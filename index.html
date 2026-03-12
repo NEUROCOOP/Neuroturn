@@ -45,7 +45,7 @@
   #auth-screen {
     display: flex; align-items: center; justify-content: center;
     min-height: 100vh; background: linear-gradient(135deg, #EFF6FF 0%, #EEF2FF 60%, #F0FDF4 100%);
-    position: fixed; inset: 0; z-index: 1000;
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 1000;
   }
   .auth-header { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; }
   .auth-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; color: var(--text); }
@@ -105,7 +105,7 @@
 
   /* modal de registro (overlay) */
   #registro-overlay {
-    display: none; position: fixed; inset: 0; z-index: 2000;
+    display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2000;
     background: rgba(15,23,42,.45); backdrop-filter: blur(4px);
     align-items: center; justify-content: center;
   }
@@ -625,7 +625,7 @@
   .tv-fullscreen-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
 
   /* Fullscreen overlay */
-  #tv-fullscreen { position: fixed; inset: 0; z-index: 900; background: #080D1A; display: none; flex-direction: column; }
+  #tv-fullscreen { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 900; background: #080D1A; display: none; flex-direction: column; }
   #tv-fullscreen.open { display: flex; }
   #tv-fullscreen .tv-screen { border-radius: 0; border: none; flex: 1; display: flex; flex-direction: column; box-shadow: none; }
   #tv-fullscreen .tv-body { flex: 1; }
@@ -638,7 +638,7 @@
   .tv-exit-btn:hover { background: rgba(239,68,68,.4); border-color: #EF4444; }
 
   /* ── MODAL ───────────────────────────────────── */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+  .modal-overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,.4); z-index: 500; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
   .modal-overlay.open { display: flex; }
   .modal { background: white; border-radius: 16px; padding: 32px; width: 480px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
   .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
@@ -1256,8 +1256,12 @@
                 <option value="3">3×</option>
               </select>
             </div>
-            <button class="voice-test-btn" onclick="TTS.speak({id:'A-104', patient:'Juan Pérez', modulo:'Módulo 04'})">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <button 
+              class="voice-test-btn" 
+              onclick="TTS.speak({id:'A-104', patient:'Juan Pérez', modulo:'Módulo 04'})"
+              aria-label="Probar síntesis de voz con turno de ejemplo"
+              title="Reproduce de prueba de voz">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Probar voz
             </button>
           </div>
@@ -1338,12 +1342,11 @@
               <option value="30">Últimos 30 días</option>
             </select>
             <select class="filter-select" id="hist-servicio" onchange="filterHistorial()">
-              <option value="">Todos los servicios</option>
-              <option>Neurología</option>
-              <option>Psiquiatría</option>
-              <option>Kinesiología</option>
-              <option>General</option>
-              <option>Laboratorio</option>
+              <option value="">Todos los módulos</option>
+              <option>Módulo 1</option>
+              <option>Módulo 2</option>
+              <option>Módulo 3</option>
+              <option>Módulo 4</option>
             </select>
             <select class="filter-select" id="hist-estado" onchange="filterHistorial()">
               <option value="">Todos los estados</option>
@@ -1892,13 +1895,12 @@
         <input class="form-input" id="new-patient-doc" placeholder="Ej: 4821" maxlength="4" inputmode="numeric">
       </div>
       <div class="form-group">
-        <label class="form-label">Servicio *</label>
+        <label class="form-label">Módulo *</label>
         <select class="form-select" id="new-patient-service" onchange="updatePrefixPreview()">
-          <option value="General">General</option>
-          <option value="Neurología">Neurología</option>
-          <option value="Psiquiatría">Psiquiatría</option>
-          <option value="Kinesiología">Kinesiología</option>
-          <option value="Laboratorio">Laboratorio</option>
+          <option value="Módulo 1">Módulo 1 - Recepción</option>
+          <option value="Módulo 2">Módulo 2 - Recepción</option>
+          <option value="Módulo 3">Módulo 3 - Recepción</option>
+          <option value="Módulo 4">Módulo 4 - Recepción</option>
         </select>
       </div>
     </div>
@@ -2123,6 +2125,10 @@ function tsToHHMM(ts) {
   return d.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
 }
 function msBetween(a, b) { return b - a; }
+// HTML-escape helper — prevents XSS when injecting user-supplied strings into innerHTML
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function fmtDuration(ms) {
   if (!ms || ms < 0) return '—';
   const s = Math.floor(ms / 1000);
@@ -2142,29 +2148,29 @@ function fmtMMSS(ms) {
 function makeTs(minutesAgo) { return Date.now() - minutesAgo * 60000; }
 
 const DEFAULT_TURNOS = [
-  { id:'A-104', patient:'Ricardo M. Valdivia', doc:'4821', estado:'Llamando', modulo:'Módulo 05', service:'General',
+  { id:'A-104', patient:'Ricardo M. Valdivia', doc:'4821', estado:'Llamando', modulo:'Módulo 05', service:'Módulo 1',
     tsCreated: makeTs(42), tsLlamado: makeTs(3), tsAtendido: null, tsFin: null },
-  { id:'B-201', patient:'Elena Rodríguez', doc:'3902', estado:'Atendiendo', modulo:'Módulo 02', service:'General',
+  { id:'B-201', patient:'Elena Rodríguez', doc:'3902', estado:'Atendiendo', modulo:'Módulo 02', service:'Módulo 2',
     tsCreated: makeTs(55), tsLlamado: makeTs(14), tsAtendido: makeTs(13), tsFin: null },
-  { id:'L-054', patient:'Carlos Méndez', doc:'1154', estado:'En fila', modulo:'—', service:'Laboratorio',
+  { id:'L-054', patient:'Carlos Méndez', doc:'1154', estado:'En fila', modulo:'—', service:'Módulo 3',
     tsCreated: makeTs(38), tsLlamado: null, tsAtendido: null, tsFin: null },
-  { id:'A-103', patient:'Sofía Hernanz', doc:'8827', estado:'Finalizado', modulo:'Módulo 05', service:'General',
+  { id:'A-103', patient:'Sofía Hernanz', doc:'8827', estado:'Finalizado', modulo:'Módulo 05', service:'Módulo 1',
     tsCreated: makeTs(90), tsLlamado: makeTs(52), tsAtendido: makeTs(50), tsFin: makeTs(35) },
-  { id:'G-012', patient:'Juan P. Duarte', doc:'0023', estado:'En fila', modulo:'—', service:'General',
+  { id:'G-012', patient:'Juan P. Duarte', doc:'0023', estado:'En fila', modulo:'—', service:'Módulo 2',
     tsCreated: makeTs(30), tsLlamado: null, tsAtendido: null, tsFin: null },
-  { id:'A-108', patient:'Marina Torres', doc:'9028', estado:'En fila', modulo:'—', service:'General',
+  { id:'A-108', patient:'Marina Torres', doc:'9028', estado:'En fila', modulo:'—', service:'Módulo 3',
     tsCreated: makeTs(22), tsLlamado: null, tsAtendido: null, tsFin: null },
-  { id:'B-205', patient:'Sergio Ruiz', doc:'5541', estado:'En fila', modulo:'—', service:'General',
+  { id:'B-205', patient:'Sergio Ruiz', doc:'5541', estado:'En fila', modulo:'—', service:'Módulo 4',
     tsCreated: makeTs(17), tsLlamado: null, tsAtendido: null, tsFin: null },
-  { id:'N-402', patient:'Pedro Alvarado', doc:'7731', estado:'Finalizado', modulo:'Módulo 04', service:'Neurología',
+  { id:'N-402', patient:'Pedro Alvarado', doc:'7731', estado:'Finalizado', modulo:'Módulo 04', service:'Módulo 1',
     tsCreated: makeTs(110), tsLlamado: makeTs(73), tsAtendido: makeTs(71), tsFin: makeTs(48) },
-  { id:'K-115', patient:'Laura Gómez', doc:'6612', estado:'Llamando', modulo:'Módulo 01', service:'Kinesiología',
+  { id:'K-115', patient:'Laura Gómez', doc:'6612', estado:'Llamando', modulo:'Módulo 01', service:'Módulo 2',
     tsCreated: makeTs(28), tsLlamado: makeTs(2), tsAtendido: null, tsFin: null },
-  { id:'P-089', patient:'Fernando Ríos', doc:'3310', estado:'Cancelado', modulo:'Módulo 07', service:'Psiquiatría',
+  { id:'P-089', patient:'Fernando Ríos', doc:'3310', estado:'Cancelado', modulo:'Módulo 07', service:'Módulo 3',
     tsCreated: makeTs(80), tsLlamado: makeTs(40), tsAtendido: null, tsFin: makeTs(39) },
-  { id:'G-551', patient:'Marta Villanueva', doc:'9982', estado:'Finalizado', modulo:'Módulo 02', service:'General',
+  { id:'G-551', patient:'Marta Villanueva', doc:'9982', estado:'Finalizado', modulo:'Módulo 02', service:'Módulo 4',
     tsCreated: makeTs(95), tsLlamado: makeTs(60), tsAtendido: makeTs(58), tsFin: makeTs(40) },
-  { id:'A-102', patient:'Juan Pérez', doc:'1100', estado:'Finalizado', modulo:'Módulo 01', service:'Neurología',
+  { id:'A-102', patient:'Juan Pérez', doc:'1100', estado:'Finalizado', modulo:'Módulo 01', service:'Módulo 1',
     tsCreated: makeTs(140), tsLlamado: makeTs(120), tsAtendido: makeTs(119), tsFin: makeTs(100) },
   { id:'B-205', patient:'María García', doc:'4450', estado:'Finalizado', modulo:'Módulo 03', service:'Psiquiatría',
     tsCreated: makeTs(105), tsLlamado: makeTs(75), tsAtendido: makeTs(73), tsFin: makeTs(55) },
@@ -2176,9 +2182,12 @@ const DEFAULT_TURNOS = [
 
 // Computed helpers
 function getWaitTime(t) {
-  // Time from creation to attended (or now if still waiting)
+  if (!t.tsCreated || t.tsCreated <= 0) return 0;
+  // Tiempo de espera: desde creación hasta que fue atendido (fijo) o hasta ahora si sigue esperando
   if (t.tsAtendido) return msBetween(t.tsCreated, t.tsAtendido);
-  if (t.tsFin) return msBetween(t.tsCreated, t.tsFin);
+  if (t.tsFin)      return msBetween(t.tsCreated, t.tsFin);
+  // Llamando: ya fue llamado, mostrar tiempo de espera fijo hasta ese momento
+  if (t.tsLlamado)  return msBetween(t.tsCreated, t.tsLlamado);
   return msBetween(t.tsCreated, nowTs());
 }
 function getServiceTime(t) {
@@ -2246,6 +2255,7 @@ let state = {
   turnos:   [],
   servicios: [],
   modulos:  [],
+  users:    [],
   counter:  100,
 };
 
@@ -2361,7 +2371,12 @@ async function registrarUsuario() {
 }
 
 // Compatibilidad con código viejo que llame mostrarLogin / mostrarRegistro
-function mostrarLogin() {}
+function mostrarLogin() {
+  const authScreen = document.getElementById('auth-screen');
+  const appDiv = document.getElementById('app');
+  if (authScreen) authScreen.style.display = 'flex';
+  if (appDiv) appDiv.style.display = 'none';
+}
 function mostrarRegistro() { abrirRegistro(); }
 
 async function onLoginSuccess() {
@@ -2399,14 +2414,16 @@ function logout() {
 // ── Carga inicial de datos desde la API ───────────
 async function cargarDatos() {
   try {
-    const [tRes, sRes, mRes] = await Promise.all([
+    const [tRes, sRes, mRes, uRes] = await Promise.all([
       API.get('/api/turnos'),
       API.get('/api/servicios'),
       API.get('/api/modulos'),
+      API.get('/api/usuarios'),
     ]);
     state.turnos   = (tRes.turnos   || []).map(normalizarTurno);
     state.servicios = sRes.servicios || [];
     state.modulos  = mRes.modulos   || [];
+    state.users    = uRes.usuarios  || [];
   } catch(e) {
     console.warn('cargarDatos error:', e.message);
     showToast('Modo sin conexión — los datos pueden estar desactualizados', 'error');
@@ -2416,8 +2433,9 @@ async function cargarDatos() {
 // Normaliza campos de la API (snake_case → camelCase compatible con render)
 function normalizarTurno(t) {
   return {
-    id:          t.id,
-    codigo:      t.codigo   || t.id,         // "N-101"
+    id:          t.codigo   || String(t.id),      // "N-101" o "124" como string
+    codigo:      t.codigo   || String(t.id),      // "N-101"
+    dbId:        t.id,                             // ID numérico de BD (para updates)
     patient:     t.paciente || t.patient,
     doc:         t.documento || t.doc || '',
     service:     t.servicio || t.service,
@@ -2468,21 +2486,21 @@ function onSSEMessage(msg) {
 
   if (msg.tipo === 'turno_nuevo' && msg.turno) {
     const t = normalizarTurno(msg.turno);
-    const existing = state.turnos.findIndex(x => x.id === t.id);
+    const existing = state.turnos.findIndex(x => x.dbId === t.dbId);
     if (existing < 0) state.turnos.push(t);
     addNotif('turno', `Nuevo turno ${t.codigo}`, `${t.patient} · ${t.service}`);
   }
 
   if ((msg.tipo === 'turno_actualizado' || msg.tipo === 'turno_llamado') && msg.turno) {
     const t = normalizarTurno(msg.turno);
-    const idx = state.turnos.findIndex(x => x.id === t.id);
+    const idx = state.turnos.findIndex(x => x.dbId === t.dbId);
     if (idx >= 0) {
       state.turnos[idx] = { ...state.turnos[idx], ...t };
     } else {
       state.turnos.push(t);
     }
     if (msg.tipo === 'turno_llamado') {
-      showTVCallBanner(state.turnos.find(x => x.id === t.id));
+      showTVCallBanner(state.turnos.find(x => x.dbId === t.dbId));
       addNotif('llamado', `Turno ${t.codigo} llamado`, `→ ${t.modulo} · Por: ${t.atendidoPor?.split(' ').slice(0,2).join(' ') || '—'}`);
     }
   }
@@ -2490,6 +2508,8 @@ function onSSEMessage(msg) {
   // Re-renderizar la página activa
   const activePage = document.querySelector('.page.active')?.id?.replace('page-', '');
   if (activePage) renderPage(activePage);
+  // Actualizar TV fullscreen si está abierta (sin delay)
+  _renderTVNow();
 }
 
 // ── Nuevo turno (llama a la API) ──────────────────
@@ -2517,17 +2537,24 @@ let moduloPaused = false;
 
 async function siguienteTurno() {
   if (moduloPaused) { showToast('⏸ Módulo en pausa', 'error'); return; }
+  const waiting = state.turnos.filter(t => t.estado === 'En fila');
+  if (!waiting.length) { showToast('No hay turnos en espera'); return; }
   try {
     const data = await API.post('/api/turnos/siguiente', {});
     if (!data.ok) { showToast(data.mensaje || 'No hay turnos en espera'); return; }
     const t = normalizarTurno(data.turno);
-    const idx = state.turnos.findIndex(x => x.id === t.id);
+    const idx = state.turnos.findIndex(x => x.dbId === t.dbId);
     if (idx >= 0) state.turnos[idx] = { ...state.turnos[idx], ...t };
     else state.turnos.push(t);
-    renderPanel(); renderDashboard();
-    TTS.speak(state.turnos.find(x => x.id === t.id) || t);
-    showTVCallBanner(state.turnos.find(x => x.id === t.id) || t);
+    renderPanel(); renderDashboard(); renderTurnos();
+    const turnoActual = state.turnos.find(x => x.dbId === t.dbId) || t;
+    if (turnoActual) {
+      TTS.speak(turnoActual);
+      showTVCallBanner(turnoActual);
+    }
+    _renderTVNow();
     showToast(`🔊 Llamando: ${t.codigo} → ${t.modulo}`, 'success');
+    addNotif('llamado', `Turno ${t.codigo} llamado`, `→ ${t.modulo}`);
   } catch(e) {
     showToast('Error: ' + e.message, 'error');
   }
@@ -2539,12 +2566,14 @@ async function llamarTurno() {
   const t = state.turnos.find(x => x.codigo === codigo || x.id === codigo);
   if (!t) return;
   try {
-    await API.patch(`/api/turnos/${t.id}`, { estado: 'Llamando', modulo: currentUser?.modulo || t.modulo });
-    t.estado = 'Llamando'; t.tsLlamado = t.tsLlamado || Date.now(); t.atendidoPor = t.atendidoPor || currentUser?.nombre;
+    const modulo = (currentUser?.modulo && currentUser.modulo !== 'Sin módulo') ? currentUser.modulo : (t.modulo !== '—' ? t.modulo : 'Módulo 01');
+    await API.patch(`/api/turnos/${t.dbId}`, { estado: 'Llamando', modulo });
+    t.estado = 'Llamando'; t.tsLlamado = t.tsLlamado || Date.now();
+    t.modulo = modulo; t.atendidoPor = t.atendidoPor || currentUser?.nombre || currentUser?.name;
     TTS.speak(t);
     showTVCallBanner(t);
+    renderPanel(); renderTurnos(); _renderTVNow();
     showToast(`🔊 Re-llamando turno ${t.codigo}`, 'success');
-    renderPanel();
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
 
@@ -2553,9 +2582,11 @@ async function atenderTurnoAPI() {
   const t = state.turnos.find(x => x.codigo === id || String(x.id) === String(id));
   if (!t) return;
   try {
-    await API.patch(`/api/turnos/${t.id}`, { estado: 'Atendiendo' });
-    t.estado = 'Atendiendo'; t.tsAtendido = Date.now();
-    renderPanel(); renderDashboard();
+    const modulo = (currentUser?.modulo && currentUser.modulo !== 'Sin módulo') ? currentUser.modulo : t.modulo;
+    await API.patch(`/api/turnos/${t.dbId}`, { estado: 'Atendiendo', modulo });
+    t.estado = 'Atendiendo'; t.tsAtendido = t.tsAtendido || Date.now();
+    t.modulo = modulo; t.atendidoPor = t.atendidoPor || currentUser?.nombre || currentUser?.name;
+    renderPanel(); renderDashboard(); renderTurnos(); _renderTVNow();
     showToast(`✅ ${t.codigo} en atención`, 'success');
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
@@ -2565,10 +2596,10 @@ async function finalizarTurnoAPI(nota = '') {
   const t = state.turnos.find(x => x.codigo === id || String(x.id) === String(id));
   if (!t) return;
   try {
-    await API.patch(`/api/turnos/${t.id}`, { estado: 'Finalizado', nota: nota || undefined });
+    await API.patch(`/api/turnos/${t.dbId}`, { estado: 'Finalizado', nota: nota || undefined });
     t.estado = 'Finalizado'; t.tsFin = Date.now(); if (nota) t.nota = nota;
     if (!t.tsAtendido) t.tsAtendido = Date.now();
-    renderPanel(); renderDashboard();
+    renderPanel(); renderDashboard(); renderTurnos(); _renderTVNow();
     showToast('Turno ' + t.codigo + ' finalizado ✓', 'success');
     addNotif('turno', `Turno ${t.codigo} finalizado`, `${t.patient} · ${t.service}`);
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
@@ -2579,9 +2610,9 @@ async function cancelarTurnoAPI() {
   const t = state.turnos.find(x => x.codigo === id || String(x.id) === String(id));
   if (!t) return;
   try {
-    await API.patch(`/api/turnos/${t.id}`, { estado: 'Cancelado' });
+    await API.patch(`/api/turnos/${t.dbId}`, { estado: 'Cancelado' });
     t.estado = 'Cancelado'; t.tsFin = Date.now();
-    renderPanel(); renderDashboard();
+    renderPanel(); renderDashboard(); renderTurnos(); _renderTVNow();
     showToast('Turno ' + t.codigo + ' cancelado');
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
@@ -2671,8 +2702,8 @@ function renderNotifList() {
     `<div class="notif-item ${n.unread?'unread':''}">
       <div class="notif-icon" style="background:${n.ic.bg};color:${n.ic.color}">${n.ic.svg}</div>
       <div class="notif-text">
-        <div class="notif-title">${n.title}</div>
-        <div class="notif-body">${n.body}</div>
+        <div class="notif-title">${esc(n.title)}</div>
+        <div class="notif-body">${esc(n.body)}</div>
         <div class="notif-time">${n.time}</div>
       </div>
     </div>`
@@ -2717,7 +2748,8 @@ function renderInicio() {
   // Welcome message with current user
   const welcomeEl = document.getElementById('inicio-welcome');
   if (welcomeEl && currentUser) {
-    const firstName = currentUser.name.split(' ').find(w => !['Dr.','Dra.','Enf.','Rec.','Adm.'].includes(w)) || currentUser.name.split(' ')[0];
+    const nameToUse = currentUser.nombre || currentUser.name || 'Usuario';
+    const firstName = nameToUse.split(' ').find(w => !['Dr.','Dra.','Enf.','Rec.','Adm.'].includes(w)) || nameToUse.split(' ')[0];
     const hour = now.getHours();
     const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
     welcomeEl.textContent = `${greeting}, ${firstName} 👋`;
@@ -2748,8 +2780,8 @@ function renderInicio() {
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light)">
         <div style="width:28px;height:28px;border-radius:8px;background:${color}20;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${icon}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:500"><span style="font-family:'DM Mono',monospace;color:${color}">${t.id}</span> — ${t.patient}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${t.service} · ${tsToHHMM(t.tsCreated)}</div>
+          <div style="font-size:13px;font-weight:500"><span style="font-family:'DM Mono',monospace;color:${color}">${esc(t.id)}</span> — ${esc(t.patient)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${esc(t.service)} · ${tsToHHMM(t.tsCreated)}</div>
         </div>
         ${badgeHTML(t.estado)}
       </div>`;
@@ -2768,7 +2800,7 @@ function renderInicio() {
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light)">
           <div style="width:28px;height:28px;border-radius:8px;background:var(--danger-light);display:flex;align-items:center;justify-content:center;font-size:13px">⚠️</div>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:500">${t.id} — ${t.patient}</div>
+            <div style="font-size:13px;font-weight:500">${esc(t.id)} — ${esc(t.patient)}</div>
             <div style="font-size:11px;color:var(--danger)">${wMin} minutos esperando</div>
           </div>
         </div>`;
@@ -2799,8 +2831,8 @@ function renderInicio() {
             ${statusLabel}
           </div>
         </div>
-        ${turnoActual ? `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--primary);font-weight:700">${turnoActual.id}</div><div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${turnoActual.patient.split(' ')[0]}</div>` : ''}
-        ${operador ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">${operador.name.split(' ').slice(0,2).join(' ')}</div>` : '<div style="font-size:10.5px;color:var(--text-light);margin-top:4px">Sin operador</div>'}
+        ${turnoActual ? `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--primary);font-weight:700">${esc(turnoActual.id)}</div><div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(turnoActual.patient.split(' ')[0])}</div>` : ''}
+        ${operador ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">${esc(operador.name.split(' ').slice(0,2).join(' '))}</div>` : '<div style="font-size:10.5px;color:var(--text-light);margin-top:4px">Sin operador</div>'}
       </div>`;
     }).join('');
   }
@@ -2859,9 +2891,9 @@ function renderDashboard() {
     const waitMs = getWaitTime(t);
     const pill   = `<span class="timer-pill ${t.estado==='En fila'||t.estado==='Llamando'||t.estado==='Atendiendo'?'timer-orange':'timer-gray'}">${fmtDuration(waitMs)}</span>`;
     return `<tr>
-      <td><span class="turno-id">${t.id}</span></td>
-      <td>${t.service}</td>
-      <td>${t.modulo}</td>
+      <td><span class="turno-id">${esc(t.id)}</span></td>
+      <td>${esc(t.service)}</td>
+      <td>${esc(t.modulo)}</td>
       <td>${badgeHTML(t.estado)}</td>
       <td>${pill}</td>
       <td style="color:var(--text-muted);font-size:12.5px">${tsToHHMM(t.tsCreated)}</td>
@@ -2906,15 +2938,23 @@ function renderTurnos(search='') {
       ? `<span class="live-tw-${t.id.replace('-','_')} timer-pill ${waitMs>1200000?'timer-red':waitMs>600000?'timer-orange':''}">${fmtMMSS(waitMs)}</span>`
       : `<span class="timer-pill timer-gray">${fmtDuration(waitMs)}</span>`;
     const svcStr = svcMs ? `<span class="timer-pill timer-blue">${fmtDuration(svcMs)}</span>` : '<span style="color:var(--text-light)">—</span>';
+    const moduloDisplay = (() => {
+      const mod = t.modulo && t.modulo !== '—' ? t.modulo : '—';
+      if (t.estado === 'Llamando')
+        return `<span style="font-size:12.5px;color:var(--text-muted)">${esc(mod)}</span><span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:#EEF2FF;color:#3B72F2;padding:1px 7px;border-radius:20px;margin-left:6px">● LLAMANDO</span>`;
+      if (t.estado === 'Atendiendo')
+        return `<span style="font-size:12.5px;color:var(--text-muted)">${esc(mod)}</span><span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:#DCFCE7;color:#16A34A;padding:1px 7px;border-radius:20px;margin-left:6px">● ATENDIENDO</span>`;
+      return `<span style="color:var(--text-muted);font-size:12.5px">${esc(mod)}</span>`;
+    })();
     return `
     <tr>
-      <td><span class="turno-id">${t.id}</span></td>
-      <td style="font-weight:500">${t.patient}</td>
-      <td><span class="doc-masked">****${t.doc}</span></td>
+      <td><span class="turno-id">${esc(t.id)}</span></td>
+      <td style="font-weight:500">${esc(t.patient)}</td>
+      <td><span class="doc-masked">****${esc(t.doc)}</span></td>
       <td>${badgeHTML(t.estado)}</td>
       <td>${waitStr}</td>
       <td>${svcStr}</td>
-      <td style="color:var(--text-muted);font-size:12.5px">${t.modulo}</td>
+      <td>${moduloDisplay}</td>
       <td>
         <div class="action-icons">
           <div class="icon-btn" title="Llamar" onclick="actionTurno(${start+i},'llamar')">
@@ -3002,21 +3042,21 @@ function openTurnoDetail(idx) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
       <div class="detail-stat-box">
         <div class="detail-stat-label">Paciente</div>
-        <div class="detail-stat-val">${t.patient}</div>
+        <div class="detail-stat-val">${esc(t.patient)}</div>
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Documento</div>
-        <div class="detail-stat-val" style="font-family:'DM Mono',monospace">****${t.doc}</div>
+        <div class="detail-stat-val" style="font-family:'DM Mono',monospace">****${esc(t.doc)}</div>
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Servicio</div>
         <div class="detail-stat-val" style="display:flex;align-items:center;gap:6px">
-          <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block"></span>${t.service}
+          <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block"></span>${esc(t.service)}
         </div>
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Módulo</div>
-        <div class="detail-stat-val">${t.modulo}</div>
+        <div class="detail-stat-val">${esc(t.modulo)}</div>
       </div>
     </div>
     <div style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:20px">
@@ -3083,9 +3123,9 @@ function startTurnosTicker() {
   }, 1000);
 }
 
-function openTurnoDetailById(id, patient) {
-  const idx = state.turnos.findIndex(t => t.id===id && t.patient===patient);
-  if (idx>=0) openTurnoDetail(idx);
+function openTurnoDetailById(id) {
+  const idx = state.turnos.findIndex(t => t.id === id);
+  if (idx >= 0) openTurnoDetail(idx);
 }
 
 // ── LONG-WAIT ALERT SYSTEM ────────────────────────
@@ -3112,7 +3152,7 @@ let panelTimerInterval = null;
 
 function renderPanel() {
   // Show operator badge
-  const opName  = currentUser?.name   || 'Sistema';
+  const opName  = currentUser?.nombre || currentUser?.name || 'Sistema';
   const opMod   = currentUser?.modulo || 'Sin módulo';
   const opNameEl = document.getElementById('panel-operator-name');
   const opModEl  = document.getElementById('panel-modulo-label');
@@ -3122,13 +3162,22 @@ function renderPanel() {
   const serving = state.turnos.filter(t => t.estado === 'Atendiendo');
   const calling = state.turnos.filter(t => t.estado === 'Llamando');
   const waiting = state.turnos.filter(t => t.estado === 'En fila');
-  const current = serving[0] || calling[0] || waiting[0];
+  // Priorizar el turno del módulo de ESTE operador; si no, el primero global
+  const myMod = opMod !== 'Sin módulo' ? opMod : null;
+  const current = (myMod && serving.find(t => t.modulo === myMod))
+    || (myMod && calling.find(t => t.modulo === myMod))
+    || serving[0] || calling[0] || waiting[0];
 
   if (current) {
-    document.getElementById('panel-turno-id').textContent    = current.id;
+    document.getElementById('panel-turno-id').textContent     = current.id;
     document.getElementById('panel-patient-name').textContent = current.patient;
-    const atPor = current.atendidoPor ? ` · Op: ${current.atendidoPor.split(' ').slice(-1)[0]}` : '';
-    document.getElementById('panel-patient-info').textContent = `${current.service} · ${current.modulo}${atPor}`;
+    const modLabel = current.modulo && current.modulo !== '—' ? current.modulo : current.service;
+    const estadoBadge = current.estado === 'Llamando'
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;background:#EEF2FF;color:#3B72F2;padding:2px 9px;border-radius:20px;margin-left:8px">● LLAMANDO</span>`
+      : current.estado === 'Atendiendo'
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;background:#DCFCE7;color:#16A34A;padding:2px 9px;border-radius:20px;margin-left:8px">● ATENDIENDO</span>`
+      : '';
+    document.getElementById('panel-patient-info').innerHTML = `${modLabel}${estadoBadge}`;
     updatePanelTimers(current);
   } else {
     document.getElementById('panel-turno-id').textContent    = '—';
@@ -3142,7 +3191,6 @@ function renderPanel() {
   queueEl.innerHTML = allWaiting.slice(0, 6).map(t => {
     const color   = getSvcColor(t.id[0]);
     const waitMs  = getWaitTime(t);
-    const atPorStr = t.atendidoPor ? `<div style="font-size:10px;color:var(--primary);margin-top:1px">→ ${t.atendidoPor.split(' ').slice(-1)[0]}</div>` : '';
     const llamandoBadge = t.estado==='Llamando' ? `<span style="color:var(--primary);font-size:10px;font-weight:700;margin-left:4px">● LLAMANDO</span>` : '';
     return `<div class="queue-item" onclick="selectQueueItem('${t.id}')">
       <div class="queue-item-top">
@@ -3151,15 +3199,16 @@ function renderPanel() {
       </div>
       <div class="queue-name">${t.patient}</div>
       <div class="queue-location">${t.modulo !== '—' ? t.modulo : 'Sin módulo'}${llamandoBadge}</div>
-      ${atPorStr}
     </div>`;
   }).join('');
 
   if (panelTimerInterval) clearInterval(panelTimerInterval);
   panelTimerInterval = setInterval(() => {
-    const cur = state.turnos.find(t=>t.estado==='Atendiendo') ||
-                state.turnos.find(t=>t.estado==='Llamando')   ||
-                state.turnos.find(t=>t.estado==='En fila');
+    const myM = (currentUser?.modulo && currentUser.modulo !== 'Sin módulo') ? currentUser.modulo : null;
+    const cur = (myM && state.turnos.find(t=>(t.estado==='Atendiendo'||t.estado==='Llamando') && t.modulo===myM))
+      || state.turnos.find(t=>t.estado==='Atendiendo')
+      || state.turnos.find(t=>t.estado==='Llamando')
+      || state.turnos.find(t=>t.estado==='En fila');
     if (cur) updatePanelTimers(cur);
     state.turnos.filter(t=>t.estado==='En fila'||t.estado==='Llamando').forEach(t => {
       const el = document.querySelector(`.live-wait-${t.id.replace('-','_')}`);
@@ -3183,26 +3232,84 @@ function selectQueueItem(id) {
   document.getElementById('panel-patient-info').textContent = `${t.service} • ${t.modulo}`;
 }
 
-// ── TTS ENGINE ────────────────────────────────────
+/* ── CONVERSIÓN NÚMEROS A PALABRAS ─────────────── */
+function numberToWords(n) {
+  if (n === 0) return 'cero';
+  const ones   = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+  const teens  = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
+  const tens   = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+  const scales = ['', 'mil', 'millón', 'mil millones', 'billón'];
+
+  function convert(num, scale) {
+    if (num === 0) return '';
+    let result = '';
+    
+    const hundreds = Math.floor(num / 100);
+    if (hundreds > 0) {
+      const h = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+      result += h[hundreds] + ' ';
+    }
+    
+    const remainder = num % 100;
+    if (remainder >= 10 && remainder < 20) {
+      result += teens[remainder - 10] + ' ';
+    } else {
+      const t = Math.floor(remainder / 10);
+      const o = remainder % 10;
+      if (t > 0) result += tens[t] + (o > 0 ? ' y ' : ' ');
+      if (o > 0) result += ones[o] + ' ';
+    }
+    
+    if (scale > 0) result += scales[scale] + ' ';
+    return result.trim();
+  }
+
+  let num = Math.abs(Math.floor(n));
+  if (num === 0) return 'cero';
+  
+  let result = '';
+  let scale = 0;
+  while (num > 0) {
+    const chunk = num % 1000;
+    if (chunk > 0) {
+      result = convert(chunk, scale) + ' ' + result;
+    }
+    num = Math.floor(num / 1000);
+    scale++;
+  }
+  
+  return result.trim().replace(/\s+/g, ' ');
+}
+
+/* ── TTS ENGINE (SÍNTESIS DE VOZ) ───────────────── */
 const TTS = {
   synth: window.speechSynthesis,
   voices: [],
   settings: { lang:'es-ES', rate:0.88, pitch:1.05, volume:1, voice:null, repeat:2, delay:1200 },
+  isAvailable: !!window.speechSynthesis,
+  isSpeaking: false,
 
   init() {
-    if (!this.synth) return;
-    const load = () => {
-      this.voices = this.synth.getVoices().filter(v => v.lang.startsWith('es'));
-      if (!this.voices.length) this.voices = this.synth.getVoices();
-      this.pickBestVoice();
-      this.populateVoiceSelect();
-    };
-    load();
-    this.synth.addEventListener('voiceschanged', load);
+    if (!this.isAvailable) {
+      console.warn('⚠️ Síntesis de voz no disponible en este navegador');
+      return;
+    }
+    try {
+      const load = () => {
+        this.voices = this.synth.getVoices().filter(v => v.lang.startsWith('es'));
+        if (!this.voices.length) this.voices = this.synth.getVoices();
+        this.pickBestVoice();
+        this.populateVoiceSelect();
+      };
+      load();
+      this.synth.addEventListener('voiceschanged', load);
+    } catch(e) {
+      console.error('❌ Error inicializando TTS:', e.message);
+    }
   },
 
   pickBestVoice() {
-    // Prefer natural-sounding Spanish voices
+    // Preferred Spanish voices in priority order
     const preferred = ['Google español', 'Microsoft Sabina', 'Monica', 'Paulina', 'Jorge', 'Google español de Estados Unidos'];
     for (const name of preferred) {
       const v = this.voices.find(v => v.name.includes(name.split(' ')[1]) || v.name === name);
@@ -3219,127 +3326,186 @@ const TTS = {
     ).join('');
   },
 
-  // Split turn ID into speakable parts: "A-104" → "A, ciento cuatro"
+  // MEJORADO: Convierte ID a texto hablado: "G-122" → "Turno G ciento veintidós"
   formatTurnoId(id) {
-    const parts = id.split('-');
-    if (parts.length !== 2) return id;
-    const letter = parts[0];
-    const num = parseInt(parts[1], 10);
-    return `${letter}... ${num}`;
+    if (!id) return '';
+    const idStr = String(id).trim();
+    const parts = idStr.split('-');
+    
+    if (parts.length === 2) {
+      const prefijo = parts[0].toUpperCase();
+      const numero = parseInt(parts[1], 10);
+      
+      if (!isNaN(numero)) {
+        const numeroEnPalabras = numberToWords(numero);
+        return `${prefijo} ${numeroEnPalabras}`;
+      }
+    }
+    
+    return idStr;
   },
 
+  // MEJORADO: Construye un anuncio profesional y natural
   buildMessage(turno) {
-    const id = this.formatTurnoId(turno.id);
-    const modulo = turno.modulo !== '—' ? `, por favor diríjase al ${turno.modulo}` : '';
-    return `Turno ${id}... Turno ${id}... Paciente ${turno.patient}${modulo}.`;
+    if (!turno || !turno.id) return '';
+    
+    try {
+      const turnoAnunciado = this.formatTurnoId(turno.id);
+      const pacienteNombre = (turno.patient || 'paciente').trim();
+      
+      // Construir mensaje base
+      let mensaje = `Turno ${turnoAnunciado}. Paciente ${pacienteNombre}.`;
+      
+      // Agregar módulo si existe
+      if (turno.modulo && turno.modulo !== '—' && turno.modulo.trim()) {
+        mensaje += ` Por favor diríjase al ${turno.modulo}.`;
+      }
+      
+      return mensaje;
+    } catch(e) {
+      console.error('❌ Error en buildMessage:', e.message);
+      return `Turno ${turno.id || 'desconocido'}`;
+    }
   },
 
+  // MEJORADO: Reproduce el anuncio con control total de propiedades
   speak(turno) {
-    if (!this.synth) { showToast('Tu navegador no soporta síntesis de voz', 'error'); return; }
-    this.synth.cancel();
+    if (!this.isAvailable) {
+      showToast('⚠️ Síntesis de voz no disponible en este navegador', 'error');
+      return;
+    }
+    
+    if (!turno || !turno.id) {
+      console.error('❌ TTS.speak(): Turno inválido', turno);
+      showToast('❌ Error: Datos del turno inválidos', 'error');
+      return;
+    }
 
-    // Show calling overlay
-    showCallingOverlay(turno);
+    // Cancelar cualquier síntesis en curso
+    if (this.synth.speaking) {
+      this.synth.cancel();
+    }
+    
+    this.isSpeaking = true;
 
-    const msg = this.buildMessage(turno);
-    let count = 0;
-    const sayOnce = () => {
-      const utt = new SpeechSynthesisUtterance(msg);
-      if (this.settings.voice) utt.voice = this.settings.voice;
-      utt.lang    = this.settings.lang;
-      utt.rate    = parseFloat(this.settings.rate);
-      utt.pitch   = parseFloat(this.settings.pitch);
-      utt.volume  = parseFloat(this.settings.volume);
-      utt.onend = () => {
-        count++;
-        if (count < this.settings.repeat) setTimeout(sayOnce, this.settings.delay);
-        else hideCallingOverlay();
+    try {
+      showCallingOverlay(turno);
+      const mensaje = this.buildMessage(turno);
+      let contador = 0;
+      const repeticiones = parseInt(this.settings.repeat) || 2;
+      const delayMs = parseInt(this.settings.delay) || 1200;
+
+      const reproducirUnaVez = () => {
+        try {
+          const utterance = new SpeechSynthesisUtterance(mensaje);
+          
+          // Aplicar configuración de voz
+          if (this.settings.voice && this.settings.voice.name) {
+            utterance.voice = this.settings.voice;
+          }
+          
+          utterance.lang   = this.settings.lang || 'es-ES';
+          utterance.rate   = parseFloat(this.settings.rate)   || 0.88;
+          utterance.pitch  = parseFloat(this.settings.pitch)  || 1.05;
+          utterance.volume = Math.min(1, Math.max(0.1, parseFloat(this.settings.volume) || 1));
+
+          utterance.onend = () => {
+            contador++;
+            if (contador < repeticiones) {
+              // Esperar antes de repetir
+              setTimeout(reproducirUnaVez, delayMs);
+            } else {
+              // Síntesis completada
+              this.isSpeaking = false;
+              hideCallingOverlay();
+              console.log('✅ Síntesis completada:', mensaje.substring(0, 30) + '...');
+            }
+          };
+
+          utterance.onerror = (evento) => {
+            console.error('❌ Error de síntesis:', evento.error);
+            this.isSpeaking = false;
+            hideCallingOverlay();
+            showToast('❌ Error en síntesis de voz: ' + evento.error, 'error');
+          };
+
+          this.synth.speak(utterance);
+        } catch(error) {
+          console.error('❌ Error en reproducirUnaVez():', error.message);
+          this.isSpeaking = false;
+          hideCallingOverlay();
+          showToast('❌ Error al reproducir voz', 'error');
+        }
       };
-      utt.onerror = () => hideCallingOverlay();
-      this.synth.speak(utt);
-    };
-    sayOnce();
+
+      reproducirUnaVez();
+    } catch(error) {
+      console.error('❌ Error en TTS.speak():', error.message);
+      this.isSpeaking = false;
+      hideCallingOverlay();
+      showToast('❌ Error al reproducir anuncio', 'error');
+    }
   },
 
-  stop() { this.synth?.cancel(); hideCallingOverlay(); }
+  stop() {
+    try {
+      if (this.synth && this.synth.speaking) {
+        this.synth.cancel();
+      }
+      this.isSpeaking = false;
+      hideCallingOverlay();
+      console.log('✅ Síntesis detenida');
+    } catch(error) {
+      console.error('❌ Error al detener TTS:', error.message);
+    }
+  }
 };
 
-// ── CALLING OVERLAY ───────────────────────────────
+/* ── CALLING OVERLAY ───────────────────────────────
+   Muestra turno siendo llamado con animaciones visuales y sonoras
+ */
 function showCallingOverlay(turno) {
   let overlay = document.getElementById('calling-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.id = 'calling-overlay';
+    overlay.setAttribute('role', 'alert');
+    overlay.setAttribute('aria-live', 'assertive');
+    overlay.setAttribute('aria-atomic', 'true');
     overlay.innerHTML = `
       <div class="calling-box">
         <div class="calling-waves">
-          <span></span><span></span><span></span><span></span>
+          <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
         </div>
-        <div class="calling-label">LLAMANDO</div>
-        <div class="calling-id" id="co-id"></div>
-        <div class="calling-name" id="co-name"></div>
-        <div class="calling-modulo" id="co-modulo"></div>
-        <button class="calling-stop" onclick="TTS.stop()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        <div class="calling-label" aria-live="polite">LLAMANDO</div>
+        <div class="calling-id" id="co-id" aria-label="Código de turno"></div>
+        <div class="calling-name" id="co-name" aria-label="Nombre del paciente"></div>
+        <div class="calling-modulo" id="co-modulo" aria-label="Módulo de atención"></div>
+        <button 
+          class="calling-stop" 
+          onclick="TTS.stop()"
+          aria-label="Detener reproducción de voz"
+          title="Detiene inmediatamente la síntesis de voz">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
           Detener
         </button>
       </div>`;
     document.body.appendChild(overlay);
   }
-  document.getElementById('co-id').textContent   = turno.id;
-  document.getElementById('co-name').textContent  = turno.patient;
-  document.getElementById('co-modulo').textContent = turno.modulo !== '—' ? turno.modulo : '';
+  document.getElementById('co-id').textContent   = turno.id || '—';
+  document.getElementById('co-name').textContent  = turno.patient || '—';
+  document.getElementById('co-modulo').textContent = (turno.modulo && turno.modulo !== '—') ? turno.modulo : '';
   overlay.classList.add('visible');
 }
+
 function hideCallingOverlay() {
-  document.getElementById('calling-overlay')?.classList.remove('visible');
+  const overlay = document.getElementById('calling-overlay');
+  if (overlay) overlay.classList.remove('visible');
 }
 
-function llamarTurno() {
-  const id  = document.getElementById('panel-turno-id').textContent;
-  if (!id || id === '—') return;
-  const idx = state.turnos.findIndex(t => t.id === id);
-  if (idx >= 0) {
-    const t = state.turnos[idx];
-    t.tsLlamado   = t.tsLlamado || nowTs();
-    t.estado      = 'Llamando';
-    t.atendidoPor = t.atendidoPor || currentUser?.name || 'Sistema';
-    t.modulo      = (currentUser?.modulo && currentUser.modulo !== 'Sin módulo') ? currentUser.modulo : (t.modulo !== '—' ? t.modulo : 'Módulo 01');
-    saveState();
-    TTS.speak(t);
-    showTVCallBanner(t);
-    showToast(`🔊 Re-llamando turno ${id}`, 'success');
-    renderPanel();
-  }
-}
+// llamarTurno definido arriba (versión API)
 
-function siguienteTurno() {
-  if (moduloPaused) {
-    showToast('⏸ Módulo en pausa — reactive el módulo antes de llamar', 'error');
-    return;
-  }
-  const waiting = state.turnos.filter(t => t.estado === 'En fila');
-  if (!waiting.length) { showToast('No hay turnos en espera'); return; }
-
-  const next = waiting[0];
-  const idx  = state.turnos.indexOf(next);
-  const now  = nowTs();
-
-  // Determine which module is calling (from the logged-in user's assigned module)
-  const operatorModulo = currentUser?.modulo || 'Sin módulo';
-  const operatorName   = currentUser?.name   || 'Sistema';
-
-  state.turnos[idx].estado    = 'Llamando';
-  state.turnos[idx].tsLlamado = now;
-  state.turnos[idx].modulo    = operatorModulo !== 'Sin módulo' ? operatorModulo : (next.modulo !== '—' ? next.modulo : 'Módulo 01');
-  state.turnos[idx].atendidoPor = operatorName;
-
-  saveState(); renderPanel(); renderDashboard();
-  TTS.speak(state.turnos[idx]);
-  showTVCallBanner(state.turnos[idx]);
-  addNotif('llamado', `Turno ${next.id} llamado`, `${next.patient} → ${state.turnos[idx].modulo} · Por: ${operatorName.split(' ').slice(0,2).join(' ')}`);
-  showToast(`🔊 Llamando: ${next.id} → ${state.turnos[idx].modulo}`, 'success');
-}
+// siguienteTurno definido arriba (versión API)
 
 function finalizarTurno() { finalizarTurnoAPI(''); }
 function cancelarTurno()  { cancelarTurnoAPI(); }
@@ -3427,13 +3593,13 @@ function renderHistorial() {
       const svcStr  = svcMs  ? `<span class="timer-pill timer-gray">${fmtDuration(svcMs)}</span>`  : '—';
       const opName  = t.atendidoPor ? t.atendidoPor.split(' ').slice(0,2).join(' ') : '—';
       const notaIcon = t.nota
-        ? `<span title="${t.nota.replace(/"/g,"'")}" style="cursor:help;font-size:14px">📝</span>`
+        ? `<span title="${esc(t.nota)}" style="cursor:help;font-size:14px">📝</span>`
         : '<span style="color:var(--border)">—</span>';
       return `<tr>
-        <td><span class="turno-id" style="cursor:pointer;color:${color}" onclick="openTurnoDetailById('${t.id}','${t.patient}')">${t.id}</span></td>
-        <td style="font-weight:500">${t.patient}</td>
-        <td><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${color};display:inline-block"></span>${t.service}</span></td>
-        <td style="font-size:12px;color:var(--text-muted)">${opName}</td>
+        <td><span class="turno-id" style="cursor:pointer;color:${color}" onclick="openTurnoDetailById('${esc(t.id)}')">${esc(t.id)}</span></td>
+        <td style="font-weight:500">${esc(t.patient)}</td>
+        <td><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${color};display:inline-block"></span>${esc(t.service)}</span></td>
+        <td style="font-size:12px;color:var(--text-muted)">${esc(opName)}</td>
         <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:12.5px">${tsToHHMM(t.tsCreated)}</td>
         <td>${waitStr}</td>
         <td>${svcStr}</td>
@@ -3472,17 +3638,24 @@ function clearHistFiltros() {
 // ── TV ────────────────────────────────────────────
 let tvInterval = null;
 
+function _renderTVNow() {
+  // Actualiza el panel TV principal y fullscreen si está abierta (llamado por SSE y siguienteTurno)
+  if (document.getElementById('tv-queue-list')) {
+    _renderTVContent('tv-time','tv-date','tv-queue-list','tv-serving-list','tv-queue-count','tv-serving-count');
+  }
+  const fs = document.getElementById('tv-fullscreen');
+  if (fs && fs.classList.contains('open')) {
+    _renderTVContent('tvf-time','tvf-date','tvf-queue-list','tvf-serving-list','tvf-queue-count','tvf-serving-count');
+  }
+}
+
 function renderTV() {
   _renderTVContent('tv-time','tv-date','tv-queue-list','tv-serving-list','tv-queue-count','tv-serving-count');
   if (tvInterval) clearInterval(tvInterval);
-  // refresh data every 5s
+  // refresh data every 2s (backup por si SSE no llega)
   tvInterval = setInterval(() => {
-    _renderTVContent('tv-time','tv-date','tv-queue-list','tv-serving-list','tv-queue-count','tv-serving-count');
-    const fs = document.getElementById('tv-fullscreen');
-    if (fs && fs.classList.contains('open')) {
-      _renderTVContent('tvf-time','tvf-date','tvf-queue-list','tvf-serving-list','tvf-queue-count','tvf-serving-count');
-    }
-  }, 5000);
+    _renderTVNow();
+  }, 2000);
   // clock ticks every second
   setInterval(() => {
     const t = new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
@@ -3531,8 +3704,8 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
           <div class="tv-queue-left">
             <div class="tv-queue-num">${i+1}</div>
             <div class="tv-queue-info">
-              <div class="tv-queue-id" style="color:${color}">${t.id}</div>
-              <div class="tv-queue-name">${t.patient}</div>
+              <div class="tv-queue-id" style="color:${color}">${esc(t.id)}</div>
+              <div class="tv-queue-name">${esc(t.patient)}</div>
             </div>
           </div>
           <div class="tv-queue-wait ${wClass}">${waitMin>0?waitMin+' min':'&lt;1 min'}</div>
@@ -3563,7 +3736,7 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
         const operatorHTML = opName
           ? `<div class="tv-serving-operator">
                <div class="tv-serving-operator-dot" style="background:${opColor}"></div>
-               Llamado por ${opName.split(' ').slice(0,2).join(' ')}
+               Llamado por ${esc(opName.split(' ').slice(0,2).join(' '))}
              </div>`
           : '';
         return `<div class="tv-serving-card ${cardClass}">
@@ -3572,14 +3745,14 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
               <span class="tv-serving-status-dot" style="background:${dotColor}"></span>
               ${statusLabel}
             </div>
-            <div class="tv-serving-turno" style="color:${color}">${t.id}</div>
-            <div class="tv-serving-patient">${t.patient}</div>
+            <div class="tv-serving-turno" style="color:${color}">${esc(t.id)}</div>
+            <div class="tv-serving-patient">${esc(t.patient)}</div>
             ${operatorHTML}
           </div>
           <div class="tv-serving-right">
             <div class="tv-serving-modulo-label">Módulo</div>
-            <div class="tv-serving-modulo-val" style="color:${isLlamando?'#FDE68A':'white'}">${moduloNum}</div>
-            <div class="tv-serving-svc">${t.service}</div>
+            <div class="tv-serving-modulo-val" style="color:${isLlamando?'#FDE68A':'white'}">${esc(moduloNum)}</div>
+            <div class="tv-serving-svc">${esc(t.service)}</div>
             ${svcMs?`<div class="tv-serving-timer">&#9201; ${fmtMMSS(svcMs)}</div>`:''}
           </div>
         </div>`;
@@ -3751,16 +3924,16 @@ function renderUsuarios() {
     return `<tr>
       <td>
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:34px;height:34px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0">${initials}</div>
+          <div style="width:34px;height:34px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0">${esc(initials)}</div>
           <div>
-            <div style="font-weight:600;font-size:13.5px">${u.name}</div>
-            <div style="font-size:11.5px;color:var(--text-muted)">${u.email||'usuario@neuroturn.com'}</div>
+            <div style="font-weight:600;font-size:13.5px">${esc(u.name)}</div>
+            <div style="font-size:11.5px;color:var(--text-muted)">${esc(u.email||'usuario@neuroturn.com')}</div>
           </div>
         </div>
       </td>
-      <td><span class="badge" style="background:var(--primary-light);color:var(--primary)">${u.role}</span></td>
-      <td style="color:var(--text-muted);font-size:13px;font-family:'DM Mono',monospace">${u.username||'—'}</td>
-      <td style="color:var(--text-muted)">${u.modulo||'Sin módulo'}</td>
+      <td><span class="badge" style="background:var(--primary-light);color:var(--primary)">${esc(u.role)}</span></td>
+      <td style="color:var(--text-muted);font-size:13px;font-family:'DM Mono',monospace">${esc(u.username||'—')}</td>
+      <td style="color:var(--text-muted)">${esc(u.modulo||'Sin módulo')}</td>
       <td>${u.active ? '<span class="badge badge-atendiendo">Activo</span>' : '<span class="badge badge-cancelado">Inactivo</span>'}</td>
       <td style="color:var(--text-muted);font-size:12.5px">${lastAccess}</td>
       <td>
@@ -4341,12 +4514,12 @@ function openModal(id) {
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 function updatePrefixPreview() {
-  const svc = document.getElementById('new-patient-service')?.value || 'General';
-  const prefixes = {General:'A', Neurología:'N', Psiquiatría:'P', Kinesiología:'K', Laboratorio:'L'};
-  const prefix = prefixes[svc] || 'A';
+  const svc = document.getElementById('new-patient-service')?.value || 'Módulo 1';
+  const prefixes = {'Módulo 1':'M', 'Módulo 2':'M', 'Módulo 3':'M', 'Módulo 4':'M'};
+  const prefix = prefixes[svc] || 'M';
   const next = (state.counter || 100) + 1;
   const el = document.getElementById('turno-preview');
-  const colors = {A:'#22C55E',N:'#3B72F2',P:'#8B5CF6',K:'#F97316',L:'#F59E0B'};
+  const colors = {M:'#3B72F2'};
   if (el) { el.textContent = `${prefix}-${next}`; el.style.color = colors[prefix]||'var(--primary)'; }
 }
 
@@ -4354,7 +4527,7 @@ function openNewTurno() { openModal('modal-turno'); }
 async function saveTurno() {
   const paciente   = document.getElementById('new-patient-name')?.value.trim();
   const documento  = document.getElementById('new-patient-doc')?.value.trim() || '';
-  const servicio   = document.getElementById('new-patient-service')?.value || 'General';
+  const servicio   = document.getElementById('new-patient-service')?.value || 'Módulo 1';
   if (!paciente) { showToast('Ingrese el nombre del paciente', 'error'); return; }
 
   const btn = document.querySelector('#modal-turno .btn-save');
@@ -4603,7 +4776,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 
 
 // ── PAUSA DE MÓDULO ───────────────────────────────
-let moduloPaused = false;
+// Usa la variable moduloPaused declarada anteriormente
 
 function toggleModuloPause() {
   moduloPaused = !moduloPaused;
@@ -4686,13 +4859,13 @@ function globalSearch(q) {
     const color = getSvcColor(t.id[0]);
     const badge = {Finalizado:'#DCFCE7|#16A34A',Cancelado:'#FEE2E2|#DC2626','En fila':'#F3F4F6|#6B7280',Llamando:'#EEF2FF|#3B72F2',Atendiendo:'#DCFCE7|#16A34A'}[t.estado]||'#F3F4F6|#6B7280';
     const [bb,bc] = badge.split('|');
-    return `<div onclick="cerrarSearch();openTurnoDetailById('${t.id}','${t.patient}')" style="padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--border-light);transition:background .1s" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:800;color:${color};min-width:52px">${t.id}</div>
+    return `<div onclick="cerrarSearch();openTurnoDetailById('${esc(t.id)}')" style="padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--border-light);transition:background .1s" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
+      <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:800;color:${color};min-width:52px">${esc(t.id)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.patient}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${t.service} · Doc. ****${t.doc}</div>
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.patient)}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${esc(t.service)} · Doc. ****${esc(t.doc)}</div>
       </div>
-      <div style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${bb};color:${bc};white-space:nowrap">${t.estado}</div>
+      <div style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${bb};color:${bc};white-space:nowrap">${esc(t.estado)}</div>
     </div>`;
   }).join('');
 }
@@ -4763,7 +4936,74 @@ function calcEstimatedWait() {
 
 // ── INIT ──────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  TTS.init();
+  try {
+    console.log('NeuroTurn v2.2 iniciando...');
+    
+    // 1. Mostrar auth screen por defecto
+    const authScreen = document.getElementById('auth-screen');
+    const appDiv = document.getElementById('app');
+    
+    if (authScreen) {
+      authScreen.style.display = 'flex';
+      console.log('✅ Auth screen visible');
+    }
+    
+    if (appDiv) {
+      appDiv.style.display = 'none';
+      console.log('✅ App hidden');
+    }
+    
+    // 2. Inicializar TTS
+    try {
+      if (window.TTS && window.TTS.init) {
+        TTS.init();
+        console.log('✅ TTS initialized');
+      }
+    } catch (e) {
+      console.warn('TTS init skipped:', e.message);
+    }
+    
+    // 3. Setup listeners
+    try {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const registro = document.getElementById('registro-overlay');
+          if (registro && registro.classList.contains('open')) {
+            registro.classList.remove('open');
+          }
+        }
+      });
+      console.log('✅ Keyboard listeners ready');
+    } catch (e) {
+      console.warn('Listeners setup error:', e.message);
+    }
+    
+    // 4. Restaurar sesión si existe token
+    try {
+      const token = getToken && getToken();
+      if (token) {
+        console.log('Token encontrado, verificando...');
+        if (window.API && window.API.get) {
+          API.get('/api/auth/me')
+            .then(res => {
+              if (res && (res.usuario || res.user)) {
+                console.log('✅ Sesión válida');
+                if (window.onLoginSuccess) {
+                  onLoginSuccess();
+                }
+              }
+            })
+            .catch(e => console.warn('Token inválido:', e.message));
+        }
+      }
+    } catch (e) {
+      console.warn('Session restore skipped:', e.message);
+    }
+    
+    console.log('✅ Inicialización completada');
+  } catch (e) {
+    console.error('❌ Error en inicialización:', e.message, e);
+  }
 });
 </script>
 </body>

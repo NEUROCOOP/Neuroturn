@@ -68,48 +68,58 @@ try {
 /* ═══════════════════════════════════════════════════════════════════
    4. CONSTANTES DE CONFIGURACIÓN
 ═══════════════════════════════════════════════════════════════════ */
-const PORT       = parseInt(process.env.PORT || '3002', 10);
+const PORT       = parseInt(process.env.PORT || '3001', 10);
 const HOST       = '0.0.0.0';   // acepta conexiones desde CUALQUIER PC de la red
-const DB_SERVER  = process.env.DB_SERVER || String.raw`(localdb)\PANACEA-DIDACTI`;
+let   DB_SERVER  = process.env.DB_SERVER || 'localhost';
+const DB_PORT    = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 1433;
+const DB_USER    = process.env.DB_USER || '';
+const DB_PASS    = process.env.DB_PASS || '';
 const DB_NAME    = process.env.DB_NAME   || 'Neuroturn';
+
+// Reemplazar notación Windows .\INSTANCIA a formato NodeJS compatible
+if (DB_SERVER.startsWith('.\\')) {
+  DB_SERVER = 'localhost\\' + DB_SERVER.substring(2);
+}
 const JWT_SECRET = process.env.JWT_SECRET
   || 'nt_dev_' + crypto.randomBytes(24).toString('hex');
 const JWT_EXPIRY = '10h';
 
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️  JWT_SECRET no configurado en .env — se usa clave temporal. Las sesiones se invalidan al reiniciar.');
+} else if (process.env.JWT_SECRET.length < 32) {
+  console.warn('⚠️  JWT_SECRET demasiado corto (mínimo 32 caracteres recomendado).');
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    5. SQL SERVER — CONFIGURACIÓN
    ─────────────────────────────────────────────────────────────────
-   LocalDB requiere el driver nativo msnodesqlv8.
-   Si no está disponible, intentamos con tedious (driver JS puro).
+   Soporta SQL authentication (user+pass) para SQL Server Express
 ═══════════════════════════════════════════════════════════════════ */
 function construirConfigDB(driver) {
-  if (driver === 'msnodesqlv8') {
-    /* msnodesqlv8 — driver nativo Windows para SQL Server LocalDB */
-    return {
-      server:   DB_SERVER,
-      database: DB_NAME,
-      driver:   'msnodesqlv8',
-      options: {
-        trustedConnection:      true,
-        trustServerCertificate: true,
-        enableArithAbort:       true,
-      },
-      pool: { max: 10, min: 0, idleTimeoutMillis: 30000 },
-      requestTimeout: 20000,
-    };
-  }
-  /* tedious — driver JS puro, funciona también con SQL Express en red */
-  return {
-    server:   DB_SERVER,
-    database: DB_NAME,
+  const cfg = {
+    server:      DB_SERVER,
+    port:        DB_PORT,
+    database:    DB_NAME,
     options: {
-      trustedConnection:      true,
       trustServerCertificate: true,
+      encrypt:                false,
       enableArithAbort:       true,
     },
     pool: { max: 10, min: 0, idleTimeoutMillis: 30000 },
     requestTimeout: 20000,
   };
+
+  // Si hay credenciales, usar SQL authentication
+  if (DB_USER && DB_PASS) {
+    cfg.user     = DB_USER;
+    cfg.password = DB_PASS;
+    cfg.options.trustedConnection = false;
+  } else {
+    // Si no, usar Windows authentication
+    cfg.options.trustedConnection = true;
+  }
+
+  return cfg;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -263,7 +273,14 @@ async function dbQ(queryStr, params) {
     for (const [k, v] of Object.entries(params)) {
       if (v === null || v === undefined)    req.input(k, sql.NVarChar,  null);
       else if (typeof v === 'bigint')       req.input(k, sql.BigInt,    v);
-      else if (Number.isInteger(v))         req.input(k, sql.Int,       v);
+      else if (Number.isInteger(v)) {
+        // Si el número excede el rango de INT, usar BigInt (para timestamps)
+        if (v > 2147483647 || v < -2147483648) {
+          req.input(k, sql.BigInt, v);
+        } else {
+          req.input(k, sql.Int, v);
+        }
+      }
       else if (typeof v === 'boolean')      req.input(k, sql.Bit,       v ? 1 : 0);
       else                                  req.input(k, sql.NVarChar,  String(v));
     }
@@ -275,6 +292,35 @@ async function dbQ(queryStr, params) {
    9. MODO MEMORIA  (fallback sin BD)
 ═══════════════════════════════════════════════════════════════════ */
 const mem = { usuarios: [], turnos: [], contador: 100 };
+
+// Inicializar usuarios de prueba si no hay base de datos
+async function inicializarMemoria() {
+  if (mem.usuarios.length === 0 && bcrypt) {
+    const usuariosPrueba = [
+      { nombre: 'Administrador', username: 'admin', password: 'admin123', rol: 'Administrador', modulo: 'Módulo 01' },
+      { nombre: 'Dr. Juan García', username: 'juangarcia', password: 'medico123', rol: 'Médico', modulo: 'Módulo 01' },
+      { nombre: 'Enfermera María López', username: 'marialopez', password: 'enfermera123', rol: 'Enfermero', modulo: 'Módulo 02' },
+      { nombre: 'Recepcionista Carlos', username: 'carlos', password: 'recepcion123', rol: 'Recepcionista', modulo: 'Sin módulo' },
+    ];
+    
+    for (let i = 0; i < usuariosPrueba.length; i++) {
+      const u = usuariosPrueba[i];
+      const hash = await bcrypt.hash(u.password, 12);
+      const color = '#' + crypto.randomBytes(3).toString('hex');
+      mem.usuarios.push({
+        id: i + 1,
+        nombre: u.nombre,
+        username: u.username,
+        password_hash: hash,
+        rol: u.rol,
+        modulo: u.modulo,
+        activo: true,
+        color
+      });
+    }
+    console.log(`✅ ${mem.usuarios.length} usuarios de prueba creados en memoria`);
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    10. CONTADOR ATÓMICO DE TURNOS
@@ -297,8 +343,11 @@ async function siguienteNumero() {
 ═══════════════════════════════════════════════════════════════════ */
 const clientesSSE = new Set();
 
+/* Reemplazador para serializar BigInt (mssql v10 devuelve BIGINT como BigInt JS) */
+const bigIntReplacer = (_, v) => typeof v === 'bigint' ? Number(v) : v;
+
 function emitir(tipo, datos) {
-  const msg = `data: ${JSON.stringify({ tipo, ...datos })}\n\n`;
+  const msg = `data: ${JSON.stringify({ tipo, ...datos }, bigIntReplacer)}\n\n`;
   for (const res of clientesSSE) {
     try { res.write(msg); } catch (_) { clientesSSE.delete(res); }
   }
@@ -335,7 +384,7 @@ const CORS = {
 
 const json = (res, status, data) => {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache', ...CORS });
-  res.end(JSON.stringify(data));
+  res.end(JSON.stringify(data, bigIntReplacer));
 };
 
 /* MIME types para archivos estáticos */
@@ -350,12 +399,18 @@ function servirEstatico(res, pathname) {
   const bases = [path.join(__dirname, 'public'), __dirname];
   let fp = null;
   for (const base of bases) {
-    const candidato = path.join(base, pathname === '/' ? 'index.html' : pathname);
-    if (fs.existsSync(candidato) && fs.statSync(candidato).isFile()) { fp = candidato; break; }
+    const file    = (pathname === '/' ? 'index.html' : pathname).replace(/^[\/\\]+/, '');
+    const resolved = path.resolve(path.join(base, file));
+    const baseAbs  = path.resolve(base);
+    // Security: resolved path must stay inside the base directory
+    if (!resolved.startsWith(baseAbs + path.sep) && resolved !== baseAbs) continue;
+    // Security: from __dirname root, only serve index.html (never expose server code / .env / schema)
+    if (base === __dirname && path.basename(resolved) !== 'index.html') continue;
+    if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) { fp = resolved; break; }
   }
   if (!fp) {
     for (const base of bases) {
-      const idx = path.join(base, 'index.html');
+      const idx = path.resolve(path.join(base, 'index.html'));
       if (fs.existsSync(idx)) { fp = idx; break; }
     }
   }
@@ -405,9 +460,8 @@ async function manejar(req, res) {
     return;
   }
 
-  /* Archivos estáticos — prevenir path traversal */
-  const safeRuta = '/' + ruta.replace(/\.\./g, '').replace(/^\/+/, '');
-  servirEstatico(res, safeRuta);
+  /* Archivos estáticos — path traversal handled inside servirEstatico via path.resolve */
+  servirEstatico(res, ruta);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -441,6 +495,7 @@ async function routerAPI(req, res, ruta, metodo, qp) {
   /* Datos de referencia */
   if (ruta === '/api/servicios' && metodo === 'GET') { await getServicios(res); return; }
   if (ruta === '/api/modulos'   && metodo === 'GET') { await getModulos(res);   return; }
+  if (ruta === '/api/usuarios'  && metodo === 'GET') { await getUsuarios(res);  return; }
   if (ruta === '/api/dashboard' && metodo === 'GET') { await getDashboard(res); return; }
   if (ruta === '/api/historial' && metodo === 'GET') { await getHistorial(res, qp); return; }
 
@@ -546,44 +601,49 @@ async function getTurnos(res) {
    19. TURNOS — CREAR
 ═══════════════════════════════════════════════════════════════════ */
 async function crearTurno(req, res, usuario) {
-  const b = await leerBody(req);
-  const { paciente, documento, servicio } = b;
+  try {
+    const b = await leerBody(req);
+    const { paciente, documento, servicio } = b;
 
-  if (!paciente?.trim()) return json(res, 400, { error: 'Nombre del paciente es obligatorio.' });
-  if (!servicio?.trim()) return json(res, 400, { error: 'Servicio es obligatorio.' });
+    if (!paciente?.trim()) return json(res, 400, { error: 'Nombre del paciente es obligatorio.' });
+    if (!servicio?.trim()) return json(res, 400, { error: 'Servicio es obligatorio.' });
 
-  let prefijo = 'T';
-  if (dbReady) {
-    const r = await dbQ(`SELECT prefijo FROM servicios WHERE nombre = @n`, { n: servicio });
-    if (r.recordset.length) prefijo = r.recordset[0].prefijo;
-  } else {
-    const P = { Neurología:'N', Psiquiatría:'P', Kinesiología:'K', General:'G', Laboratorio:'L' };
-    prefijo = P[servicio] || 'T';
-  }
+    let prefijo = 'T';
+    if (dbReady) {
+      const r = await dbQ(`SELECT prefijo FROM servicios WHERE nombre = @n`, { n: servicio });
+      if (r.recordset.length) prefijo = r.recordset[0].prefijo;
+    } else {
+      const P = { Neurología:'N', Psiquiatría:'P', Kinesiología:'K', General:'G', Laboratorio:'L' };
+      prefijo = P[servicio] || 'T';
+    }
 
-  const num    = await siguienteNumero();
-  const codigo = `${prefijo}-${num}`;
-  const ts     = Date.now();
+    const num    = await siguienteNumero();
+    const codigo = `${prefijo}-${num}`;
+    const ts     = Date.now();
 
-  if (dbReady) {
-    const ins = await dbQ(`
-      INSERT INTO turnos (codigo, paciente, documento, servicio, ts_creado)
-      OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.documento,
-             INSERTED.servicio, INSERTED.modulo, INSERTED.estado, INSERTED.ts_creado
-      VALUES (@codigo, @paciente, @doc, @servicio, @ts)
-    `, { codigo, paciente: paciente.trim(), doc: documento?.trim() || null, servicio, ts });
+    if (dbReady) {
+      const ins = await dbQ(`
+        INSERT INTO turnos (codigo, paciente, documento, servicio, ts_creado)
+        OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.documento,
+               INSERTED.servicio, INSERTED.modulo, INSERTED.estado, INSERTED.ts_creado
+        VALUES (@codigo, @paciente, @doc, @servicio, @ts)
+      `, { codigo, paciente: paciente.trim(), doc: documento?.trim() || null, servicio, ts });
 
-    const t = ins.recordset[0];
+      const t = ins.recordset[0];
+      emitir('turno_nuevo', { turno: t });
+      return json(res, 201, { ok: true, turno: t });
+    }
+
+    const t = { id: mem.turnos.length + 1, codigo, paciente: paciente.trim(), documento: documento || null,
+                servicio, modulo: '-', estado: 'En fila', atendido_por: null, nota: null,
+                llamadas: 0, ts_creado: ts, ts_llamado: null, ts_atendido: null, ts_fin: null };
+    mem.turnos.push(t);
     emitir('turno_nuevo', { turno: t });
     return json(res, 201, { ok: true, turno: t });
+  } catch(e) {
+    console.error('[crearTurno]', e.message);
+    return json(res, 500, { error: 'Error al crear turno: ' + e.message });
   }
-
-  const t = { id: mem.turnos.length + 1, codigo, paciente: paciente.trim(), documento: documento || null,
-              servicio, modulo: '-', estado: 'En fila', atendido_por: null, nota: null,
-              llamadas: 0, ts_creado: ts, ts_llamado: null, ts_atendido: null, ts_fin: null };
-  mem.turnos.push(t);
-  emitir('turno_nuevo', { turno: t });
-  return json(res, 201, { ok: true, turno: t });
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -607,6 +667,11 @@ async function actualizarTurno(req, res, id, usuario) {
     if (estado === 'Atendiendo') {
       sets.push('ts_atendido = @ahora'); p.ahora = ahora;
       if (!p.op) { sets.push('atendido_por = @op'); p.op = usuario.nombre; }
+      // Asignar módulo del operador si aún no tiene uno asignado, o si se envía explícitamente
+      if (modulo) { sets.push('modulo = @modulo'); p.modulo = modulo; }
+      else if (usuario.modulo && usuario.modulo !== 'Sin módulo') {
+        sets.push('modulo = @modulo'); p.modulo = usuario.modulo;
+      }
     }
     if (['Finalizado','Cancelado','No atendido'].includes(estado)) {
       sets.push('ts_fin = @ahora'); p.ahora = ahora;
@@ -619,9 +684,9 @@ async function actualizarTurno(req, res, id, usuario) {
   if (dbReady) {
     const r = await dbQ(`
       UPDATE turnos SET ${sets.join(', ')}
-      OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.servicio,
+      OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.documento, INSERTED.servicio,
              INSERTED.estado, INSERTED.modulo, INSERTED.atendido_por,
-             INSERTED.ts_llamado, INSERTED.ts_atendido, INSERTED.ts_fin, INSERTED.nota
+             INSERTED.ts_creado, INSERTED.ts_llamado, INSERTED.ts_atendido, INSERTED.ts_fin, INSERTED.nota
       WHERE id = @id
     `, p);
     if (!r.recordset.length) return json(res, 404, { error: 'Turno no encontrado.' });
@@ -663,8 +728,9 @@ async function siguienteTurno(res, usuario) {
       UPDATE turnos
       SET    estado='Llamando', ts_llamado=@ahora, modulo=@mod,
              atendido_por=@op, llamadas=llamadas+1
-      OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.servicio,
-             INSERTED.estado, INSERTED.modulo, INSERTED.atendido_por, INSERTED.ts_llamado
+      OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.documento, INSERTED.servicio,
+             INSERTED.estado, INSERTED.modulo, INSERTED.atendido_por,
+             INSERTED.ts_creado, INSERTED.ts_llamado
       WHERE  id = @id
     `, { ahora, mod: modOp, op: usuario.nombre, id });
 
@@ -706,6 +772,23 @@ async function getModulos(res) {
     return json(res, 200, { ok: true, modulos: r.recordset });
   }
   json(res, 200, { ok: true, modulos: [] });
+}
+
+async function getUsuarios(res) {
+  if (dbReady) {
+    const r = await dbQ(`SELECT id, nombre, username, rol, modulo, color, activo FROM usuarios WHERE activo=1 ORDER BY nombre`);
+    return json(res, 200, { ok: true, usuarios: r.recordset });
+  }
+  const activos = mem.usuarios.filter(u => u.activo).map(u => ({
+    id: u.id,
+    nombre: u.nombre,
+    username: u.username,
+    rol: u.rol,
+    modulo: u.modulo,
+    color: u.color,
+    activo: u.activo
+  }));
+  json(res, 200, { ok: true, usuarios: activos });
 }
 
 async function getDashboard(res) {
@@ -778,6 +861,7 @@ async function arrancar() {
   console.log('└────────────────────────────────────────────────────────────┘');
 
   await conectarDB();
+  await inicializarMemoria();
 
   servidor.listen(PORT, HOST, () => {
     const ips      = ipsLocales();
@@ -814,10 +898,13 @@ servidor.on('error', err => {
   process.exit(1);
 });
 
-process.on('SIGINT', async () => {
+process.on('SIGINT',  cerrar);
+process.on('SIGTERM', cerrar);
+
+async function cerrar() {
   console.log('\n🛑  Cerrando...');
   try { if (pool) await pool.close(); } catch (_) {}
   process.exit(0);
-});
+}
 
 process.on('unhandledRejection', reason => console.error('[UnhandledRejection]', reason));

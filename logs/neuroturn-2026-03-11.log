@@ -1,0 +1,247 @@
+[2026-03-11T20:58:16.509Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T20:58:16.513Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T20:58:16.514Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T20:58:16.939Z] [INFO ] Probando driver SQL Server: msnodesqlv8
+[2026-03-11T20:58:31.955Z] [WARN ] Driver msnodesqlv8 falló | {"error":"Failed to connect to localhost\\SQLEXPRESS in 15000ms"}
+[2026-03-11T20:58:31.956Z] [INFO ] Probando driver SQL Server: tedious
+[2026-03-11T20:58:36.491Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T20:58:36.493Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T20:58:36.494Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T20:58:36.545Z] [INFO ] Probando driver SQL Server: msnodesqlv8
+[2026-03-11T20:58:46.958Z] [WARN ] Driver tedious falló | {"error":"Failed to connect to localhost\\SQLEXPRESS in 15000ms"}
+[2026-03-11T20:58:46.959Z] [WARN ] ⚠️  No se pudo conectar a SQL Server. Iniciando en MODO MEMORIA
+[2026-03-11T20:58:46.967Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T20:58:46.968Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T20:58:46.968Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T20:58:46.969Z] [INFO ] BD:       ⚠️  Sin BD (modo memoria)
+[2026-03-11T20:58:46.969Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T20:58:46.970Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T20:58:46.971Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T20:58:46.971Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T20:58:46.972Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T20:58:51.557Z] [WARN ] Driver msnodesqlv8 falló | {"error":"Failed to connect to localhost\\SQLEXPRESS in 15000ms"}
+[2026-03-11T20:58:51.558Z] [INFO ] Probando driver SQL Server: tedious
+[2026-03-11T20:58:58.796Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T20:58:58.799Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T20:58:58.800Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T20:58:58.832Z] [INFO ] Probando driver SQL Server: msnodesqlv8
+[2026-03-11T20:59:06.560Z] [WARN ] Driver tedious falló | {"error":"Failed to connect to localhost\\SQLEXPRESS in 15000ms"}
+[2026-03-11T20:59:06.561Z] [WARN ] ⚠️  No se pudo conectar a SQL Server. Iniciando en MODO MEMORIA
+[2026-03-11T20:59:06.564Z] [ERROR] Puerto 3001 en uso
+[2026-03-11T20:59:13.840Z] [WARN ] Driver msnodesqlv8 falló | {"error":"Failed to connect to localhost\\SQLEXPRESS in 15000ms"}
+[2026-03-11T20:59:13.842Z] [INFO ] Probando driver SQL Server: tedious
+[2026-03-11T20:59:28.845Z] [WARN ] Driver tedious falló | {"error":"Failed to connect to localhost\\SQLEXPRESS in 15000ms"}
+[2026-03-11T20:59:28.846Z] [WARN ] ⚠️  No se pudo conectar a SQL Server. Iniciando en MODO MEMORIA
+[2026-03-11T20:59:28.849Z] [ERROR] Puerto 3001 en uso
+[2026-03-11T21:01:23.352Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:01:23.355Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:01:23.356Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:01:23.393Z] [INFO ] Probando driver SQL Server: msnodesqlv8
+[2026-03-11T21:01:38.483Z] [WARN ] Driver msnodesqlv8 falló | {"error":"Failed to connect to localhost\\SQLEXPRESS in 15000ms"}
+[2026-03-11T21:01:38.485Z] [INFO ] Probando driver SQL Server: tedious
+[2026-03-11T21:01:53.488Z] [WARN ] Driver tedious falló | {"error":"Failed to connect to localhost\\SQLEXPRESS in 15000ms"}
+[2026-03-11T21:01:53.489Z] [WARN ] ⚠️  No se pudo conectar a SQL Server. Iniciando en MODO MEMORIA
+[2026-03-11T21:01:53.498Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:01:53.499Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:01:53.500Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:01:53.502Z] [INFO ] BD:       ⚠️  Sin BD (modo memoria)
+[2026-03-11T21:01:53.503Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:01:53.504Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:01:53.505Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:01:53.506Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:01:53.507Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:04:46.345Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:04:46.347Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:04:46.348Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:04:46.381Z] [INFO ] Probando driver SQL Server: msnodesqlv8
+[2026-03-11T21:04:46.413Z] [WARN ] Driver msnodesqlv8 falló | {"error":"Failed to connect to localhost:1433 - Could not connect (sequence)"}
+[2026-03-11T21:04:46.414Z] [INFO ] Probando driver SQL Server: tedious
+[2026-03-11T21:04:46.417Z] [WARN ] Driver tedious falló | {"error":"Failed to connect to localhost:1433 - Could not connect (sequence)"}
+[2026-03-11T21:04:46.418Z] [WARN ] ⚠️  No se pudo conectar a SQL Server. Iniciando en MODO MEMORIA
+[2026-03-11T21:04:46.427Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:04:46.429Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:04:46.429Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:04:46.430Z] [INFO ] BD:       ⚠️  Sin BD (modo memoria)
+[2026-03-11T21:04:46.431Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:04:46.432Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:04:46.432Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:04:46.433Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:04:46.434Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:06:15.921Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:06:15.923Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:06:15.924Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:06:15.959Z] [INFO ] Probando driver SQL Server: msnodesqlv8
+[2026-03-11T21:06:15.992Z] [WARN ] Driver msnodesqlv8 falló | {"error":"Failed to connect to localhost:1433 - Could not connect (sequence)"}
+[2026-03-11T21:06:15.994Z] [INFO ] Probando driver SQL Server: tedious
+[2026-03-11T21:06:16.002Z] [WARN ] Driver tedious falló | {"error":"Failed to connect to localhost:1433 - Could not connect (sequence)"}
+[2026-03-11T21:06:16.003Z] [WARN ] ⚠️  No se pudo conectar a SQL Server. Iniciando en MODO MEMORIA
+[2026-03-11T21:06:16.014Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:06:16.015Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:06:16.015Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:06:16.016Z] [INFO ] BD:       ⚠️  Sin BD (modo memoria)
+[2026-03-11T21:06:16.017Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:06:16.018Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:06:16.018Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:06:16.019Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:06:16.020Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:11:16.047Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:11:16.049Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:11:16.050Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:11:16.051Z] [INFO ] Intentando conectar a SQL Server...
+[2026-03-11T21:11:16.051Z] [INFO ] Servidor: localhost:1433, BD: Neuroturn, Usuario: sa
+[2026-03-11T21:11:16.110Z] [INFO ] ✅ SQL Server conectado | {"server":"localhost","database":"Neuroturn"}
+[2026-03-11T21:11:16.352Z] [INFO ] ✅ Esquema BD verificado/creado
+[2026-03-11T21:11:16.360Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:11:16.360Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:11:16.362Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:11:16.363Z] [INFO ] BD:       ✅ SQL Server (localhost / Neuroturn)
+[2026-03-11T21:11:16.364Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:11:16.364Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:11:16.365Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:11:16.366Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:11:16.366Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:11:59.682Z] [WARN ] Acceso no autorizado | {"ruta":"/api/auth/register","ip":"127.0.0.1"}
+[2026-03-11T21:11:59.852Z] [WARN ] Acceso no autorizado | {"ruta":"/api/auth/register","ip":"127.0.0.1"}
+[2026-03-11T21:11:59.870Z] [WARN ] Acceso no autorizado | {"ruta":"/api/auth/register","ip":"127.0.0.1"}
+[2026-03-11T21:26:07.931Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:26:07.935Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:26:07.936Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:26:07.936Z] [INFO ] Intentando conectar a SQL Server...
+[2026-03-11T21:26:07.937Z] [INFO ] Servidor: localhost:1433, BD: Neuroturn, Usuario: sa
+[2026-03-11T21:26:07.994Z] [INFO ] ✅ SQL Server conectado | {"server":"localhost","database":"Neuroturn"}
+[2026-03-11T21:26:08.042Z] [ERROR] Error inicializando esquema | {"error":"The operation failed because an index or statistics with name 'idx_turnos_ts_creado' already exists on table 'turnos'."}
+[2026-03-11T21:26:08.050Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:26:08.051Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:26:08.052Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:26:08.054Z] [INFO ] BD:       ✅ SQL Server (localhost / Neuroturn)
+[2026-03-11T21:26:08.054Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:26:08.055Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:26:08.056Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:26:08.056Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:26:08.057Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:31:17.759Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:31:17.762Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:31:17.763Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:31:17.764Z] [INFO ] Intentando conectar a SQL Server...
+[2026-03-11T21:31:17.764Z] [INFO ] Servidor: localhost:1433, BD: Neuroturn, Usuario: sa
+[2026-03-11T21:31:17.825Z] [INFO ] ✅ SQL Server conectado | {"server":"localhost","database":"Neuroturn"}
+[2026-03-11T21:31:17.870Z] [ERROR] Error inicializando esquema | {"error":"The operation failed because an index or statistics with name 'idx_turnos_ts_creado' already exists on table 'turnos'."}
+[2026-03-11T21:31:17.878Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:31:17.879Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:31:17.880Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:31:17.881Z] [INFO ] BD:       ✅ SQL Server (localhost / Neuroturn)
+[2026-03-11T21:31:17.882Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:31:17.882Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:31:17.883Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:31:17.884Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:31:17.885Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:34:55.788Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:34:55.790Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:34:55.791Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:34:55.792Z] [INFO ] Intentando conectar a SQL Server...
+[2026-03-11T21:34:55.793Z] [INFO ] Servidor: localhost:1433, BD: Neuroturn, Usuario: sa
+[2026-03-11T21:34:55.852Z] [INFO ] ✅ SQL Server conectado | {"server":"localhost","database":"Neuroturn"}
+[2026-03-11T21:34:55.889Z] [ERROR] Error inicializando esquema | {"error":"The operation failed because an index or statistics with name 'idx_turnos_ts_creado' already exists on table 'turnos'."}
+[2026-03-11T21:34:55.897Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:34:55.898Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:34:55.899Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:34:55.900Z] [INFO ] BD:       ✅ SQL Server (localhost / Neuroturn)
+[2026-03-11T21:34:55.900Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:34:55.901Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:34:55.902Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:34:55.903Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:34:55.904Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:50:19.646Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:50:19.649Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:50:19.650Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:50:19.650Z] [INFO ] Intentando conectar a SQL Server...
+[2026-03-11T21:50:19.651Z] [INFO ] Servidor: localhost:1433, BD: Neuroturn, Usuario: sa
+[2026-03-11T21:50:19.710Z] [INFO ] ✅ SQL Server conectado | {"server":"localhost","database":"Neuroturn"}
+[2026-03-11T21:50:19.745Z] [ERROR] Error inicializando esquema | {"error":"The operation failed because an index or statistics with name 'idx_turnos_ts_creado' already exists on table 'turnos'."}
+[2026-03-11T21:50:19.755Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:50:19.756Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:50:19.758Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:50:19.759Z] [INFO ] BD:       ✅ SQL Server (localhost / Neuroturn)
+[2026-03-11T21:50:19.759Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:50:19.760Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:50:19.761Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:50:19.761Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:50:19.762Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:51:52.270Z] [WARN ] Intento de login fallido | {"username":"admin","ip":"127.0.0.1","razon":"usuario_no_existe"}
+[2026-03-11T21:51:53.369Z] [WARN ] Intento de login fallido | {"username":"admin","ip":"127.0.0.1","razon":"usuario_no_existe"}
+[2026-03-11T21:52:18.855Z] [INFO ] Nuevo usuario registrado | {"username":"ddap","rol":"Administrador","ip":"127.0.0.1"}
+[2026-03-11T21:52:30.507Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"127.0.0.1"}
+[2026-03-11T21:52:47.991Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"127.0.0.1"}
+[2026-03-11T21:52:49.291Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"127.0.0.1"}
+[2026-03-11T21:54:54.554Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T21:54:54.556Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T21:54:54.557Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:54:54.557Z] [INFO ] Intentando conectar a SQL Server...
+[2026-03-11T21:54:54.558Z] [INFO ] Servidor: localhost:1433, BD: Neuroturn, Usuario: sa
+[2026-03-11T21:54:54.637Z] [INFO ] ✅ SQL Server conectado | {"server":"localhost","database":"Neuroturn"}
+[2026-03-11T21:54:54.672Z] [ERROR] Error inicializando esquema | {"error":"The operation failed because an index or statistics with name 'idx_turnos_ts_creado' already exists on table 'turnos'."}
+[2026-03-11T21:54:54.680Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:54:54.681Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T21:54:54.682Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:54:54.683Z] [INFO ] BD:       ✅ SQL Server (localhost / Neuroturn)
+[2026-03-11T21:54:54.684Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T21:54:54.684Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T21:54:54.685Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T21:54:54.686Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T21:54:54.687Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T21:55:32.452Z] [WARN ] Acceso no autorizado | {"ruta":"/api/turnos","ip":"127.0.0.1"}
+[2026-03-11T21:57:43.928Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"192.168.2.13"}
+[2026-03-11T21:57:54.634Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T21:57:55.417Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:00:16.905Z] [WARN ] Intento de login fallido - contraseña incorrecta | {"username":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:00:19.236Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"192.168.2.13"}
+[2026-03-11T22:00:35.067Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:00:42.467Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:00:50.533Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:07:50.366Z] [WARN ] Intento de login fallido | {"username":"dan@gmail.com","ip":"127.0.0.1","razon":"usuario_no_existe"}
+[2026-03-11T22:07:56.146Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"127.0.0.1"}
+[2026-03-11T22:08:58.816Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"192.168.2.13"}
+[2026-03-11T22:09:11.390Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:09:13.656Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:09:15.723Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:09:17.123Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:09:19.065Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-11T22:14:22.604Z] [WARN ] Acceso no autorizado | {"ruta":"/api/turnos","ip":"192.168.2.13"}
+[2026-03-11T22:16:41.180Z] [WARN ] Acceso no autorizado | {"ruta":"/api/turnos","ip":"192.168.2.13"}
+[2026-03-11T22:20:59.680Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"127.0.0.1"}
+[2026-03-11T22:21:16.337Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"127.0.0.1"}
+[2026-03-11T22:21:28.822Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"127.0.0.1"}
+[2026-03-11T22:32:50.018Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T22:32:50.021Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T22:32:50.021Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T22:32:50.023Z] [INFO ] Intentando conectar a SQL Server...
+[2026-03-11T22:32:50.023Z] [INFO ] Servidor: localhost:1433, BD: Neuroturn, Usuario: sa
+[2026-03-11T22:32:50.081Z] [INFO ] ✅ SQL Server conectado | {"server":"localhost","database":"Neuroturn"}
+[2026-03-11T22:32:50.117Z] [ERROR] Error inicializando esquema | {"error":"The operation failed because an index or statistics with name 'idx_turnos_ts_creado' already exists on table 'turnos'."}
+[2026-03-11T22:32:50.124Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T22:32:50.125Z] [INFO ]    NeuroTurn v2.2 — SERVIDOR INICIADO
+[2026-03-11T22:32:50.126Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T22:32:50.127Z] [INFO ] BD:       ✅ SQL Server (localhost / Neuroturn)
+[2026-03-11T22:32:50.129Z] [INFO ] Local:    http://localhost:3001
+[2026-03-11T22:32:50.129Z] [INFO ] Red:      http://172.30.96.1:3001  ← Compartir con clientes
+[2026-03-11T22:32:50.130Z] [INFO ] Red:      http://192.168.2.3:3001  ← Compartir con clientes
+[2026-03-11T22:32:50.130Z] [INFO ] Logs:     C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod\logs
+[2026-03-11T22:32:50.131Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T22:32:51.956Z] [INFO ] ══════════════════════════════════════════════════════════
+[2026-03-11T22:32:51.958Z] [INFO ]    NeuroTurn v2.2 — Iniciando servidor...
+[2026-03-11T22:32:51.959Z] [INFO ] ═══════════════════════════════════════════════════════════
+[2026-03-11T22:32:51.959Z] [INFO ] Intentando conectar a SQL Server...
+[2026-03-11T22:32:51.960Z] [INFO ] Servidor: localhost:1433, BD: Neuroturn, Usuario: sa
+[2026-03-11T22:32:52.016Z] [INFO ] ✅ SQL Server conectado | {"server":"localhost","database":"Neuroturn"}
+[2026-03-11T22:32:52.050Z] [ERROR] Error inicializando esquema | {"error":"The operation failed because an index or statistics with name 'idx_turnos_ts_creado' already exists on table 'turnos'."}
+[2026-03-11T22:32:52.053Z] [ERROR] Puerto 3001 en uso
+[2026-03-12T12:33:37.894Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"192.168.2.13"}
+[2026-03-12T12:33:49.613Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"192.168.2.13"}
+[2026-03-12T12:40:44.866Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"127.0.0.1"}
+[2026-03-12T12:40:45.178Z] [WARN ] Ruta API no encontrada | {"ruta":"/api/usuarios","metodo":"GET","ip":"127.0.0.1"}
+[2026-03-12T12:40:56.015Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"127.0.0.1"}
+[2026-03-12T12:42:43.293Z] [INFO ] Login exitoso | {"username":"ddap","rol":"Administrador","ip":"127.0.0.1"}
+[2026-03-12T12:42:43.314Z] [WARN ] Ruta API no encontrada | {"ruta":"/api/usuarios","metodo":"GET","ip":"127.0.0.1"}
+[2026-03-12T12:42:53.951Z] [WARN ] Acceso no autorizado | {"ruta":"/api/usuarios","ip":"127.0.0.1"}
+[2026-03-12T12:43:02.666Z] [ERROR] Error creando turno | {"error":"Validation failed for parameter 'ts'. Value must be between -2147483648 and 2147483647, inclusive.","usuario":"ddap","ip":"127.0.0.1"}
+[2026-03-12T12:43:16.758Z] [INFO ] 🛑 Cerrando servidor...
