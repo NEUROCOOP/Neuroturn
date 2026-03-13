@@ -45,9 +45,10 @@ CREATE TABLE turnos (
   documento    NVARCHAR(30)  NULL,
   servicio     NVARCHAR(80)  NULL,
   modulo       NVARCHAR(80)  NOT NULL DEFAULT '-',
-  estado       NVARCHAR(30)  NOT NULL DEFAULT 'En fila',
-  atendido_por NVARCHAR(120) NULL,
-  nota         NVARCHAR(500) NULL,
+  estado         NVARCHAR(30)  NOT NULL DEFAULT 'En fila',
+  atendido_por   NVARCHAR(120) NULL,
+  registrado_por NVARCHAR(120) NULL,
+  nota           NVARCHAR(500) NULL,
   llamadas     INT           NOT NULL DEFAULT 0,
   ts_creado    BIGINT        NOT NULL,
   ts_llamado   BIGINT        NULL,
@@ -86,3 +87,14 @@ INSERT INTO modulos (nombre, servicio) VALUES
 -- Contador de turnos
 IF NOT EXISTS (SELECT 1 FROM config WHERE clave='contador')
 INSERT INTO config VALUES ('contador', '100');
+
+-- Tabla historial_turnos (auditoría de acciones)
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='historial_turnos' AND xtype='U')
+CREATE TABLE historial_turnos (
+  id           INT IDENTITY(1,1) PRIMARY KEY,
+  turno_id     INT           NOT NULL,
+  turno_codigo NVARCHAR(20)  NOT NULL,
+  accion       NVARCHAR(20)  NOT NULL,   -- CREADO | LLAMADO | ATENDIDO | FINALIZADO | CANCELADO
+  usuario      NVARCHAR(120) NULL,
+  ts           BIGINT        NOT NULL
+);

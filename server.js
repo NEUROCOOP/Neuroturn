@@ -83,6 +83,7 @@ if (DB_SERVER.startsWith('.\\')) {
 const JWT_SECRET = process.env.JWT_SECRET
   || 'nt_dev_' + crypto.randomBytes(24).toString('hex');
 const JWT_EXPIRY = '10h';
+const ADMIN_REGISTER_KEY = process.env.ADMIN_REGISTER_KEY || '';
 
 if (!process.env.JWT_SECRET) {
   console.warn('⚠️  JWT_SECRET no configurado en .env — se usa clave temporal. Las sesiones se invalidan al reiniciar.');
@@ -228,6 +229,24 @@ async function inicializarEsquema() {
     CREATE TABLE config (
       clave NVARCHAR(60)  PRIMARY KEY,
       valor NVARCHAR(500) NOT NULL
+    );
+  `);
+
+  /* Migración: agregar columnas nuevas si no existen */
+  await r.query(`
+    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('turnos') AND name='registrado_por')
+      ALTER TABLE turnos ADD registrado_por NVARCHAR(120) NULL;
+  `);
+
+  await r.query(`
+    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='historial_turnos' AND xtype='U')
+    CREATE TABLE historial_turnos (
+      id           INT IDENTITY(1,1) PRIMARY KEY,
+      turno_id     INT           NOT NULL,
+      turno_codigo NVARCHAR(20)  NOT NULL,
+      accion       NVARCHAR(20)  NOT NULL,
+      usuario      NVARCHAR(120) NULL,
+      ts           BIGINT        NOT NULL
     );
   `);
 
@@ -472,6 +491,7 @@ async function routerAPI(req, res, ruta, metodo, qp) {
   /* ── Rutas PÚBLICAS (sin token) ─────────────────────────────── */
   if (ruta === '/api/auth/login'    && metodo === 'POST') { await login(req, res);    return; }
   if (ruta === '/api/auth/registro' && metodo === 'POST') { await registro(req, res); return; }
+  if (ruta === '/api/auth/validar-clave-admin' && metodo === 'POST') { await validarClaveAdmin(req, res); return; }
   if (ruta === '/api/estado'        && metodo === 'GET')  {
     json(res, 200, { ok: true, version: '2.1.0', db: dbReady ? 'ok' : 'sin_bd', uptime: Math.floor(process.uptime()), sse: clientesSSE.size });
     return;
@@ -496,8 +516,9 @@ async function routerAPI(req, res, ruta, metodo, qp) {
   if (ruta === '/api/servicios' && metodo === 'GET') { await getServicios(res); return; }
   if (ruta === '/api/modulos'   && metodo === 'GET') { await getModulos(res);   return; }
   if (ruta === '/api/usuarios'  && metodo === 'GET') { await getUsuarios(res);  return; }
-  if (ruta === '/api/dashboard' && metodo === 'GET') { await getDashboard(res); return; }
-  if (ruta === '/api/historial' && metodo === 'GET') { await getHistorial(res, qp); return; }
+  if (ruta === '/api/dashboard'    && metodo === 'GET') { await getDashboard(res); return; }
+  if (ruta === '/api/historial'     && metodo === 'GET') { await getHistorial(res, qp); return; }
+  if (ruta === '/api/estadisticas'  && metodo === 'GET') { await getEstadisticas(res, qp); return; }
 
   json(res, 404, { error: `Ruta no encontrada: ${metodo} ${ruta}` });
 }
@@ -505,9 +526,20 @@ async function routerAPI(req, res, ruta, metodo, qp) {
 /* ═══════════════════════════════════════════════════════════════════
    16. AUTH — REGISTRO
 ═══════════════════════════════════════════════════════════════════ */
+async function validarClaveAdmin(req, res) {
+  const { clave } = await leerBody(req);
+  if (!ADMIN_REGISTER_KEY) return json(res, 503, { error: 'Registro no disponible. Contacta al administrador.' });
+  if (!clave || clave !== ADMIN_REGISTER_KEY) return json(res, 403, { error: 'Acceso no autorizado.' });
+  return json(res, 200, { ok: true });
+}
+
 async function registro(req, res) {
   const b = await leerBody(req);
-  const { nombre, username, password, rol, email } = b;
+  const { nombre, username, password, rol, email, admin_key } = b;
+
+  /* Validar clave de administrador antes de procesar */
+  if (!ADMIN_REGISTER_KEY) return json(res, 503, { error: 'Registro no disponible. Contacta al administrador.' });
+  if (!admin_key || admin_key !== ADMIN_REGISTER_KEY) return json(res, 403, { error: 'Acceso no autorizado.' });
 
   if (!nombre?.trim())     return json(res, 400, { error: 'El nombre es obligatorio.' });
   if (!username?.trim())   return json(res, 400, { error: 'El nombre de usuario es obligatorio.' });
@@ -587,7 +619,7 @@ async function getTurnos(res) {
   if (dbReady) {
     const r = await dbQ(`
       SELECT id, codigo, paciente, documento, servicio, modulo, estado,
-             atendido_por, nota, llamadas, ts_creado, ts_llamado, ts_atendido, ts_fin
+             atendido_por, registrado_por, nota, llamadas, ts_creado, ts_llamado, ts_atendido, ts_fin
       FROM   turnos
       WHERE  CAST(DATEADD(SECOND, ts_creado/1000, '19700101') AS DATE) = CAST(GETDATE() AS DATE)
       ORDER  BY ts_creado ASC
@@ -623,19 +655,21 @@ async function crearTurno(req, res, usuario) {
 
     if (dbReady) {
       const ins = await dbQ(`
-        INSERT INTO turnos (codigo, paciente, documento, servicio, ts_creado)
+        INSERT INTO turnos (codigo, paciente, documento, servicio, registrado_por, ts_creado)
         OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.documento,
-               INSERTED.servicio, INSERTED.modulo, INSERTED.estado, INSERTED.ts_creado
-        VALUES (@codigo, @paciente, @doc, @servicio, @ts)
-      `, { codigo, paciente: paciente.trim(), doc: documento?.trim() || null, servicio, ts });
+               INSERTED.servicio, INSERTED.modulo, INSERTED.estado,
+               INSERTED.registrado_por, INSERTED.atendido_por, INSERTED.ts_creado
+        VALUES (@codigo, @paciente, @doc, @servicio, @regPor, @ts)
+      `, { codigo, paciente: paciente.trim(), doc: documento?.trim() || null, servicio, regPor: usuario.nombre, ts });
 
       const t = ins.recordset[0];
+      await registrarHistorial(t.id, t.codigo, 'CREADO', usuario.nombre);
       emitir('turno_nuevo', { turno: t });
       return json(res, 201, { ok: true, turno: t });
     }
 
     const t = { id: mem.turnos.length + 1, codigo, paciente: paciente.trim(), documento: documento || null,
-                servicio, modulo: '-', estado: 'En fila', atendido_por: null, nota: null,
+                servicio, modulo: '-', estado: 'En fila', atendido_por: null, registrado_por: usuario.nombre, nota: null,
                 llamadas: 0, ts_creado: ts, ts_llamado: null, ts_atendido: null, ts_fin: null };
     mem.turnos.push(t);
     emitir('turno_nuevo', { turno: t });
@@ -667,7 +701,6 @@ async function actualizarTurno(req, res, id, usuario) {
     if (estado === 'Atendiendo') {
       sets.push('ts_atendido = @ahora'); p.ahora = ahora;
       if (!p.op) { sets.push('atendido_por = @op'); p.op = usuario.nombre; }
-      // Asignar módulo del operador si aún no tiene uno asignado, o si se envía explícitamente
       if (modulo) { sets.push('modulo = @modulo'); p.modulo = modulo; }
       else if (usuario.modulo && usuario.modulo !== 'Sin módulo') {
         sets.push('modulo = @modulo'); p.modulo = usuario.modulo;
@@ -682,21 +715,33 @@ async function actualizarTurno(req, res, id, usuario) {
   if (!sets.length) return json(res, 400, { error: 'Sin cambios.' });
 
   if (dbReady) {
+    /* Bloqueo optimista: evita que dos usuarios atiendan el mismo turno */
+    let whereExtra = '';
+    if (estado === 'Llamando')   whereExtra = ` AND estado = 'En fila'`;
+    if (estado === 'Atendiendo') whereExtra = ` AND estado IN ('En fila','Llamando')`;
+
     const r = await dbQ(`
       UPDATE turnos SET ${sets.join(', ')}
       OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.documento, INSERTED.servicio,
-             INSERTED.estado, INSERTED.modulo, INSERTED.atendido_por,
+             INSERTED.estado, INSERTED.modulo, INSERTED.atendido_por, INSERTED.registrado_por,
              INSERTED.ts_creado, INSERTED.ts_llamado, INSERTED.ts_atendido, INSERTED.ts_fin, INSERTED.nota
-      WHERE id = @id
+      WHERE id = @id${whereExtra}
     `, p);
-    if (!r.recordset.length) return json(res, 404, { error: 'Turno no encontrado.' });
+    if (!r.recordset.length) return json(res, 409, { error: 'El turno ya está siendo atendido o no existe.' });
     const t = r.recordset[0];
+    if (estado) {
+      const accionMap = { Llamando:'LLAMADO', Atendiendo:'ATENDIDO', Finalizado:'FINALIZADO', Cancelado:'CANCELADO', 'No atendido':'CANCELADO' };
+      if (accionMap[estado]) await registrarHistorial(t.id, t.codigo, accionMap[estado], usuario.nombre);
+    }
     emitir('turno_actualizado', { turno: t });
     return json(res, 200, { ok: true, turno: t });
   }
 
   const t = mem.turnos.find(x => x.id === id);
   if (!t) return json(res, 404, { error: 'Turno no encontrado.' });
+  /* Bloqueo en memoria */
+  if (estado === 'Llamando'   && t.estado !== 'En fila')                       return json(res, 409, { error: 'El turno ya está siendo atendido.' });
+  if (estado === 'Atendiendo' && !['En fila','Llamando'].includes(t.estado))   return json(res, 409, { error: 'El turno ya está siendo atendido.' });
   if (estado) t.estado = estado;
   if (nota !== undefined) t.nota = nota;
   if (modulo) t.modulo = modulo;
@@ -735,6 +780,7 @@ async function siguienteTurno(res, usuario) {
     `, { ahora, mod: modOp, op: usuario.nombre, id });
 
     const t = upd.recordset[0];
+    await registrarHistorial(t.id, t.codigo, 'LLAMADO', usuario.nombre);
     emitir('turno_llamado', { turno: t });
     return json(res, 200, { ok: true, turno: t });
   }
@@ -752,6 +798,67 @@ async function siguienteTurno(res, usuario) {
 /* ═══════════════════════════════════════════════════════════════════
    22. SERVICIOS  /  MÓDULOS  /  DASHBOARD  /  HISTORIAL
 ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   22b. HISTORIAL DE ACCIONES
+═══════════════════════════════════════════════════════════════════ */
+async function registrarHistorial(turnoId, turnoCodigo, accion, usuario) {
+  if (!dbReady) return;
+  try {
+    await dbQ(`
+      INSERT INTO historial_turnos (turno_id, turno_codigo, accion, usuario, ts)
+      VALUES (@tid, @tcod, @accion, @usr, @ts)
+    `, { tid: turnoId, tcod: turnoCodigo, accion, usr: usuario || null, ts: Date.now() });
+  } catch (e) {
+    console.warn('[historial]', e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   22c. ESTADÍSTICAS POR FUNCIONARIO
+═══════════════════════════════════════════════════════════════════ */
+async function getEstadisticas(res, qp) {
+  if (!dbReady) {
+    /* Modo memoria: calcular desde mem.turnos */
+    const byOp = {};
+    for (const t of mem.turnos) {
+      if (t.estado !== 'Finalizado' || !t.atendido_por) continue;
+      const op = t.atendido_por;
+      if (!byOp[op]) byOp[op] = { usuario: op, turnos_atendidos: 0, suma_atencion: 0, count_atencion: 0 };
+      byOp[op].turnos_atendidos++;
+      if (t.ts_atendido && t.ts_fin) {
+        byOp[op].suma_atencion += (t.ts_fin - t.ts_atendido) / 60000;
+        byOp[op].count_atencion++;
+      }
+    }
+    const stats = Object.values(byOp).map(o => ({
+      usuario: o.usuario,
+      turnos_atendidos: o.turnos_atendidos,
+      tiempo_promedio_atencion: o.count_atencion ? +(o.suma_atencion / o.count_atencion).toFixed(1) : null,
+    }));
+    return json(res, 200, { ok: true, estadisticas: stats });
+  }
+
+  const fechaFiltro = qp.fecha
+    ? `CAST(DATEADD(SECOND, ts_creado/1000,'19700101') AS DATE) = CAST('${qp.fecha.replace(/[^\d\-]/g,'')}' AS DATE)`
+    : `CAST(DATEADD(SECOND, ts_creado/1000,'19700101') AS DATE) = CAST(GETDATE() AS DATE)`;
+
+  const r = await dbQ(`
+    SELECT
+      atendido_por                                                                   AS usuario,
+      COUNT(*)                                                                       AS turnos_atendidos,
+      AVG(CASE WHEN ts_atendido IS NOT NULL AND ts_fin IS NOT NULL
+               THEN CAST(ts_fin - ts_atendido AS FLOAT)/60000.0 ELSE NULL END)      AS tiempo_promedio_atencion,
+      MIN(modulo)                                                                    AS modulo_principal
+    FROM turnos
+    WHERE estado = 'Finalizado'
+      AND atendido_por IS NOT NULL
+      AND ${fechaFiltro}
+    GROUP BY atendido_por
+    ORDER BY turnos_atendidos DESC
+  `);
+  return json(res, 200, { ok: true, estadisticas: r.recordset });
+}
+
 async function getServicios(res) {
   if (dbReady) {
     const r = await dbQ(`SELECT id, nombre, prefijo, color FROM servicios WHERE activo=1 ORDER BY nombre`);

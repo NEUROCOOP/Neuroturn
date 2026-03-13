@@ -911,6 +911,13 @@
       <input class="auth-input" type="email" id="reg-email" placeholder="correo@ejemplo.com" autocomplete="email">
     </div>
 
+    <div class="reg-field">
+      <label>Clave de administrador *
+        <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--danger)">requerida para registrar usuarios</span>
+      </label>
+      <input class="auth-input" type="password" id="reg-admin-key" placeholder="Clave de administrador" autocomplete="off" style="border-color:#FCA5A5">
+    </div>
+
     <div id="reg-error" class="auth-error-box" style="margin-bottom:4px"></div>
     <div id="reg-success" class="reg-success" style="display:none">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -968,6 +975,10 @@
         <a class="nav-item" onclick="navTo('historial')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Historial de Turnos
+        </a>
+        <a class="nav-item" onclick="navTo('estadisticas')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+          Estadísticas
         </a>
         <a class="nav-item" onclick="navTo('tv')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -1212,7 +1223,7 @@
               </div>
             </div>
             <table>
-              <thead><tr><th>TURNO</th><th>PACIENTE</th><th>DOCUMENTO</th><th>ESTADO</th><th>T. ESPERA</th><th>T. ATENCIÓN</th><th>MÓDULO</th><th>ACCIONES</th></tr></thead>
+              <thead><tr><th>TURNO</th><th>PACIENTE</th><th>REGISTRADO POR</th><th>ATENDIDO POR</th><th>ESTADO</th><th>T. ESPERA</th><th>HORA</th><th>ACCIONES</th></tr></thead>
               <tbody id="turnos-table-body"></tbody>
             </table>
             <div class="pagination">
@@ -1529,6 +1540,23 @@
           </div>
         </div>
 
+        <!-- ESTADÍSTICAS POR FUNCIONARIO -->
+        <div class="page" id="page-estadisticas">
+          <div class="card table-card" style="margin-bottom:16px">
+            <div class="table-header">
+              <h3>Estadísticas por Funcionario — Hoy</h3>
+              <button class="btn-sm primary" onclick="renderEstadisticasFuncionarios()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                Actualizar
+              </button>
+            </div>
+            <table id="est-func-table">
+              <thead><tr><th>FUNCIONARIO</th><th>TURNOS ATENDIDOS</th><th>T. PROM. ATENCIÓN</th><th>MÓDULO PRINCIPAL</th></tr></thead>
+              <tbody id="est-func-body"><tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- REPORTES — PRÓXIMAMENTE -->
         <div class="page" id="page-reportes">
           <div class="soon-page">
@@ -1600,6 +1628,36 @@
 
         <!-- CONFIG -->
         <div class="page" id="page-config">
+          <!-- MI MÓDULO DE TRABAJO -->
+          <div class="card" style="padding:24px;margin-bottom:20px;border:2px solid var(--primary-light)">
+            <div style="font-size:14px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+              Mi módulo de trabajo
+              <span style="font-size:11px;font-weight:500;color:var(--primary);background:var(--primary-light);padding:2px 8px;border-radius:20px;margin-left:4px">Personal · solo te afecta a ti</span>
+            </div>
+            <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px">Selecciona el módulo o box desde el que estás trabajando hoy. Este valor se usará automáticamente al llamar turnos.</p>
+            <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+              <div style="flex:1;min-width:180px">
+                <label class="form-label">Módulo actual</label>
+                <select class="form-select" id="mi-modulo-select" style="border-color:var(--primary)">
+                  <option value="Sin módulo">Sin módulo asignado</option>
+                  <option value="Módulo 01">Módulo 01</option>
+                  <option value="Módulo 02">Módulo 02</option>
+                  <option value="Módulo 03">Módulo 03</option>
+                  <option value="Módulo 04">Módulo 04</option>
+                  <option value="Módulo 05">Módulo 05</option>
+                  <option value="Módulo 06">Módulo 06</option>
+                  <option value="Módulo 07">Módulo 07</option>
+                  <option value="Módulo 08">Módulo 08</option>
+                </select>
+              </div>
+              <button class="btn-save" onclick="guardarMiModulo()" style="white-space:nowrap;display:flex;align-items:center;gap:6px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Guardar mi módulo
+              </button>
+            </div>
+            <div id="mi-modulo-status" style="margin-top:12px;font-size:12.5px;color:#16A34A;font-weight:600;display:none"></div>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
             <div class="card" style="padding:24px">
               <div style="font-size:14px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px">
@@ -2273,7 +2331,7 @@ let currentUser = null;
 // ── Funciones del modal de registro ──────────────
 function abrirRegistro() {
   // Limpiar campos y mensajes
-  ['reg-nombre','reg-username','reg-password','reg-email'].forEach(id => {
+  ['reg-nombre','reg-username','reg-password','reg-email','reg-admin-key'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -2331,24 +2389,26 @@ async function login() {
 }
 
 async function registrarUsuario() {
-  const nombre   = document.getElementById('reg-nombre')?.value.trim();
-  const username = document.getElementById('reg-username')?.value.trim().toLowerCase();
-  const password = document.getElementById('reg-password')?.value;
-  const email    = document.getElementById('reg-email')?.value.trim();
-  const rol      = document.getElementById('reg-rol')?.value;
-  const modulo   = document.getElementById('reg-modulo')?.value;
+  const nombre    = document.getElementById('reg-nombre')?.value.trim();
+  const username  = document.getElementById('reg-username')?.value.trim().toLowerCase();
+  const password  = document.getElementById('reg-password')?.value;
+  const email     = document.getElementById('reg-email')?.value.trim();
+  const rol       = document.getElementById('reg-rol')?.value;
+  const modulo    = document.getElementById('reg-modulo')?.value;
+  const admin_key = document.getElementById('reg-admin-key')?.value;
 
   if (!nombre)    { setAuthError('reg-error', 'El nombre completo es obligatorio'); return; }
   if (!username)  { setAuthError('reg-error', 'El nombre de usuario es obligatorio'); return; }
   if (!password)  { setAuthError('reg-error', 'La contraseña es obligatoria'); return; }
   if (password.length < 6) { setAuthError('reg-error', 'La contraseña debe tener al menos 6 caracteres'); return; }
+  if (!admin_key) { setAuthError('reg-error', 'La clave de administrador es obligatoria'); return; }
 
   const btn = document.getElementById('btn-reg-submit');
   if (btn) { btn.disabled = true; btn.textContent = 'Creando cuenta...'; }
   document.getElementById('reg-error').textContent = '';
 
   try {
-    await API.postAuth('/api/auth/registro', { nombre, username, password, email, rol, modulo });
+    await API.postAuth('/api/auth/registro', { nombre, username, password, email, rol, modulo, admin_key });
 
     // Mostrar mensaje de éxito en el modal
     document.getElementById('reg-success-msg').textContent = `¡Listo! "${username}" puede iniciar sesión ahora.`;
@@ -2396,6 +2456,7 @@ async function onLoginSuccess() {
   // Cargar datos iniciales
   await cargarDatos();
   iniciarSSE();
+  loadMiModulo();
   addNotif('sistema', `Sesión iniciada — ${nombre.split(' ').slice(0,2).join(' ')}`, `${state.turnos.filter(t=>t.estado==='En fila').length} turno(s) en espera`);
   navTo('inicio');
 }
@@ -2433,20 +2494,21 @@ async function cargarDatos() {
 // Normaliza campos de la API (snake_case → camelCase compatible con render)
 function normalizarTurno(t) {
   return {
-    id:          t.codigo   || String(t.id),      // "N-101" o "124" como string
-    codigo:      t.codigo   || String(t.id),      // "N-101"
-    dbId:        t.id,                             // ID numérico de BD (para updates)
-    patient:     t.paciente || t.patient,
-    doc:         t.documento || t.doc || '',
-    service:     t.servicio || t.service,
-    modulo:      t.modulo   || '—',
-    estado:      t.estado,
-    atendidoPor: t.atendido_por || t.atendidoPor || null,
-    nota:        t.nota || null,
-    tsCreated:   t.ts_creado  || t.tsCreated  || null,
-    tsLlamado:   t.ts_llamado || t.tsLlamado  || null,
-    tsAtendido:  t.ts_atendido|| t.tsAtendido || null,
-    tsFin:       t.ts_fin     || t.tsFin      || null,
+    id:           t.codigo   || String(t.id),
+    codigo:       t.codigo   || String(t.id),
+    dbId:         t.id,
+    patient:      t.paciente || t.patient,
+    doc:          t.documento || t.doc || '',
+    service:      t.servicio || t.service,
+    modulo:       t.modulo   || '—',
+    estado:       t.estado,
+    atendidoPor:  t.atendido_por   || t.atendidoPor  || null,
+    registradoPor: t.registrado_por || t.registradoPor || null,
+    nota:         t.nota || null,
+    tsCreated:    t.ts_creado   || t.tsCreated  || null,
+    tsLlamado:    t.ts_llamado  || t.tsLlamado  || null,
+    tsAtendido:   t.ts_atendido || t.tsAtendido || null,
+    tsFin:        t.ts_fin      || t.tsFin      || null,
   };
 }
 
@@ -2522,7 +2584,7 @@ async function crearNuevoTurno() {
   try {
     const data = await API.post('/api/turnos', { paciente, documento, servicio });
     const t = normalizarTurno(data.turno);
-    state.turnos.push(t);
+    if (state.turnos.findIndex(x => x.dbId === t.dbId) < 0) state.turnos.push(t);
     closeModal('modal-nuevo-turno');
     renderTurnos(); renderInicio();
     showToast(`✅ Turno ${t.codigo} creado — ${paciente}`, 'success');
@@ -2627,10 +2689,11 @@ const PAGE_TITLES = {
   inicio:'Inicio', dashboard:'Main Dashboard Overview', turnos:'Gestión de Turnos',
   panel:'Attention Control Panel', historial:'Historial de Turnos', tv:'Ventana Televisor',
   usuarios:'Gestión De Usuarios', servicios:'Servicios Médicos', reportes:'Reporte y Estadísticas',
+  estadisticas:'Estadísticas por Funcionario',
   modulos:'Gestión de Módulos', gservicios:'Gestión de Servicios', config:'Configuración'
 };
 // Pages that are fully implemented (others show Próximamente screen)
-const ACTIVE_PAGES = new Set(['inicio','dashboard','turnos','panel','historial','tv','config']);
+const ACTIVE_PAGES = new Set(['inicio','dashboard','turnos','panel','historial','tv','config','estadisticas']);
 
 function navTo(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2651,6 +2714,7 @@ function renderPage(page) {
   else if (page === 'turnos') renderTurnos();
   else if (page === 'panel') renderPanel();
   else if (page === 'historial') renderHistorial();
+  else if (page === 'estadisticas') renderEstadisticasFuncionarios();
   else if (page === 'tv') renderTV();
   else if (page === 'config') renderArchivos();
 }
@@ -3511,6 +3575,40 @@ function finalizarTurno() { finalizarTurnoAPI(''); }
 function cancelarTurno()  { cancelarTurnoAPI(); }
 function atenderTurno()   { atenderTurnoAPI(); }
 
+// ── ESTADÍSTICAS POR FUNCIONARIO ─────────────────
+async function renderEstadisticasFuncionarios() {
+  const tbody = document.getElementById('est-func-body');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Cargando...</td></tr>';
+  try {
+    const data = await API.get('/api/estadisticas');
+    const rows = data.estadisticas || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Sin datos para hoy</td></tr>';
+      return;
+    }
+    const colors = ['#3B72F2','#8B5CF6','#F97316','#22C55E','#F59E0B','#EF4444'];
+    tbody.innerHTML = rows.map(r => {
+      const nom = r.usuario || '—';
+      const ini = nom.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+      const col = colors[nom.charCodeAt(0) % colors.length];
+      const tProm = r.tiempo_promedio_atencion != null ? `<span class="timer-pill timer-blue">${parseFloat(r.tiempo_promedio_atencion).toFixed(1)} min</span>` : '—';
+      const modulo = r.modulo_principal || '—';
+      return `<tr>
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:50%;background:${col};color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${esc(ini)}</div>
+          <span style="font-weight:600;font-size:13px">${esc(nom.split(' ').slice(0,3).join(' '))}</span>
+        </div></td>
+        <td style="font-weight:700;color:var(--primary);font-size:15px">${r.turnos_atendidos}</td>
+        <td>${tProm}</td>
+        <td style="color:var(--text-muted);font-size:12.5px">${esc(modulo)}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--danger)">${esc(e.message)}</td></tr>`;
+  }
+}
+
 // ── HISTORIAL ─────────────────────────────────────
 let histPage = 1;
 const HIST_PER_PAGE = 5;
@@ -4294,10 +4392,41 @@ function descargarArchivo(i) {
   showToast(`Archivo ${a.label} descargado`, 'success');
 }
 
+// ── MI MÓDULO DE TRABAJO ──────────────────────────
+function loadMiModulo() {
+  if (!currentUser) return;
+  const key = 'nt_mimodulo_' + (currentUser.username || currentUser.id);
+  const saved = localStorage.getItem(key);
+  if (saved) {
+    currentUser.modulo = saved;
+    const roleEl = document.getElementById('sidebar-user-role');
+    if (roleEl) roleEl.textContent = (currentUser.rol || '') + (saved && saved !== 'Sin módulo' ? ' · ' + saved : '');
+  }
+  const sel = document.getElementById('mi-modulo-select');
+  if (sel) sel.value = currentUser.modulo || 'Sin módulo';
+}
+
+function guardarMiModulo() {
+  const sel = document.getElementById('mi-modulo-select');
+  if (!sel || !currentUser) return;
+  const modulo = sel.value;
+  const key = 'nt_mimodulo_' + (currentUser.username || currentUser.id);
+  localStorage.setItem(key, modulo);
+  currentUser.modulo = modulo;
+  const roleEl = document.getElementById('sidebar-user-role');
+  if (roleEl) roleEl.textContent = (currentUser.rol || '') + (modulo && modulo !== 'Sin módulo' ? ' · ' + modulo : '');
+  const statusEl = document.getElementById('mi-modulo-status');
+  if (statusEl) { statusEl.textContent = '✓ Módulo guardado: ' + modulo; statusEl.style.display = 'block'; setTimeout(() => { statusEl.style.display = 'none'; }, 3000); }
+  showToast('✅ Módulo actualizado: ' + modulo, 'success');
+}
+
 function renderArchivos() {
   const archivos = loadArchivos();
   const el = document.getElementById('archivos-mensuales-list');
   if (!el) return;
+  // sync mi-modulo-select with saved value each time config page renders
+  const selMod = document.getElementById('mi-modulo-select');
+  if (selMod && currentUser) selMod.value = currentUser.modulo || 'Sin módulo';
   if (!archivos.length) {
     el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:10px 0">No hay archivos mensuales aún. El primer archivo se creará al presionar "Archivar mes actual".</div>';
     return;
@@ -4535,7 +4664,7 @@ async function saveTurno() {
   try {
     const data = await API.post('/api/turnos', { paciente, documento, servicio });
     const t = normalizarTurno(data.turno);
-    state.turnos.unshift(t);
+    if (state.turnos.findIndex(x => x.dbId === t.dbId) < 0) state.turnos.unshift(t);
     closeModal('modal-turno');
     showToast(`✅ Turno ${t.codigo} creado para ${paciente}`, 'success');
     addNotif('turno', `Turno ${t.codigo} creado`, `${paciente} · ${servicio}`);
