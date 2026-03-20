@@ -533,7 +533,7 @@ function servirEstatico(res, pathname) {
   let fp = null;
   
   // Archivos permitidos desde la raíz (sin carpeta)
-  const permitidosRaiz = ['index.html', 'usuarios-module.js', 'Logo.png'];
+  const permitidosRaiz = ['index.html', 'usuarios-module.js', 'Logo.png', 'pantalla-tv.html'];
   
   for (const base of bases) {
     const file    = (pathname === '/' ? 'index.html' : pathname).replace(/^[\/\\]+/, '');
@@ -614,6 +614,7 @@ async function routerAPI(req, res, ruta, metodo, qp) {
     json(res, 200, { ok: true, version: '2.1.0', db: dbReady ? 'ok' : 'sin_bd', uptime: Math.floor(process.uptime()), sse: clientesSSE.size });
     return;
   }
+  if (ruta === '/api/imagenes'      && metodo === 'GET')  { await obtenerImagenes(res); return; }
 
   /* ── Autenticación requerida ────────────────────────────────── */
   const usuario = autenticar(req);
@@ -1331,6 +1332,30 @@ async function registrarHistorialUsuario(usuarioId, username, accion, realizadoP
     });
   } catch (e) {
     console.warn('[usuarios_historial]', e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   22i. OBTENER IMÁGENES DISPONIBLES (para Pantalla TV)
+═══════════════════════════════════════════════════════════════════ */
+async function obtenerImagenes(res) {
+  try {
+    const carpeta = path.join(__dirname, 'img');
+    if (!fs.existsSync(carpeta)) {
+      return json(res, 200, { ok: true, imagenes: [] });
+    }
+
+    const archivos = fs.readdirSync(carpeta);
+    const extensionesPermitidas = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+    
+    const imagenes = archivos
+      .filter(archivo => extensionesPermitidas.includes(path.extname(archivo).toLowerCase()))
+      .sort();
+
+    return json(res, 200, { ok: true, imagenes });
+  } catch (e) {
+    console.error('[obtenerImagenes]', e.message);
+    return json(res, 200, { ok: true, imagenes: [] });
   }
 }
 

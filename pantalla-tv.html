@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroTurn - Pantalla TV de Turnos</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #1a1a1a;
+      color: #ffffff;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ════════════════════════════════════════════════════════════ */
+    /* BARRA SUPERIOR                                                 */
+    /* ════════════════════════════════════════════════════════════ */
+    .barra-superior {
+      background: linear-gradient(90deg, #0a3d62 0%, #1e5f8e 100%);
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .logo-empresa {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .logo-icono {
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .titulo-centro {
+      text-align: center;
+      flex: 1;
+      font-size: 32px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .hora-actual {
+      font-size: 28px;
+      font-weight: bold;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 8px 20px;
+      border-radius: 8px;
+      min-width: 180px;
+      text-align: right;
+    }
+
+    /* ════════════════════════════════════════════════════════════ */
+    /* CONTENEDOR PRINCIPAL                                           */
+    /* ════════════════════════════════════════════════════════════ */
+    .contenedor-principal {
+      display: flex;
+      height: calc(100vh - 80px - 70px);
+      gap: 0;
+    }
+
+    /* ════════════════════════════════════════════════════════════ */
+    /* COLUMNA IZQUIERDA - TURNOS                                    */
+    /* ════════════════════════════════════════════════════════════ */
+    .columna-izquierda {
+      flex: 1;
+      background: linear-gradient(135deg, #0f3460 0%, #1a5490 100%);
+      display: flex;
+      flex-direction: column;
+      padding: 30px;
+      gap: 20px;
+      overflow: hidden;
+    }
+
+    /* Panel de Turnos en Atención */
+    .panel-atencion {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .titulo-seccion {
+      font-size: 28px;
+      font-weight: bold;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 3px solid #22c55e;
+      padding-bottom: 10px;
+    }
+
+    .contenedor-turnos-atencion {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow: auto;
+    }
+
+    .tarjeta-turno {
+      background: linear-gradient(135deg, #1e5f8e 0%, #16a34a 100%);
+      border-radius: 12px;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      border-left: 6px solid #22c55e;
+      animation: slideIn 0.5s ease-out;
+      transition: all 0.3s ease;
+      min-height: 160px;
+      justify-content: center;
+    }
+
+    .tarjeta-turno:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .turno-numero {
+      font-size: 48px;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      letter-spacing: 2px;
+    }
+
+    .turno-paciente {
+      font-size: 32px;
+      font-weight: bold;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+
+    .turno-funcionario {
+      font-size: 24px;
+      color: #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .turno-modulo {
+      font-size: 20px;
+      color: #ffd700;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 6px 12px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Panel de Fila */
+    .panel-fila {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      min-height: 250px;
+    }
+
+    .contenedor-fila {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: auto;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .item-fila {
+      background: rgba(255, 255, 255, 0.12);
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #3b82f6;
+      transition: all 0.3s ease;
+    }
+
+    .item-fila:hover {
+      background: rgba(255, 255, 255, 0.16);
+      transform: translateX(5px);
+    }
+
+    .item-codigo {
+      font-weight: bold;
+      color: #ffd700;
+      min-width: 80px;
+    }
+
+    .item-paciente {
+      color: #ffffff;
+      flex: 1;
+      margin-left: 20px;
+    }
+
+    /* ════════════════════════════════════════════════════════════ */
+    /* COLUMNA DERECHA - ANUNCIOS                                    */
+    /* ════════════════════════════════════════════════════════════ */
+    .columna-derecha {
+      flex: 1;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow: hidden;
+    }
+
+    .panel-anuncios {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .slider-contenedor {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .slider-imagen {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .slider-placeholder {
+      weight: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #888;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .indicadores-slider {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    .punto-indicador {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .punto-indicador.activo {
+      background: #22c55e;
+      width: 30px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    /* ════════════════════════════════════════════════════════════ */
+    /* BARRA INFERIOR - TICKER                                        */
+    /* ════════════════════════════════════════════════════════════ */
+    .barra-inferior {
+      background: linear-gradient(90deg, #ff6b35 0%, #f7931e 100%);
+      height: 70px;
+      display: flex;
+      align-items: center;
+      padding: 0 40px;
+      box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .ticker-contenedor {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      width: 100%;
+    }
+
+    .etiqueta-ticker {
+      font-size: 24px;
+      font-weight: bold;
+      white-space: nowrap;
+      color: #ffffff;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .texto-ticker {
+      font-size: 24px;
+      color: #ffffff;
+      font-weight: bold;
+      animation: scroll 20s linear infinite;
+      white-space: nowrap;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes scroll {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+
+    /* Scrollbar personalizado */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Mensaje sin turnos */
+    .sin-turnos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      font-size: 28px;
+      color: #999;
+      text-align: center;
+      gap: 20px;
+    }
+
+    .sin-turnos-icono {
+      font-size: 64px;
+      opacity: 0.5;
+    }
+
+    /* Estado desconectado */
+    .estado-conexion {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 2000;
+      display: none;
+    }
+
+    .estado-conexion.conectado {
+      background: #22c55e;
+      color: #ffffff;
+      display: block;
+    }
+
+    .estado-conexion.desconectado {
+      background: #ef4444;
+      color: #ffffff;
+      display: block;
+    }
+
+    /* Pulso de animación */
+    @keyframes pulso {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .pulsando {
+      animation: pulso 1s infinite;
+    }
+  </style>
+</head>
+<body>
+  <!-- BARRA SUPERIOR -->
+  <div class="barra-superior">
+    <div class="logo-empresa">
+      <div class="logo-icono">🏥</div>
+      <span>NeuroTurn</span>
+    </div>
+    <div class="titulo-centro">SISTEMA DE TURNOS</div>
+    <div class="hora-actual" id="horaActual">00:00:00</div>
+  </div>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="contenedor-principal">
+    <!-- COLUMNA IZQUIERDA - TURNOS -->
+    <div class="columna-izquierda">
+      <!-- Panel de Turnos en Atención -->
+      <div class="panel-atencion">
+        <h2 class="titulo-seccion">Turnos en Atención</h2>
+        <div class="contenedor-turnos-atencion" id="contenedorTurnosAtencion">
+          <div class="sin-turnos">
+            <div class="sin-turnos-icono">👤</div>
+            <div>No hay turnos siendo atendidos</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de Fila de Espera -->
+      <div class="panel-fila">
+        <h2 class="titulo-seccion">En Fila de Espera</h2>
+        <div class="contenedor-fila" id="contenedorFila">
+          <div class="sin-turnos">
+            <div class="sin-turnos-icono">😌</div>
+            <div>Lista de espera vacía</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA - ANUNCIOS -->
+    <div class="columna-derecha">
+      <div class="panel-anuncios">
+        <h2 class="titulo-seccion">Información Importante</h2>
+        <div class="slider-contenedor" id="sliderContenedor">
+          <div class="slider-placeholder">Cargando anuncios...</div>
+        </div>
+        <div class="indicadores-slider" id="indicadoresSlider"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BARRA INFERIOR -->
+  <div class="barra-inferior">
+    <div class="ticker-contenedor">
+      <div class="etiqueta-ticker">📢</div>
+      <div class="texto-ticker" id="textoTicker">Bienvenido a Neurocoop. Espere su turno para ser atendido.</div>
+    </div>
+  </div>
+
+  <!-- INDICADOR DE CONEXIÓN -->
+  <div class="estado-conexion conectado" id="estadoConexion">
+    <span id="estadoTexto">● Conectado</span>
+  </div>
+
+  <!-- SCRIPT PRINCIPAL -->
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // CONFIGURACIÓN GENERAL
+    // ═══════════════════════════════════════════════════════════════
+    const CONFIG = {
+      URL_API: 'http://' + (window.location.hostname || 'localhost') + ':3001',
+      INTERVALO_POLLING: 1000, // Actualizar cada 1 segundo
+      INTERVALO_SLIDER: 8000, // Cambiar imagen cada 8 segundos
+      CARPETA_IMG: '/img/', // Carpeta de imágenes
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // ESTADO GLOBAL
+    // ═══════════════════════════════════════════════════════════════
+    const estado = {
+      turnos: [],
+      turnosAtencion: [],
+      turnosFila: [],
+      imagenes: [],
+      imagenActual: 0,
+      conectado: false,
+      ultimaActualizacion: 0,
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // FUNCIONES DE HORA
+    // ═══════════════════════════════════════════════════════════════
+    function actualizarHora() {
+      const ahora = new Date();
+      const horas = String(ahora.getHours()).padStart(2, '0');
+      const minutos = String(ahora.getMinutes()).padStart(2, '0');
+      const segundos = String(ahora.getSeconds()).padStart(2, '0');
+      document.getElementById('horaActual').textContent = `${horas}:${minutos}:${segundos}`;
+    }
+
+    setInterval(actualizarHora, 1000);
+    actualizarHora();
+
+    // ═══════════════════════════════════════════════════════════════
+    // FUNCIONES DE API
+    // ═══════════════════════════════════════════════════════════════
+    async function obtenerTurnos() {
+      try {
+        const respuesta = await fetch(`${CONFIG.URL_API}/api/turnos`);
+        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+        
+        const datos = await respuesta.json();
+        if (datos.ok && Array.isArray(datos.turnos)) {
+          estado.turnos = datos.turnos;
+          procesarTurnos();
+          actualizarUI();
+          establecerEstado(true);
+        }
+      } catch (error) {
+        console.error('Error al obtener turnos:', error.message);
+        establecerEstado(false);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PROCESAMIENTO DE TURNOS
+    // ═══════════════════════════════════════════════════════════════
+    function procesarTurnos() {
+      estado.turnosAtencion = estado.turnos.filter(t => t.estado === 'Atendiendo').slice(0, 2);
+      estado.turnosFila = estado.turnos.filter(t => t.estado === 'En fila').slice(0, 8);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // RENDERIZAR TURNOS EN ATENCIÓN
+    // ═══════════════════════════════════════════════════════════════
+    function renderizarTurnosAtencion() {
+      const contenedor = document.getElementById('contenedorTurnosAtencion');
+      
+      if (estado.turnosAtencion.length === 0) {
+        contenedor.innerHTML = `
+          <div class="sin-turnos">
+            <div class="sin-turnos-icono">👤</div>
+            <div>No hay turnos siendo atendidos</div>
+          </div>
+        `;
+        return;
+      }
+
+      contenedor.innerHTML = estado.turnosAtencion.map(turno => `
+        <div class="tarjeta-turno">
+          <div class="turno-numero">${turno.codigo}</div>
+          <div class="turno-paciente">${turno.paciente.toUpperCase()}</div>
+          <div class="turno-funcionario">
+            <span>👤 ${turno.atendido_por || 'Sin asignar'}</span>
+            <div class="turno-modulo">Módulo ${turno.modulo || '-'}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // RENDERIZAR FILA DE ESPERA
+    // ═══════════════════════════════════════════════════════════════
+    function renderizarFila() {
+      const contenedor = document.getElementById('contenedorFila');
+      
+      if (estado.turnosFila.length === 0) {
+        contenedor.innerHTML = `
+          <div class="sin-turnos">
+            <div class="sin-turnos-icono">😌</div>
+            <div>Lista de espera vacía</div>
+          </div>
+        `;
+        return;
+      }
+
+      contenedor.innerHTML = estado.turnosFila.map(turno => `
+        <div class="item-fila">
+          <span class="item-codigo">${turno.codigo}</span>
+          <span class="item-paciente">${turno.paciente}</span>
+        </div>
+      `).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ACTUALIZAR UI
+    // ═══════════════════════════════════════════════════════════════
+    function actualizarUI() {
+      renderizarTurnosAtencion();
+      renderizarFila();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CARGAR IMÁGENES
+    // ═══════════════════════════════════════════════════════════════
+    async function cargarImagenes() {
+      try {
+        // Listar imágenes disponibles en la carpeta /img
+        const respuesta = await fetch(`${CONFIG.URL_API}/api/imagenes`);
+        
+        if (respuesta.ok) {
+          const datos = await respuesta.json();
+          estado.imagenes = datos.imagenes || [];
+        } else {
+          // Fallback: usar imágenes conocidas
+          estado.imagenes = [
+            'DerechoDeber.png',
+            'LavadoManos.png',
+            'Recomendaciones.png'
+          ];
+        }
+
+        inicializarSlider();
+      } catch (error) {
+        console.warn('Error al cargar imágenes:', error.message);
+        // Fallback
+        estado.imagenes = [
+          'DerechoDeber.png',
+          'LavadoManos.png',
+          'Recomendaciones.png'
+        ];
+        inicializarSlider();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INICIALIZAR SLIDER
+    // ═══════════════════════════════════════════════════════════════
+    function inicializarSlider() {
+      if (estado.imagenes.length === 0) {
+        document.getElementById('sliderContenedor').innerHTML = 
+          '<div class="slider-placeholder">No hay anuncios disponibles</div>';
+        return;
+      }
+
+      // Renderizar indicadores
+      const indicadores = document.getElementById('indicadoresSlider');
+      indicadores.innerHTML = estado.imagenes.map((_, i) => 
+        `<div class="punto-indicador ${i === 0 ? 'activo' : ''}" onclick="irAImagen(${i})"></div>`
+      ).join('');
+
+      // Mostrar primera imagen
+      mostrarImagen(0);
+
+      // Cambiar imagen automáticamente
+      setInterval(() => {
+        estado.imagenActual = (estado.imagenActual + 1) % estado.imagenes.length;
+        mostrarImagen(estado.imagenActual);
+      }, CONFIG.INTERVALO_SLIDER);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MOSTRAR IMAGEN
+    // ═══════════════════════════════════════════════════════════════
+    function mostrarImagen(indice) {
+      if (indice >= estado.imagenes.length) indice = 0;
+      if (indice < 0) indice = estado.imagenes.length - 1;
+      
+      estado.imagenActual = indice;
+      const imagen = estado.imagenes[indice];
+      const contenedor = document.getElementById('sliderContenedor');
+      
+      const ruta = `${CONFIG.URL_API}${CONFIG.CARPETA_IMG}${imagen}`;
+      contenedor.innerHTML = `<img src="${ruta}" class="slider-imagen" alt="Anuncio">`;
+      
+      // Actualizar indicadores
+      document.querySelectorAll('.punto-indicador').forEach((p, i) => {
+        p.classList.toggle('activo', i === indice);
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // IR A IMAGEN ESPECÍFICA
+    // ═══════════════════════════════════════════════════════════════
+    function irAImagen(indice) {
+      mostrarImagen(indice);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ESTABLECER ESTADO DE CONEXIÓN
+    // ═══════════════════════════════════════════════════════════════
+    function establecerEstado(conectado) {
+      estado.conectado = conectado;
+      const elemento = document.getElementById('estadoConexion');
+      const texto = document.getElementById('estadoTexto');
+      
+      if (conectado) {
+        elemento.classList.remove('desconectado');
+        elemento.classList.add('conectado');
+        texto.textContent = '● Conectado';
+      } else {
+        elemento.classList.remove('conectado');
+        elemento.classList.add('desconectado');
+        texto.textContent = '● Desconectado';
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // REPRODUCIR SONIDO
+    // ═══════════════════════════════════════════════════════════════
+    function reproducirSonido() {
+      // Web Audio API para generar sonido sin archivo externo
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscilador = audioContext.createOscillator();
+      const ganancia = audioContext.createGain();
+      
+      oscilador.connect(ganancia);
+      ganancia.connect(audioContext.destination);
+      
+      oscilador.frequency.value = 800; // Frecuencia en Hz
+      oscilador.type = 'sine';
+      
+      ganancia.gain.setValueAtTime(0.3, audioContext.currentTime);
+      ganancia.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscilador.start(audioContext.currentTime);
+      oscilador.stop(audioContext.currentTime + 0.5);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INICIALIZACIÓN
+    // ═══════════════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarImagenes();
+      obtenerTurnos();
+      
+      // Polling cada X segundos
+      setInterval(obtenerTurnos, CONFIG.INTERVALO_POLLING);
+    });
+
+    // Permitir interacción del usuario para reproducir sonido
+    document.addEventListener('click', () => {
+      // El sonido se puede activar manualmente si es necesario
+    });
+  </script>
+</body>
+</html>
