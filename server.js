@@ -250,6 +250,19 @@ async function inicializarEsquema() {
     );
   `);
 
+  await r.query(`
+    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='usuarios_historial' AND xtype='U')
+    CREATE TABLE usuarios_historial (
+      id           INT IDENTITY(1,1) PRIMARY KEY,
+      usuario_id   INT           NOT NULL,
+      username     NVARCHAR(60)  NOT NULL,
+      accion       NVARCHAR(40)  NOT NULL,
+      detalles     NVARCHAR(500) NULL,
+      ip           NVARCHAR(45)  NULL,
+      ts           DATETIME2     NOT NULL DEFAULT SYSDATETIME()
+    );
+  `);
+
   /* Datos iniciales */
   await r.query(`
     IF NOT EXISTS (SELECT 1 FROM servicios)
@@ -276,7 +289,7 @@ async function inicializarEsquema() {
 
   await r.query(`
     IF NOT EXISTS (SELECT 1 FROM config WHERE clave='contador')
-    INSERT INTO config VALUES ('contador', '100');
+    INSERT INTO config VALUES ('contador', '0');
   `);
 
   console.log('✅ Esquema verificado/creado correctamente.');
@@ -310,7 +323,7 @@ async function dbQ(queryStr, params) {
 /* ═══════════════════════════════════════════════════════════════════
    9. MODO MEMORIA  (fallback sin BD)
 ═══════════════════════════════════════════════════════════════════ */
-const mem = { usuarios: [], turnos: [], contador: 100 };
+const mem = { usuarios: [], turnos: [], contador: 0, modulosActuales: {} };
 
 // Inicializar usuarios de prueba si no hay base de datos
 async function inicializarMemoria() {
@@ -338,6 +351,107 @@ async function inicializarMemoria() {
       });
     }
     console.log(`✅ ${mem.usuarios.length} usuarios de prueba creados en memoria`);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   9B. INSERTAR USUARIOS DE PRUEBA EN BD
+═══════════════════════════════════════════════════════════════════ */
+async function insertarUsuariosDePrueba() {
+  if (!dbReady || !pool) return; // Solo si la BD está lista
+  
+  try {
+    // Usuarios de prueba con contraseñas claras (se hashearán)
+    const usuariosPrueba = [
+      { nombre: 'Administrador', username: 'admin', password: 'admin123', rol: 'Administrador', modulo: 'Módulo 01' },
+      { nombre: 'Dr. Juan García', username: 'juangarcia', password: 'medico123', rol: 'Médico', modulo: 'Módulo 01' },
+      { nombre: 'Enfermera María López', username: 'marialopez', password: 'enfermera123', rol: 'Enfermero', modulo: 'Módulo 02' },
+      { nombre: 'Recepcionista Carlos', username: 'carlos', password: 'recepcion123', rol: 'Recepcionista', modulo: 'Sin módulo' },
+    ];
+    
+    // Asegurar que cada usuario de prueba existe con la contraseña correcta
+    for (const u of usuariosPrueba) {
+      try {
+        // Verificar si el usuario ya existe
+        const existe = await dbQ('SELECT id FROM usuarios WHERE username = @user', { user: u.username });
+        const hash = await bcrypt.hash(u.password, 12);
+        const color = '#' + crypto.randomBytes(3).toString('hex');
+        
+        if (existe.recordset && existe.recordset.length > 0) {
+          // Usuario existe, actualizar si es necesario
+          const usuarioActual = existe.recordset[0];
+          const req = pool.request();
+          req.input('id', sql.Int, usuarioActual.id);
+          req.input('pass_hash', sql.NVarChar, hash);
+          req.input('rol', sql.NVarChar, u.rol);
+          req.input('nombre', sql.NVarChar, u.nombre);
+          req.input('modulo', sql.NVarChar, u.modulo);
+          
+          await req.query(`
+            UPDATE usuarios 
+            SET password_hash = @pass_hash, rol = @rol, nombre = @nombre, modulo = @modulo, activo = 1
+            WHERE id = @id
+          `);
+        } else {
+          // Usuario no existe, crearlo
+          const req = pool.request();
+          req.input('nombre', sql.NVarChar, u.nombre);
+          req.input('username', sql.NVarChar, u.username);
+          req.input('pass_hash', sql.NVarChar, hash);
+          req.input('rol', sql.NVarChar, u.rol);
+          req.input('modulo', sql.NVarChar, u.modulo);
+          req.input('color', sql.NVarChar, color);
+          
+          await req.query(`
+            INSERT INTO usuarios (nombre, username, password_hash, rol, modulo, activo, color)
+            VALUES (@nombre, @username, @pass_hash, @rol, @modulo, 1, @color)
+          `);
+        }
+      } catch (err) {
+        console.warn(`   ⚠️  Error procesando usuario ${u.username}: ${err.message}`);
+      }
+    }
+    
+    console.log('✅ Usuarios de prueba verificados/actualizados en la BD');
+  } catch (err) {
+    console.warn(`   ⚠️  Error en insertarUsuariosDePrueba: ${err.message}`);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   9C. ASEGURAR USUARIO ADMIN (crea si no existe)
+═══════════════════════════════════════════════════════════════════ */
+async function asegurarUsuarioAdmin() {
+  if (!dbReady || !pool) return;
+  
+  try {
+    // Verificar si existe usuario admin
+    const r = await dbQ(`SELECT id FROM usuarios WHERE username = 'admin'`);
+    if (r.recordset && r.recordset.length > 0) {
+      console.log('✅ Usuario admin ya existe');
+      return;
+    }
+
+    // Admin no existe, crearlo
+    const hash = await bcrypt.hash('admin123', 12);
+    const color = '#' + crypto.randomBytes(3).toString('hex');
+    
+    const req = pool.request();
+    req.input('nombre', sql.NVarChar, 'Administrador');
+    req.input('username', sql.NVarChar, 'admin');
+    req.input('pass_hash', sql.NVarChar, hash);
+    req.input('rol', sql.NVarChar, 'Administrador');
+    req.input('modulo', sql.NVarChar, 'Módulo 01');
+    req.input('color', sql.NVarChar, color);
+    
+    await req.query(`
+      INSERT INTO usuarios (nombre, username, password_hash, rol, modulo, activo, color)
+      VALUES (@nombre, @username, @pass_hash, @rol, @modulo, 1, @color)
+    `);
+    
+    console.log('✅ Usuario admin creado correctamente');
+  } catch (err) {
+    console.warn(`   ⚠️  Error al crear/verificar usuario admin: ${err.message}`);
   }
 }
 
@@ -417,14 +531,18 @@ const MIME = {
 function servirEstatico(res, pathname) {
   const bases = [path.join(__dirname, 'public'), __dirname];
   let fp = null;
+  
+  // Archivos permitidos desde la raíz (sin carpeta)
+  const permitidosRaiz = ['index.html', 'usuarios-module.js', 'Logo.png'];
+  
   for (const base of bases) {
     const file    = (pathname === '/' ? 'index.html' : pathname).replace(/^[\/\\]+/, '');
     const resolved = path.resolve(path.join(base, file));
     const baseAbs  = path.resolve(base);
     // Security: resolved path must stay inside the base directory
     if (!resolved.startsWith(baseAbs + path.sep) && resolved !== baseAbs) continue;
-    // Security: from __dirname root, only serve index.html (never expose server code / .env / schema)
-    if (base === __dirname && path.basename(resolved) !== 'index.html') continue;
+    // Security: from __dirname root, solo servir archivos permitidos (never expose server code / .env / schema)
+    if (base === __dirname && !permitidosRaiz.includes(path.basename(resolved))) continue;
     if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) { fp = resolved; break; }
   }
   if (!fp) {
@@ -507,7 +625,7 @@ async function routerAPI(req, res, ruta, metodo, qp) {
   /* Turnos */
   if (ruta === '/api/turnos'           && metodo === 'GET')  { await getTurnos(res);                        return; }
   if (ruta === '/api/turnos'           && metodo === 'POST') { await crearTurno(req, res, usuario);         return; }
-  if (ruta === '/api/turnos/siguiente' && metodo === 'POST') { await siguienteTurno(res, usuario);          return; }
+  if (ruta === '/api/turnos/siguiente' && metodo === 'POST') { await siguienteTurno(req, res, usuario);          return; }
 
   const mTurno = ruta.match(/^\/api\/turnos\/(\d+)$/);
   if (mTurno && metodo === 'PATCH') { await actualizarTurno(req, res, parseInt(mTurno[1], 10), usuario); return; }
@@ -515,7 +633,22 @@ async function routerAPI(req, res, ruta, metodo, qp) {
   /* Datos de referencia */
   if (ruta === '/api/servicios' && metodo === 'GET') { await getServicios(res); return; }
   if (ruta === '/api/modulos'   && metodo === 'GET') { await getModulos(res);   return; }
-  if (ruta === '/api/usuarios'  && metodo === 'GET') { await getUsuarios(res);  return; }
+  if (ruta === '/api/usuarios'  && metodo === 'GET')  { await getUsuarios(res);  return; }
+  if (ruta === '/api/usuarios'  && metodo === 'POST') { await crearUsuario(req, res, usuario); return; }
+
+  const mUsuarioId = ruta.match(/^\/api\/usuarios\/(\d+)$/);
+  if (mUsuarioId && metodo === 'PATCH') { await actualizarUsuario(req, res, parseInt(mUsuarioId[1], 10), usuario); return; }
+  if (mUsuarioId && metodo === 'DELETE') { await eliminarUsuario(req, res, parseInt(mUsuarioId[1], 10), usuario); return; }
+
+  const mPasswordId = ruta.match(/^\/api\/usuarios\/(\d+)\/password$/);
+  if (mPasswordId && metodo === 'PATCH') { await cambiarPassword(req, res, parseInt(mPasswordId[1], 10), usuario); return; }
+
+  const mModuloActualId = ruta.match(/^\/api\/usuarios\/(\d+)\/modulo-actual$/);
+  if (mModuloActualId && metodo === 'PATCH') { await cambiarModuloActual(req, res, parseInt(mModuloActualId[1], 10), usuario); return; }
+
+  const mHistorialId = ruta.match(/^\/api\/usuarios\/(\d+)\/historial$/);
+  if (mHistorialId && metodo === 'GET') { await getHistorialUsuario(res, parseInt(mHistorialId[1], 10)); return; }
+
   if (ruta === '/api/dashboard'    && metodo === 'GET') { await getDashboard(res); return; }
   if (ruta === '/api/historial'     && metodo === 'GET') { await getHistorial(res, qp); return; }
   if (ruta === '/api/estadisticas'  && metodo === 'GET') { await getEstadisticas(res, qp); return; }
@@ -548,7 +681,7 @@ async function registro(req, res) {
 
   const nom  = nombre.trim().slice(0, 120);
   const user = username.trim().toLowerCase().slice(0, 60);
-  const rolV = ['Administrador','Médico','Enfermero','Recepcionista','Administrativo'].includes(rol)
+  const rolV = ['Administrador','Médico','Enfermero','Recepcionista','Administrativo','Linea de frente'].includes(rol)
                ? rol : 'Recepcionista';
   const color = '#' + crypto.randomBytes(3).toString('hex');
   const hash  = await bcrypt.hash(password, 12);   // factor 12 = ~250ms, seguro
@@ -608,7 +741,7 @@ async function login(req, res) {
   const ok = await bcrypt.compare(password, fila.password_hash);
   if (!ok) return json(res, 401, { error: 'Credenciales incorrectas.' });
 
-  const payload = { id: fila.id, nombre: fila.nombre, username: fila.username, rol: fila.rol, modulo: fila.modulo, color: fila.color };
+  const payload = { id: fila.id, nombre: fila.nombre, username: fila.username, rol: fila.rol, modulo: fila.modulo, color: fila.color, moduloActual: mem.modulosActuales[fila.id] || null };
   return json(res, 200, { ok: true, token: firmarToken(payload), usuario: payload });
 }
 
@@ -621,10 +754,18 @@ async function getTurnos(res) {
       SELECT id, codigo, paciente, documento, servicio, modulo, estado,
              atendido_por, registrado_por, nota, llamadas, ts_creado, ts_llamado, ts_atendido, ts_fin
       FROM   turnos
-      WHERE  CAST(DATEADD(SECOND, ts_creado/1000, '19700101') AS DATE) = CAST(GETDATE() AS DATE)
+      WHERE  CAST(DATEADD(SECOND, ts_creado/1000, '1970-01-01') AS DATE) >= CAST(DATEADD(DAY, -7, GETDATE()) AS DATE)
       ORDER  BY ts_creado ASC
     `);
-    return json(res, 200, { ok: true, turnos: r.recordset });
+    // Asegurar que los timestamps son números válidos
+    const turnos = r.recordset.map(t => ({
+      ...t,
+      ts_creado: t.ts_creado ? Number(t.ts_creado) : null,
+      ts_llamado: t.ts_llamado ? Number(t.ts_llamado) : null,
+      ts_atendido: t.ts_atendido ? Number(t.ts_atendido) : null,
+      ts_fin: t.ts_fin ? Number(t.ts_fin) : null,
+    }));
+    return json(res, 200, { ok: true, turnos });
   }
   json(res, 200, { ok: true, turnos: mem.turnos });
 }
@@ -650,7 +791,7 @@ async function crearTurno(req, res, usuario) {
     }
 
     const num    = await siguienteNumero();
-    const codigo = `${prefijo}-${num}`;
+    const codigo = `${prefijo}-${String(num).padStart(3, '0')}`;
     const ts     = Date.now();
 
     if (dbReady) {
@@ -662,7 +803,9 @@ async function crearTurno(req, res, usuario) {
         VALUES (@codigo, @paciente, @doc, @servicio, @regPor, @ts)
       `, { codigo, paciente: paciente.trim(), doc: documento?.trim() || null, servicio, regPor: usuario.nombre, ts });
 
-      const t = ins.recordset[0];
+      let t = ins.recordset[0];
+      // Asegurar que ts_creado es un número válido
+      t = { ...t, ts_creado: t.ts_creado ? Number(t.ts_creado) : null };
       await registrarHistorial(t.id, t.codigo, 'CREADO', usuario.nombre);
       emitir('turno_nuevo', { turno: t });
       return json(res, 201, { ok: true, turno: t });
@@ -728,7 +871,15 @@ async function actualizarTurno(req, res, id, usuario) {
       WHERE id = @id${whereExtra}
     `, p);
     if (!r.recordset.length) return json(res, 409, { error: 'El turno ya está siendo atendido o no existe.' });
-    const t = r.recordset[0];
+    let t = r.recordset[0];
+    // Asegurar que los timestamps son números válidos
+    t = {
+      ...t,
+      ts_creado: t.ts_creado ? Number(t.ts_creado) : null,
+      ts_llamado: t.ts_llamado ? Number(t.ts_llamado) : null,
+      ts_atendido: t.ts_atendido ? Number(t.ts_atendido) : null,
+      ts_fin: t.ts_fin ? Number(t.ts_fin) : null,
+    };
     if (estado) {
       const accionMap = { Llamando:'LLAMADO', Atendiendo:'ATENDIDO', Finalizado:'FINALIZADO', Cancelado:'CANCELADO', 'No atendido':'CANCELADO' };
       if (accionMap[estado]) await registrarHistorial(t.id, t.codigo, accionMap[estado], usuario.nombre);
@@ -755,20 +906,24 @@ async function actualizarTurno(req, res, id, usuario) {
 /* ═══════════════════════════════════════════════════════════════════
    21. TURNOS — LLAMAR SIGUIENTE  POST /api/turnos/siguiente
 ═══════════════════════════════════════════════════════════════════ */
-async function siguienteTurno(res, usuario) {
-  const modOp = (usuario.modulo && usuario.modulo !== 'Sin módulo') ? usuario.modulo : 'Módulo 01';
+async function siguienteTurno(req, res, usuario) {
+  const b = await leerBody(req);
+  const moduloSolicitado = b?.modulo || mem.modulosActuales[usuario.id] || usuario.moduloActual || usuario.modulo;
+  const modOp = (moduloSolicitado && moduloSolicitado !== 'Sin módulo') ? moduloSolicitado : 'Módulo 01';
   const ahora = Date.now();
 
   if (dbReady) {
+    // Buscar el PRIMER turno en fila (sin filtrar por módulo) - en orden secuencial
     const next = await dbQ(`
       SELECT TOP 1 id FROM turnos
       WHERE  estado = 'En fila'
-        AND  CAST(DATEADD(SECOND, ts_creado/1000, '19700101') AS DATE) = CAST(GETDATE() AS DATE)
+        AND  CAST(DATEADD(SECOND, ts_creado/1000, '1970-01-01') AS DATE) >= CAST(DATEADD(DAY, -7, GETDATE()) AS DATE)
       ORDER  BY ts_creado ASC
     `);
     if (!next.recordset.length) return json(res, 200, { ok: false, mensaje: 'No hay turnos en espera.' });
 
     const { id } = next.recordset[0];
+    // Asignar el módulo del operador al turno que se llama
     const upd = await dbQ(`
       UPDATE turnos
       SET    estado='Llamando', ts_llamado=@ahora, modulo=@mod,
@@ -779,12 +934,19 @@ async function siguienteTurno(res, usuario) {
       WHERE  id = @id
     `, { ahora, mod: modOp, op: usuario.nombre, id });
 
-    const t = upd.recordset[0];
+    let t = upd.recordset[0];
+    // Asegurar que los timestamps son números válidos
+    t = {
+      ...t,
+      ts_creado: t.ts_creado ? Number(t.ts_creado) : null,
+      ts_llamado: t.ts_llamado ? Number(t.ts_llamado) : null,
+    };
     await registrarHistorial(t.id, t.codigo, 'LLAMADO', usuario.nombre);
     emitir('turno_llamado', { turno: t });
     return json(res, 200, { ok: true, turno: t });
   }
 
+  // En memoria: buscar el PRIMER turno en fila (sin filtrar por módulo)
   const idx = mem.turnos.findIndex(t => t.estado === 'En fila');
   if (idx < 0) return json(res, 200, { ok: false, mensaje: 'No hay turnos en espera.' });
 
@@ -883,19 +1045,293 @@ async function getModulos(res) {
 
 async function getUsuarios(res) {
   if (dbReady) {
-    const r = await dbQ(`SELECT id, nombre, username, rol, modulo, color, activo FROM usuarios WHERE activo=1 ORDER BY nombre`);
+    const r = await dbQ(`SELECT id, nombre, username, rol, modulo, email, color, activo, creado_en FROM usuarios ORDER BY nombre`);
     return json(res, 200, { ok: true, usuarios: r.recordset });
   }
-  const activos = mem.usuarios.filter(u => u.activo).map(u => ({
+  const todos = mem.usuarios.map(u => ({
     id: u.id,
     nombre: u.nombre,
     username: u.username,
     rol: u.rol,
     modulo: u.modulo,
+    email: u.email || null,
     color: u.color,
     activo: u.activo
   }));
-  json(res, 200, { ok: true, usuarios: activos });
+  json(res, 200, { ok: true, usuarios: todos });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   22d. USUARIOS — CREAR
+═══════════════════════════════════════════════════════════════════ */
+async function crearUsuario(req, res, usuario) {
+  try {
+    /* Verificar permisos */
+    if (usuario.rol !== 'Administrador') {
+      return json(res, 403, { error: 'Solo administradores pueden crear usuarios.' });
+    }
+
+    const b = await leerBody(req);
+    const { nombre, username, password, rol, email, modulos } = b;
+
+    if (!nombre?.trim()) return json(res, 400, { error: 'El nombre es obligatorio.' });
+    if (!username?.trim()) return json(res, 400, { error: 'El usuario es obligatorio.' });
+    if (!password || password.length < 6) return json(res, 400, { error: 'Contraseña mínimo 6 caracteres.' });
+    if (!rol?.trim()) return json(res, 400, { error: 'El rol es obligatorio.' });
+
+    const nom = nombre.trim().slice(0, 120);
+    const user = username.trim().toLowerCase().slice(0, 60);
+    const rolesList = ['Administrador', 'Médico', 'Enfermero', 'Recepcionista', 'Operador', 'Linea de frente'];
+    const rolVal = rolesList.includes(rol) ? rol : 'Recepcionista';
+    const modulosVal = modulos ? JSON.stringify(Array.isArray(modulos) ? modulos : []) : '[]';
+    const emailVal = email?.trim() || null;
+    const hash = await bcrypt.hash(password, 12);
+    const color = '#' + crypto.randomBytes(3).toString('hex');
+
+    if (dbReady) {
+      const dup = await dbQ(`SELECT 1 FROM usuarios WHERE username = @u`, { u: user });
+      if (dup.recordset.length) return json(res, 409, { error: 'El usuario ya existe.' });
+
+      const ins = await dbQ(`
+        INSERT INTO usuarios (nombre, username, password_hash, rol, modulo, email, color, activo)
+        OUTPUT INSERTED.id, INSERTED.nombre, INSERTED.username, INSERTED.rol,
+               INSERTED.modulo, INSERTED.email, INSERTED.color, INSERTED.activo
+        VALUES (@nom, @user, @hash, @rol, @mod, @email, @color, 1)
+      `, { nom, user, hash, rol: rolVal, mod: modulosVal, email: emailVal, color });
+
+      const u = ins.recordset[0];
+      await registrarHistorialUsuario(u.id, u.username, 'CREADO', user, usuario.nombre);
+      return json(res, 201, { ok: true, usuario: u });
+    }
+
+    if (mem.usuarios.find(u => u.username === user))
+      return json(res, 409, { error: 'El usuario ya existe.' });
+
+    const id = Math.max(...mem.usuarios.map(u => u.id), 0) + 1;
+    const u = { id, nombre: nom, username: user, password_hash: hash, rol: rolVal, modulo: modulosVal, email: emailVal, activo: true, color };
+    mem.usuarios.push(u);
+    return json(res, 201, { ok: true, usuario: u });
+  } catch (e) {
+    console.error('[crearUsuario]', e.message);
+    return json(res, 500, { error: 'Error al crear usuario: ' + e.message });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   22e. USUARIOS — ACTUALIZAR
+═══════════════════════════════════════════════════════════════════ */
+async function actualizarUsuario(req, res, id, usuario) {
+  try {
+    if (usuario.rol !== 'Administrador') {
+      return json(res, 403, { error: 'Solo administradores pueden editar usuarios.' });
+    }
+
+    const b = await leerBody(req);
+    const { nombre, email, rol, modulos, activo } = b;
+
+    const sets = [];
+    const p = { id };
+
+    if (nombre?.trim()) { sets.push('nombre = @nom'); p.nom = nombre.trim().slice(0, 120); }
+    if (email !== undefined) { sets.push('email = @email'); p.email = email?.trim() || null; }
+    if (rol) { sets.push('modulo = @mod'); p.mod = modulos ? JSON.stringify(Array.isArray(modulos) ? modulos : []) : '[]'; }
+    if (activo !== undefined) { sets.push('activo = @act'); p.act = activo ? 1 : 0; }
+
+    if (!sets.length) return json(res, 400, { error: 'Sin cambios.' });
+
+    if (dbReady) {
+      const upd = await dbQ(`
+        UPDATE usuarios
+        SET ${sets.join(', ')}
+        OUTPUT INSERTED.id, INSERTED.nombre, INSERTED.username, INSERTED.rol,
+               INSERTED.modulo, INSERTED.email, INSERTED.color, INSERTED.activo
+        WHERE id = @id
+      `, p);
+
+      if (!upd.recordset.length) return json(res, 404, { error: 'Usuario no encontrado.' });
+
+      const u = upd.recordset[0];
+      await registrarHistorialUsuario(u.id, u.username, 'ACTUALIZADO', usuario.username, usuario.nombre);
+      return json(res, 200, { ok: true, usuario: u });
+    }
+
+    const mem_u = mem.usuarios.find(u => u.id === id);
+    if (!mem_u) return json(res, 404, { error: 'Usuario no encontrado.' });
+
+    if (nombre?.trim()) mem_u.nombre = nombre.trim();
+    if (email !== undefined) mem_u.email = email || null;
+    if (rol) mem_u.modulo = modulos ? JSON.stringify(modulos) : '[]';
+    if (activo !== undefined) mem_u.activo = activo;
+
+    return json(res, 200, { ok: true, usuario: mem_u });
+  } catch (e) {
+    console.error('[actualizarUsuario]', e.message);
+    return json(res, 500, { error: 'Error al actualizar usuario: ' + e.message });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   22f. USUARIOS — ELIMINAR
+═══════════════════════════════════════════════════════════════════ */
+async function eliminarUsuario(req, res, id, usuario) {
+  try {
+    if (usuario.rol !== 'Administrador') {
+      return json(res, 403, { error: 'Solo administradores pueden eliminar usuarios.' });
+    }
+
+    const b = await leerBody(req);
+    const { password_confirmacion } = b;
+
+    // Verificar contraseña del administrador actual
+    if (!password_confirmacion) {
+      return json(res, 400, { error: 'Se requiere contraseña de administrador para eliminar.' });
+    }
+
+    let adminActual;
+    if (dbReady) {
+      const r = await dbQ(`SELECT password_hash FROM usuarios WHERE id = @id`, { id: usuario.id });
+      if (!r.recordset.length) return json(res, 401, { error: 'Error de autenticación.' });
+      adminActual = r.recordset[0];
+    } else {
+      adminActual = mem.usuarios.find(u => u.id === usuario.id);
+    }
+
+    if (!adminActual) return json(res, 401, { error: 'Error de autenticación.' });
+
+    const passwordValida = await bcrypt.compare(password_confirmacion, adminActual.password_hash);
+    if (!passwordValida) {
+      return json(res, 403, { error: 'Contraseña incorrecta. Eliminación cancelada.' });
+    }
+
+    if (dbReady) {
+      const r = await dbQ(`SELECT username FROM usuarios WHERE id = @id`, { id });
+      if (!r.recordset.length) return json(res, 404, { error: 'Usuario no encontrado.' });
+
+      const username = r.recordset[0].username;
+      
+      await dbQ(`DELETE FROM usuarios WHERE id = @id`, { id });
+      await registrarHistorialUsuario(id, username, 'ELIMINADO', usuario.username, usuario.nombre);
+      return json(res, 200, { ok: true, mensaje: 'Usuario eliminado.' });
+    }
+
+    const idx = mem.usuarios.findIndex(u => u.id === id);
+    if (idx < 0) return json(res, 404, { error: 'Usuario no encontrado.' });
+
+    const username = mem.usuarios[idx].username;
+    mem.usuarios.splice(idx, 1);
+    return json(res, 200, { ok: true, mensaje: 'Usuario eliminado.' });
+  } catch (e) {
+    console.error('[eliminarUsuario]', e.message);
+    return json(res, 500, { error: 'Error al eliminar usuario: ' + e.message });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   22g. USUARIOS — CAMBIAR CONTRASEÑA
+═══════════════════════════════════════════════════════════════════ */
+async function cambiarPassword(req, res, id, usuario) {
+  try {
+    if (usuario.rol !== 'Administrador' && usuario.id !== id) {
+      return json(res, 403, { error: 'No tienes permisos para cambiar la contraseña de este usuario.' });
+    }
+
+    const b = await leerBody(req);
+    const { password } = b;
+
+    if (!password || password.length < 6) {
+      return json(res, 400, { error: 'Contraseña mínimo 6 caracteres.' });
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+
+    if (dbReady) {
+      const upd = await dbQ(`
+        UPDATE usuarios
+        SET password_hash = @hash
+        OUTPUT INSERTED.id, INSERTED.nombre, INSERTED.username
+        WHERE id = @id
+      `, { hash, id });
+
+      if (!upd.recordset.length) return json(res, 404, { error: 'Usuario no encontrado.' });
+
+      const u = upd.recordset[0];
+      await registrarHistorialUsuario(u.id, u.username, 'PASSWORD_CAMBIADO', usuario.username, usuario.nombre);
+      return json(res, 200, { ok: true, mensaje: 'Contraseña actualizada.' });
+    }
+
+    const mem_u = mem.usuarios.find(u => u.id === id);
+    if (!mem_u) return json(res, 404, { error: 'Usuario no encontrado.' });
+
+    mem_u.password_hash = hash;
+    return json(res, 200, { ok: true, mensaje: 'Contraseña actualizada.' });
+  } catch (e) {
+    console.error('[cambiarPassword]', e.message);
+    return json(res, 500, { error: 'Error al cambiar contraseña: ' + e.message });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   22g. USUARIOS — CAMBIAR MÓDULO ACTUAL (para la sesión)
+═══════════════════════════════════════════════════════════════════ */
+async function cambiarModuloActual(req, res, id, usuario) {
+  try {
+    // El usuario solo puede cambiar su propio módulo actual
+    if (usuario.id !== id) {
+      return json(res, 403, { error: 'No tienes permisos para cambiar el módulo de otro usuario.' });
+    }
+
+    const b = await leerBody(req);
+    const { moduloActual } = b;
+
+    if (!moduloActual || !moduloActual.trim()) {
+      return json(res, 400, { error: 'Debes especificar un módulo.' });
+    }
+
+    // Guardar en memoria el módulo actual del usuario (para esta sesión)
+    mem.modulosActuales[usuario.id] = moduloActual.trim();
+
+    return json(res, 200, { 
+      ok: true, 
+      mensaje: `Módulo actualizado a ${moduloActual}`,
+      moduloActual: moduloActual.trim()
+    });
+  } catch (e) {
+    console.error('[cambiarModuloActual]', e.message);
+    return json(res, 500, { error: 'Error al cambiar módulo: ' + e.message });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   22h. USUARIOS — HISTORIAL DE ACCESO
+═══════════════════════════════════════════════════════════════════ */
+async function getHistorialUsuario(res, id) {
+  if (!dbReady) return json(res, 200, { ok: true, historial: [] });
+
+  const r = await dbQ(`
+    SELECT id, usuario_id, username, accion, detalles, ip, ts
+    FROM usuarios_historial
+    WHERE usuario_id = @id
+    ORDER BY ts DESC
+  `, { id });
+
+  return json(res, 200, { ok: true, historial: r.recordset });
+}
+
+async function registrarHistorialUsuario(usuarioId, username, accion, realizadoPor, nombreOp) {
+  if (!dbReady) return;
+  try {
+    await dbQ(`
+      INSERT INTO usuarios_historial (usuario_id, username, accion, detalles, ts)
+      VALUES (@uid, @user, @accion, @det, SYSDATETIME())
+    `, {
+      uid: usuarioId,
+      user: username,
+      accion,
+      det: `Realizado por: ${nombreOp || realizadoPor}`
+    });
+  } catch (e) {
+    console.warn('[usuarios_historial]', e.message);
+  }
 }
 
 async function getDashboard(res) {
@@ -962,13 +1398,35 @@ function ipsLocales() {
   return ips;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   LIMPIEZA — Eliminar turnos antiguos finalizados
+═══════════════════════════════════════════════════════════════════ */
+async function limpiarTurnosAntiguos() {
+  if (!dbReady) return;
+  try {
+    const r = await dbQ(`
+      DELETE FROM turnos
+      WHERE estado IN ('Finalizado', 'Cancelado', 'No atendido')
+        AND CAST(DATEADD(SECOND, ts_creado/1000, '1970-01-01') AS DATE) < CAST(GETDATE() AS DATE)
+    `);
+    if (r.rowsAffected[0] > 0) {
+      console.log(`✅ Limpios ${r.rowsAffected[0]} turnos antiguos finalizados.`);
+    }
+  } catch (e) {
+    console.warn('[Limpieza de turnos]', e.message);
+  }
+}
+
 async function arrancar() {
   console.log('\n┌────────────────────────────────────────────────────────────┐');
   console.log('│         NeuroTurn v2.1 — iniciando servidor...             │');
   console.log('└────────────────────────────────────────────────────────────┘');
 
   await conectarDB();
+  await limpiarTurnosAntiguos();
   await inicializarMemoria();
+  await insertarUsuariosDePrueba();
+  await asegurarUsuarioAdmin();
 
   servidor.listen(PORT, HOST, () => {
     const ips      = ipsLocales();

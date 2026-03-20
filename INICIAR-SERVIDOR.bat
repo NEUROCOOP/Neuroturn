@@ -31,6 +31,7 @@ echo Accede en: http://localhost:3001
 echo Presiona Ctrl+C para detener el servidor.
 echo.
 
+cd /d "C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod"
 node server.js
 
 echo.

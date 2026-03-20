@@ -9,11 +9,14 @@ Write-Host "   🚀 NeuroTurn v2.2 — Sistema de Gestión de Turnos" -Foregroun
 Write-Host "═════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host "`n" -ForegroundColor Green
 
-# Verificar que está en el directorio correcto
+# Cambiar al directorio del proyecto
+$proyectoPath = "C:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod"
+Set-Location $proyectoPath
+
+# Verificar que el archivo del servidor existe
 $ruta = Get-Location
-if (-not (Test-Path "server-mejorado.js")) {
-    Write-Host "❌ Error: server-mejorado.js no encontrado en $ruta" -ForegroundColor Red
-    Write-Host "Navega a la carpeta del proyecto: cd c:\Users\AuxSistemas\Desktop\Neuroturn_Sistema\Neuroturn\neuroturn-prod" -ForegroundColor Yellow
+if (-not (Test-Path "server.js")) {
+    Write-Host "❌ Error: server.js no encontrado en $ruta" -ForegroundColor Red
     exit 1
 }
 
@@ -118,7 +121,7 @@ Write-Host "🚀 Iniciando NeuroTurn..." -ForegroundColor Green
 Write-Host "" -ForegroundColor Green
 
 $env:NODE_ENV = "production"
-node server-mejorado.js
+node server.js
 
 # Si llega aquí, el servidor se cerró
 Write-Host "`n" -ForegroundColor Red

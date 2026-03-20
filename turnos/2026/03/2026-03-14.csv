@@ -1,0 +1,10 @@
+﻿turno,paciente,documento,servicio,operador,modulo,hora_creacion,tiempo_espera_min,tiempo_atencion_min,estado
+"T-172","asdasd1","1231","Módulo 1","Dan","Módulo 01","Invalid Date","","","Finalizado"
+"T-173","asdasda","1423","Módulo 1","Dan","Módulo 01","Invalid Date","","","Finalizado"
+"T-174","dasdas","3412","Módulo 1","Dan","Módulo 01","Invalid Date","","","Finalizado"
+"T-175","dasdasd","5423","Módulo 1","Dan","Módulo 01","Invalid Date","","","Finalizado"
+"T-176","wersfd","2534","Módulo 1","Dan","Módulo 01","Invalid Date","","","Finalizado"
+"T-177","Daniel","1341","Módulo 1","Dan","Módulo 01","Invalid Date","","","Finalizado"
+"T-178","Daniel Arteaga","1213","Módulo 1","Dan","-","Invalid Date","","","Finalizado"
+"T-179","Hugo Ayala","2354","Módulo 1","Dan","-","Invalid Date","","","Llamando"
+"T-180","Pedro Sanchez","1243","Módulo 1","","-","Invalid Date","","","En fila"

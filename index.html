@@ -464,47 +464,101 @@
     font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 10px;
     transition: background .3s, color .3s;
   }
-  /* Force light-mode overrides with higher specificity */
-  .tv-screen.tv-light .tv-col-count,
-  .tv-light .tv-col-count {
+  
+  /* ── TV LIGHT MODE (COMPLETE THEME OVERRIDES) ─────────────── */
+  .tv-screen.tv-light {
+    background: #F8FAFC !important; border-color: #E2E8F0 !important;
+  }
+  .tv-screen.tv-light .tv-header {
+    background: #F1F5F9 !important; border-color: #E2E8F0 !important;
+  }
+  .tv-screen.tv-light .tv-time {
+    color: #111827 !important;
+  }
+  .tv-screen.tv-light .tv-date {
+    color: #64748B !important;
+  }
+  .tv-screen.tv-light .tv-col-left {
+    border-color: #E2E8F0 !important;
+  }
+  .tv-screen.tv-light .tv-col-count {
     background: #DBEAFE !important; color: #1D4ED8 !important;
   }
-  .tv-screen.tv-light .tv-col-title,
-  .tv-light .tv-col-title {
-    color: #64748B !important; border-color: #E2E8F0 !important;
+  .tv-screen.tv-light .tv-col-title {
+    color: #475569 !important; border-color: #E2E8F0 !important;
   }
-  .tv-screen.tv-light .tv-aviso-badge,
-  .tv-light .tv-aviso-badge {
+  .tv-screen.tv-light .tv-aviso-badge {
     background: #2563EB !important; color: white !important;
   }
-  .tv-screen.tv-light .tv-ticker-text,
-  .tv-light .tv-ticker-text {
-    color: #94A3B8 !important;
+  .tv-screen.tv-light .tv-ticker-text {
+    color: #64748B !important;
+  }
+  .tv-screen.tv-light .tv-queue-item {
+    background: #FFFFFF !important; border-color: #E2E8F0 !important;
+  }
+  .tv-screen.tv-light .tv-queue-num {
+    color: #64748B !important;
+  }
+  .tv-screen.tv-light .tv-queue-id {
+    color: #1D4ED8 !important;
+  }
+  .tv-screen.tv-light .tv-queue-name {
+    color: #64748B !important;
+  }
+  .tv-screen.tv-light .tv-serving-card {
+    background: #FFFFFF !important; border-color: #E2E8F0 !important;
+  }
+  .tv-screen.tv-light .tv-serving-card.llamando {
+    background: #DBEAFE !important; border-color: #93C5FD !important;
+  }
+  .tv-screen.tv-light .tv-serving-card.atendiendo {
+    background: #DCFCE7 !important; border-color: #B7E4C7 !important;
+  }
+  .tv-screen.tv-light .tv-serving-status {
+    color: #475569 !important;
+  }
+  .tv-screen.tv-light .tv-serving-turno {
+    color: #1D4ED8 !important;
+  }
+  .tv-screen.tv-light .tv-serving-patient {
+    color: #475569 !important;
+  }
+  .tv-screen.tv-light .tv-serving-operator {
+    color: #64748B !important;
+  }
+  .tv-screen.tv-light .tv-serving-modulo-label {
+    color: #64748B !important;
+  }
+  .tv-screen.tv-light .tv-serving-modulo-val {
+    color: #1D4ED8 !important;
+  }
+  .tv-screen.tv-light .tv-serving-svc {
+    color: #64748B !important;
+  }
+  .tv-screen.tv-light .tv-serving-timer {
+    background: #F1F5F9 !important; color: #64748B !important;
   }
 
   /* Queue items */
   .tv-queue-item {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 11px 14px; border-radius: 10px; background: #0F172A;
-    margin-bottom: 6px; border: 1px solid #1E293B; transition: border-color .2s;
+    padding: 18px 16px; border-radius: 10px; background: #0F172A;
+    margin-bottom: 14px; border: 2px solid #1E293B; transition: border-color .2s;
   }
-  .tv-queue-left { display: flex; align-items: center; gap: 12px; }
-  .tv-queue-num { font-size: 10px; font-weight: 700; color: #334155; min-width: 16px; text-align:center; }
-  .tv-queue-id { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 800; line-height: 1; }
-  .tv-queue-name { font-size: 12px; font-weight: 500; color: #94A3B8; }
-  .tv-queue-wait {
-    font-size: 11px; font-weight: 700; color: #475569; font-family: 'DM Mono', monospace;
-    background: #1E293B; padding: 3px 8px; border-radius: 6px; white-space: nowrap;
-  }
+  .tv-queue-left { display: flex; align-items: center; gap: 18px; }
+  .tv-queue-num { font-size: 16px; font-weight: 700; color: #334155; min-width: 22px; text-align:center; }
+  .tv-queue-id { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 800; line-height: 1; }
+  .tv-queue-name { font-size: 20px; font-weight: 500; color: #94A3B8; }
+  .tv-queue-wait { display: none; }
   .tv-queue-wait.warm  { color: #F59E0B; background: rgba(245,158,11,.12); }
   .tv-queue-wait.hot   { color: #EF4444; background: rgba(239,68,68,.12); animation: pulse-bg .8s ease-in-out infinite; }
   @keyframes pulse-bg { 0%,100% { opacity:1 } 50% { opacity:.6 } }
 
   /* Serving cards */
   .tv-serving-card {
-    border-radius: 14px; margin-bottom: 10px; padding: 16px 18px;
-    display: flex; align-items: stretch; gap: 14px;
-    border: 1px solid #1E293B; position: relative; overflow: hidden;
+    border-radius: 14px; margin-bottom: 12px; padding: 22px 26px;
+    display: flex; align-items: stretch; gap: 18px;
+    border: 2px solid #1E293B; position: relative; overflow: hidden;
     background: #0F172A;
   }
   .tv-serving-card.llamando {
@@ -529,27 +583,27 @@
 
   .tv-serving-left { flex: 1; min-width: 0; padding-left: 6px; }
   .tv-serving-status {
-    font-size: 9.5px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-    display: flex; align-items: center; gap: 5px; margin-bottom: 5px;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 7px; margin-bottom: 6px;
   }
-  .tv-serving-status-dot { width: 5px; height: 5px; border-radius: 50%; animation: blink-dot 1s ease-in-out infinite; }
+  .tv-serving-status-dot { width: 7px; height: 7px; border-radius: 50%; animation: blink-dot 1s ease-in-out infinite; }
   @keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.15} }
-  .tv-serving-turno { font-family: 'DM Mono', monospace; font-size: 32px; font-weight: 900; line-height: 1; }
-  .tv-serving-patient { font-size: 12.5px; font-weight: 600; color: #CBD5E1; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tv-serving-turno { font-family: 'DM Mono', monospace; font-size: 42px; font-weight: 900; line-height: 1; }
+  .tv-serving-patient { font-size: 16px; font-weight: 600; color: #CBD5E1; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tv-serving-operator {
-    display: flex; align-items: center; gap: 5px; margin-top: 5px;
-    font-size: 10.5px; color: #475569; font-weight: 500;
+    display: flex; align-items: center; gap: 6px; margin-top: 6px;
+    font-size: 12px; color: #64748B; font-weight: 500;
   }
   .tv-serving-operator-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 
   .tv-serving-right {
     text-align: right; flex-shrink: 0; display: flex; flex-direction: column;
-    align-items: flex-end; justify-content: center; min-width: 80px;
+    align-items: flex-end; justify-content: center; min-width: 110px;
   }
-  .tv-serving-modulo-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #334155; }
-  .tv-serving-modulo-val { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 900; color: white; line-height: 1.1; }
-  .tv-serving-svc { font-size: 10px; color: #475569; margin-top: 2px; font-weight: 500; }
-  .tv-serving-timer { font-family: 'DM Mono', monospace; font-size: 10.5px; color: #334155; margin-top: 6px; background: #1E293B; padding: 2px 7px; border-radius: 5px; display: inline-block; }
+  .tv-serving-modulo-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #475569; }
+  .tv-serving-modulo-val { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 900; color: white; line-height: 1.1; }
+  .tv-serving-svc { font-size: 12px; color: #64748B; margin-top: 2px; font-weight: 500; }
+  .tv-serving-timer { font-family: 'DM Mono', monospace; font-size: 11px; color: #475569; margin-top: 6px; background: #1E293B; padding: 3px 10px; border-radius: 6px; display: inline-block; }
 
   /* Empty states */
   .tv-empty { text-align: center; padding: 28px 16px; color: #1E293B; }
@@ -580,9 +634,9 @@
   .tv-light .tv-time { color: #0F172A !important; }
   .tv-light .tv-date { color: #64748B !important; }
   .tv-light .tv-col-left { border-color: #DBEAFE !important; }
-  .tv-light .tv-queue-item { background: white !important; border-color: #E2E8F0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-  .tv-light .tv-queue-name { color: #475569 !important; }
-  .tv-light .tv-queue-num  { color: #CBD5E1 !important; }
+  .tv-light .tv-queue-item { background: white !important; border-color: #CBD5E1 !important; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .tv-light .tv-queue-name { color: #334155 !important; }
+  .tv-light .tv-queue-num  { color: #94A3B8 !important; }
   .tv-light .tv-queue-wait { background: #F1F5F9 !important; color: #64748B !important; }
   .tv-light .tv-queue-wait.warm { background: #FEF3C7 !important; color: #D97706 !important; }
   .tv-light .tv-queue-wait.hot  { background: #FEE2E2 !important; color: #DC2626 !important; }
@@ -959,10 +1013,6 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           Inicio
         </a>
-        <a class="nav-item" onclick="navTo('dashboard')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Dashboard
-        </a>
         <div class="nav-section-label" style="margin-top:8px">Atención</div>
         <a class="nav-item" onclick="navTo('turnos')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -985,6 +1035,10 @@
           Ventana Televisor
         </a>
         <div class="nav-section-label" style="margin-top:8px">Administración</div>
+        <a class="nav-item" onclick="navTo('dashboard')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
         <a class="nav-item nav-item-soon" onclick="navTo('usuarios')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           Gestión De Usuarios
@@ -995,11 +1049,7 @@
           Servicios Médicos
           <span class="nav-soon-badge">Próximamente</span>
         </a>
-        <a class="nav-item nav-item-soon" onclick="navTo('reportes')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Reporte y Estadísticas
-          <span class="nav-soon-badge">Próximamente</span>
-        </a>
+        <!-- REPORTES OCULTO -->
         <a class="nav-item nav-item-soon" onclick="navTo('modulos')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           Gestión de Módulos
@@ -1109,7 +1159,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
               </div>
               <div style="font-size:14px;font-weight:600;margin-bottom:4px">Ventana Televisor</div>
-              <div style="font-size:12px;color:var(--text-muted)">Pantalla pública sala de espera</div>
+              <div style="font-size:12px;color:var(--text-muted)">Ver turnos en pantalla</div>
             </div>
           </div>
           <!-- Módulos activos en tiempo real -->
@@ -1269,7 +1319,7 @@
             </div>
             <button 
               class="voice-test-btn" 
-              onclick="TTS.speak({id:'A-104', patient:'Juan Pérez', modulo:'Módulo 04'})"
+              onclick="TTS.speak({id:'G-001', patient:'Ricardo M. Valdivia', modulo:'Módulo 05'})"
               aria-label="Probar síntesis de voz con turno de ejemplo"
               title="Reproduce de prueba de voz">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -1415,7 +1465,7 @@
               </button>
             </div>
           </div>
-          <div class="tv-screen" id="tv-preview-screen">
+          <div class="tv-screen tv-light" id="tv-preview-screen">
             <!-- CALL ANNOUNCEMENT BANNER -->
             <div class="tv-call-banner" id="tv-banner-preview">
               <div class="tv-call-banner-icon">
@@ -1458,7 +1508,7 @@
                   <div class="tv-logo-org">Neurocoop</div>
                 </div>
               </div>
-              <div class="tv-clock-block">
+              <div class="tv-clock-block" style="display:none">
                 <div class="tv-time" id="tv-time">--:--</div>
                 <div class="tv-date" id="tv-date">--</div>
               </div>
@@ -1559,24 +1609,25 @@
 
         <!-- REPORTES — PRÓXIMAMENTE -->
         <div class="page" id="page-reportes">
-          <div class="soon-page">
-            <div class="soon-icon-wrap">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#3B72F2" stroke-width="1.6"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+          <div id="reportes-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+            <div class="card" style="padding:16px">
+              <h3 style="margin:0 0 12px;font-size:14px;font-weight:600">Histograma Tiempos de Espera</h3>
+              <canvas id="chart-wait-histogram" style="max-height:250px"></canvas>
             </div>
-            <div class="soon-title">Reporte y Estadísticas</div>
-            <div class="soon-desc">Accede a análisis completos del desempeño del sistema: tiempos de espera, carga por servicio, rendimiento por operador, picos horarios y tendencias históricas exportables a Excel y PDF.</div>
-            <div class="soon-features">
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>KPIs del día y del período</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Histograma de tiempos de espera</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Turnos atendidos por hora</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Rendimiento por operador</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Comparativo por servicio</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Exportar Excel y PDF</div>
+            <div class="card" style="padding:16px">
+              <h3 style="margin:0 0 12px;font-size:14px;font-weight:600">Turnos por Hora</h3>
+              <canvas id="chart-turnos-hora" style="max-height:250px"></canvas>
             </div>
-            <div class="soon-badge-big">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Módulo en desarrollo — Próximamente
-            </div>
+          </div>
+          <div id="reportes-operadores" class="card" style="padding:16px">
+            <h3 style="margin:0 0 12px;font-size:14px;font-weight:600">Rendimiento por Operador</h3>
+            <table style="width:100%;border-collapse:collapse">
+              <thead style="background:#F5F7FA;border-bottom:1px solid #DDD">
+                <tr><th style="text-align:left;padding:8px;font-size:12px">Operador</th><th style="text-align:center;padding:8px;font-size:12px">Atendidos</th><th style="text-align:center;padding:8px;font-size:12px">Tiempo Prom</th></tr>
+              </thead>
+              <tbody id="reportes-operadores-body"></tbody>
+            </table>
           </div>
         </div>
 
@@ -2206,35 +2257,35 @@ function fmtMMSS(ms) {
 function makeTs(minutesAgo) { return Date.now() - minutesAgo * 60000; }
 
 const DEFAULT_TURNOS = [
-  { id:'A-104', patient:'Ricardo M. Valdivia', doc:'4821', estado:'Llamando', modulo:'Módulo 05', service:'Módulo 1',
+  { id:'G-001', patient:'Ricardo M. Valdivia', doc:'4821', estado:'Llamando', modulo:'Módulo 05', service:'Módulo 1',
     tsCreated: makeTs(42), tsLlamado: makeTs(3), tsAtendido: null, tsFin: null },
-  { id:'B-201', patient:'Elena Rodríguez', doc:'3902', estado:'Atendiendo', modulo:'Módulo 02', service:'Módulo 2',
+  { id:'G-002', patient:'Elena Rodríguez', doc:'3902', estado:'Atendiendo', modulo:'Módulo 02', service:'Módulo 2',
     tsCreated: makeTs(55), tsLlamado: makeTs(14), tsAtendido: makeTs(13), tsFin: null },
-  { id:'L-054', patient:'Carlos Méndez', doc:'1154', estado:'En fila', modulo:'—', service:'Módulo 3',
+  { id:'G-003', patient:'Carlos Méndez', doc:'1154', estado:'En fila', modulo:'—', service:'Módulo 3',
     tsCreated: makeTs(38), tsLlamado: null, tsAtendido: null, tsFin: null },
-  { id:'A-103', patient:'Sofía Hernanz', doc:'8827', estado:'Finalizado', modulo:'Módulo 05', service:'Módulo 1',
+  { id:'G-004', patient:'Sofía Hernanz', doc:'8827', estado:'Finalizado', modulo:'Módulo 05', service:'Módulo 1',
     tsCreated: makeTs(90), tsLlamado: makeTs(52), tsAtendido: makeTs(50), tsFin: makeTs(35) },
-  { id:'G-012', patient:'Juan P. Duarte', doc:'0023', estado:'En fila', modulo:'—', service:'Módulo 2',
+  { id:'G-005', patient:'Juan P. Duarte', doc:'0023', estado:'En fila', modulo:'—', service:'Módulo 2',
     tsCreated: makeTs(30), tsLlamado: null, tsAtendido: null, tsFin: null },
-  { id:'A-108', patient:'Marina Torres', doc:'9028', estado:'En fila', modulo:'—', service:'Módulo 3',
+  { id:'G-006', patient:'Marina Torres', doc:'9028', estado:'En fila', modulo:'—', service:'Módulo 3',
     tsCreated: makeTs(22), tsLlamado: null, tsAtendido: null, tsFin: null },
-  { id:'B-205', patient:'Sergio Ruiz', doc:'5541', estado:'En fila', modulo:'—', service:'Módulo 4',
+  { id:'G-007', patient:'Sergio Ruiz', doc:'5541', estado:'En fila', modulo:'—', service:'Módulo 4',
     tsCreated: makeTs(17), tsLlamado: null, tsAtendido: null, tsFin: null },
-  { id:'N-402', patient:'Pedro Alvarado', doc:'7731', estado:'Finalizado', modulo:'Módulo 04', service:'Módulo 1',
+  { id:'G-008', patient:'Pedro Alvarado', doc:'7731', estado:'Finalizado', modulo:'Módulo 04', service:'Módulo 1',
     tsCreated: makeTs(110), tsLlamado: makeTs(73), tsAtendido: makeTs(71), tsFin: makeTs(48) },
-  { id:'K-115', patient:'Laura Gómez', doc:'6612', estado:'Llamando', modulo:'Módulo 01', service:'Módulo 2',
+  { id:'G-009', patient:'Laura Gómez', doc:'6612', estado:'Llamando', modulo:'Módulo 01', service:'Módulo 2',
     tsCreated: makeTs(28), tsLlamado: makeTs(2), tsAtendido: null, tsFin: null },
-  { id:'P-089', patient:'Fernando Ríos', doc:'3310', estado:'Cancelado', modulo:'Módulo 07', service:'Módulo 3',
+  { id:'G-010', patient:'Fernando Ríos', doc:'3310', estado:'Cancelado', modulo:'Módulo 07', service:'Módulo 3',
     tsCreated: makeTs(80), tsLlamado: makeTs(40), tsAtendido: null, tsFin: makeTs(39) },
-  { id:'G-551', patient:'Marta Villanueva', doc:'9982', estado:'Finalizado', modulo:'Módulo 02', service:'Módulo 4',
+  { id:'G-011', patient:'Marta Villanueva', doc:'9982', estado:'Finalizado', modulo:'Módulo 02', service:'Módulo 4',
     tsCreated: makeTs(95), tsLlamado: makeTs(60), tsAtendido: makeTs(58), tsFin: makeTs(40) },
-  { id:'A-102', patient:'Juan Pérez', doc:'1100', estado:'Finalizado', modulo:'Módulo 01', service:'Módulo 1',
+  { id:'G-012', patient:'Juan Pérez', doc:'1100', estado:'Finalizado', modulo:'Módulo 01', service:'Módulo 1',
     tsCreated: makeTs(140), tsLlamado: makeTs(120), tsAtendido: makeTs(119), tsFin: makeTs(100) },
-  { id:'B-205', patient:'María García', doc:'4450', estado:'Finalizado', modulo:'Módulo 03', service:'Psiquiatría',
+  { id:'G-013', patient:'María García', doc:'4450', estado:'Finalizado', modulo:'Módulo 03', service:'Psiquiatría',
     tsCreated: makeTs(105), tsLlamado: makeTs(75), tsAtendido: makeTs(73), tsFin: makeTs(55) },
-  { id:'C-044', patient:'Carlos Rodríguez', doc:'2218', estado:'Cancelado', modulo:'Módulo 02', service:'Kinesiología',
+  { id:'G-014', patient:'Carlos Rodríguez', doc:'2218', estado:'Cancelado', modulo:'Módulo 02', service:'Kinesiología',
     tsCreated: makeTs(62), tsLlamado: null, tsAtendido: null, tsFin: makeTs(60) },
-  { id:'A-109', patient:'Ricardo Gómez', doc:'3371', estado:'Finalizado', modulo:'Módulo 01', service:'Neurología',
+  { id:'G-015', patient:'Ricardo Gómez', doc:'3371', estado:'Finalizado', modulo:'Módulo 01', service:'Neurología',
     tsCreated: makeTs(78), tsLlamado: makeTs(42), tsAtendido: makeTs(40), tsFin: makeTs(20) },
 ];
 
@@ -2584,7 +2635,8 @@ async function crearNuevoTurno() {
   try {
     const data = await API.post('/api/turnos', { paciente, documento, servicio });
     const t = normalizarTurno(data.turno);
-    if (state.turnos.findIndex(x => x.dbId === t.dbId) < 0) state.turnos.push(t);
+    const existing = state.turnos.findIndex(x => x.dbId === t.dbId);
+    if (existing < 0) state.turnos.push(t);
     closeModal('modal-nuevo-turno');
     renderTurnos(); renderInicio();
     showToast(`✅ Turno ${t.codigo} creado — ${paciente}`, 'success');
@@ -3014,7 +3066,7 @@ function renderTurnos(search='') {
     <tr>
       <td><span class="turno-id">${esc(t.id)}</span></td>
       <td style="font-weight:500">${esc(t.patient)}</td>
-      <td><span class="doc-masked">****${esc(t.doc)}</span></td>
+      <td><span class="doc-masked">${esc(t.doc)}</span></td>
       <td>${badgeHTML(t.estado)}</td>
       <td>${waitStr}</td>
       <td>${svcStr}</td>
@@ -3110,7 +3162,7 @@ function openTurnoDetail(idx) {
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Documento</div>
-        <div class="detail-stat-val" style="font-family:'DM Mono',monospace">****${esc(t.doc)}</div>
+        <div class="detail-stat-val" style="font-family:'DM Mono',monospace">${esc(t.doc)}</div>
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Servicio</div>
@@ -3249,7 +3301,7 @@ function renderPanel() {
     document.getElementById('panel-patient-info').textContent = 'Presione "Siguiente" para llamar el próximo turno';
   }
 
-  const allWaiting = [...calling, ...waiting];
+  const allWaiting = [...calling, ...waiting].sort((a,b) => (a.tsCreated||0) - (b.tsCreated||0));
   document.getElementById('queue-count').textContent = allWaiting.length + ' Total';
   const queueEl = document.getElementById('queue-list');
   queueEl.innerHTML = allWaiting.slice(0, 6).map(t => {
@@ -3765,10 +3817,11 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
   const now = new Date();
   const te = document.getElementById(timeId);
   const de = document.getElementById(dateId);
-  if (te) te.textContent = now.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
-  if (de) de.textContent = now.toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'});
+  // Solo actualizar reloj si está visible
+  if (te && te.offsetParent !== null) te.textContent = now.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+  if (de && de.offsetParent !== null) de.textContent = now.toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'});
 
-  const queue   = state.turnos.filter(t => t.estado==='En fila');
+  const queue   = state.turnos.filter(t => t.estado==='En fila').sort((a,b) => (a.tsCreated||0) - (b.tsCreated||0));
   const serving = state.turnos.filter(t => t.estado==='Atendiendo'||t.estado==='Llamando');
 
   const qce = document.getElementById(queueCountId);
@@ -3794,10 +3847,8 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
     if (!queue.length) {
       qEl.innerHTML = '<div class="tv-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Sin turnos en espera</p></div>';
     } else {
-      qEl.innerHTML = queue.slice(0,6).map((t,i) => {
+      qEl.innerHTML = queue.slice(0,4).map((t,i) => {
         const color   = getSvcColor(t.id[0]);
-        const waitMin = Math.floor(getWaitTime(t)/60000);
-        const wClass  = waitMin>=30?'hot':waitMin>=15?'warm':'';
         return `<div class="tv-queue-item">
           <div class="tv-queue-left">
             <div class="tv-queue-num">${i+1}</div>
@@ -3806,7 +3857,6 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
               <div class="tv-queue-name">${esc(t.patient)}</div>
             </div>
           </div>
-          <div class="tv-queue-wait ${wClass}">${waitMin>0?waitMin+' min':'&lt;1 min'}</div>
         </div>`;
       }).join('');
     }
@@ -3831,7 +3881,7 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
         // Operator who called
         const opName      = t.atendidoPor || null;
         const opColor     = opName ? getSvcColor(opName[0]) : '#475569';
-        const operatorHTML = opName
+        const operatorHTML = opName 
           ? `<div class="tv-serving-operator">
                <div class="tv-serving-operator-dot" style="background:${opColor}"></div>
                Llamado por ${esc(opName.split(' ').slice(0,2).join(' '))}
@@ -3956,7 +4006,7 @@ function closeTVFullscreen() {
   if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
 }
 
-let tvTheme = 'dark'; // 'dark' | 'light'
+let tvTheme = 'light'; // 'dark' | 'light'
 function toggleTVTheme() {
   tvTheme = tvTheme === 'dark' ? 'light' : 'dark';
   const isDark  = tvTheme === 'dark';
@@ -4664,7 +4714,7 @@ async function saveTurno() {
   try {
     const data = await API.post('/api/turnos', { paciente, documento, servicio });
     const t = normalizarTurno(data.turno);
-    if (state.turnos.findIndex(x => x.dbId === t.dbId) < 0) state.turnos.unshift(t);
+    state.turnos.unshift(t);
     closeModal('modal-turno');
     showToast(`✅ Turno ${t.codigo} creado para ${paciente}`, 'success');
     addNotif('turno', `Turno ${t.codigo} creado`, `${paciente} · ${servicio}`);
@@ -4734,7 +4784,7 @@ function exportarExcel(source) {
     filename = 'neuroturn_historial.xlsx';
   } else {
     data = [['Turno','Paciente','Documento','Servicio','Módulo','Estado','Hora Creación'],
-      ...turnos.map(t => [t.id, t.patient, '****'+t.doc, t.service, t.modulo, t.estado, tsToHHMM(t.tsCreated)])];
+      ...turnos.map(t => [t.id, t.patient, t.doc, t.service, t.modulo, t.estado, tsToHHMM(t.tsCreated)])];
     filename = 'neuroturn_turnos.xlsx';
   }
 
@@ -4992,7 +5042,7 @@ function globalSearch(q) {
       <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:800;color:${color};min-width:52px">${esc(t.id)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.patient)}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${esc(t.service)} · Doc. ****${esc(t.doc)}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${esc(t.service)} · Doc. ${esc(t.doc)}</div>
       </div>
       <div style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${bb};color:${bc};white-space:nowrap">${esc(t.estado)}</div>
     </div>`;
