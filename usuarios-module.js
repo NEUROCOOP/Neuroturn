@@ -7,6 +7,16 @@
 
 'use strict';
 
+// ── HELPERS ─────────────────────────────────────────
+function _filtrarLista() {
+  const q = usuariosState.filtro.toLowerCase();
+  return usuariosState.usuarios.filter(u =>
+    u.username.toLowerCase().includes(q) ||
+    u.nombre.toLowerCase().includes(q) ||
+    (u.email || '').toLowerCase().includes(q)
+  );
+}
+
 // ── ESTADO LOCAL ────────────────────────────────────
 let usuariosState = {
   usuarios: [],
@@ -17,12 +27,12 @@ let usuariosState = {
 };
 
 const ROLES = [
-  { id: 'admin', label: 'Administrador', color: '#3B72F2', icon: '👑' },
-  { id: 'medico', label: 'Médico', color: '#8B5CF6', icon: '👨‍⚕️' },
-  { id: 'enfermero', label: 'Enfermero', color: '#22C55E', icon: '💉' },
-  { id: 'recepcion', label: 'Recepcionista', color: '#F59E0B', icon: '💬' },
-  { id: 'operador', label: 'Operador', color: '#06B6D4', icon: '🎮' },
-  { id: 'linea', label: 'Linea de frente', color: '#EC4899', icon: '🚨' }
+    { id: 'admin', label: 'Administrador', color: '#3B72F2' },
+    { id: 'medico', label: 'Médico', color: '#8B5CF6' },
+    { id: 'enfermero', label: 'Enfermero', color: '#22C55E' },
+    { id: 'recepcion', label: 'Recepcionista', color: '#F59E0B' },
+    { id: 'operador', label: 'Operador', color: '#06B6D4' },
+    { id: 'linea', label: 'Linea de frente', color: '#EC4899' }
 ];
 
 const MODULOS = [
@@ -38,12 +48,42 @@ async function renderUsuarios() {
   // Cargar usuarios
   await cargarUsuarios();
 
+  // Stats rápidos
+  const statsEl = document.getElementById('usuarios-stats');
+  if (statsEl) {
+    const total = usuariosState.usuarios.length;
+    const activos = usuariosState.usuarios.filter(u => u.activo !== false).length;
+    const inactivos = total - activos;
+    const admins = usuariosState.usuarios.filter(u => (u.rol || '').toLowerCase() === 'administrador' || u.rol === 'admin').length;
+    statsEl.innerHTML = `
+      <div class="usuarios-stat-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--primary-light);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div><div class="usuarios-stat-num">${total}</div><div class="usuarios-stat-label">Total</div></div>
+      </div>
+      <div class="usuarios-stat-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--success-light);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div><div class="usuarios-stat-num" style="color:var(--success)">${activos}</div><div class="usuarios-stat-label">Activos</div></div>
+      </div>
+      <div class="usuarios-stat-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--danger-light);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        </div>
+        <div><div class="usuarios-stat-num" style="color:var(--danger)">${inactivos}</div><div class="usuarios-stat-label">Inactivos</div></div>
+      </div>
+      <div class="usuarios-stat-card">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--warning-light);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M12 15v2"/><path d="M12 11h.01"/><path d="M3.34 19a10 10 0 1117.32 0"/></svg>
+        </div>
+        <div><div class="usuarios-stat-num" style="color:var(--warning)">${admins}</div><div class="usuarios-stat-label">Admins</div></div>
+      </div>`;
+  }
+
   // Tabla de usuarios
-  const filtered = usuariosState.usuarios.filter(u =>
-    u.username.toLowerCase().includes(usuariosState.filtro.toLowerCase()) ||
-    u.nombre.toLowerCase().includes(usuariosState.filtro.toLowerCase()) ||
-    u.email.toLowerCase().includes(usuariosState.filtro.toLowerCase())
-  );
+  const filtered = _filtrarLista();
 
   const totalPages = Math.ceil(filtered.length / usuariosState.perPage);
   if (usuariosState.page > totalPages && totalPages > 0) {
@@ -63,7 +103,7 @@ async function renderUsuarios() {
     }
     // Fallback si no se encuentra
     if (!rolObj) {
-      rolObj = { id: 'unknown', label: usuario.rol || 'Desconocido', color: '#999', icon: '❓' };
+      rolObj = { id: 'unknown', label: usuario.rol || 'Desconocido', color: '#999' };
     }
     
     const estado = usuario.activo ? 'Activo' : 'Inactivo';
@@ -84,7 +124,7 @@ async function renderUsuarios() {
       </td>
       <td>
         <span class="badge-rol" style="background:${rolObj?.color}22;color:${rolObj?.color}">
-          ${rolObj?.icon} ${rolObj?.label || usuario.rol}
+          ${rolObj?.label || usuario.rol}
         </span>
       </td>
       <td>
@@ -128,10 +168,18 @@ async function renderUsuarios() {
   }).join('');
 
   // Paginación
-  document.getElementById('usuarios-pagination-info').textContent =
+  const paginInfo = document.getElementById('usuarios-pagination-info');
+  const btnsPag = document.getElementById('usuarios-pagination-btns');
+
+  if (filtered.length === 0) {
+    paginInfo.textContent = 'Sin usuarios' + (usuariosState.filtro ? ' para esta búsqueda' : '');
+    btnsPag.innerHTML = '';
+    return;
+  }
+
+  paginInfo.textContent =
     `Mostrando ${start + 1}-${Math.min(start + usuariosState.perPage, filtered.length)} de ${filtered.length} usuarios`;
 
-  const btnsPag = document.getElementById('usuarios-pagination-btns');
   btnsPag.innerHTML = `
     <button class="page-btn" onclick="changeUsuariosPage(${usuariosState.page - 1})" ${usuariosState.page === 1 ? 'disabled' : ''}>‹</button>
     ${Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p =>
@@ -143,9 +191,7 @@ async function renderUsuarios() {
 }
 
 function changeUsuariosPage(p) {
-  const filtered = usuariosState.usuarios.filter(u =>
-    u.username.toLowerCase().includes(usuariosState.filtro.toLowerCase())
-  );
+  const filtered = _filtrarLista();
   const totalPages = Math.ceil(filtered.length / usuariosState.perPage);
   if (p < 1 || p > totalPages) return;
   usuariosState.page = p;
@@ -231,7 +277,7 @@ async function actualizarUsuario() {
 
 async function eliminarUsuario(usuarioId) {
   try {
-    const res = await API.delete(`/api/usuarios/${usuarioId}`);
+    const res = await API.del(`/api/usuarios/${usuarioId}`);
     if (res.ok) {
       showToast('✓ Usuario eliminado', 'success');
       await renderUsuarios();
@@ -245,7 +291,7 @@ async function eliminarUsuario(usuarioId) {
 
 async function eliminarUsuarioConPassword(usuarioId, password) {
   try {
-    const res = await API.delete(`/api/usuarios/${usuarioId}`, {
+    const res = await API.del(`/api/usuarios/${usuarioId}`, {
       password_confirmacion: password
     });
     if (res.ok) {
@@ -277,9 +323,7 @@ function abrirFormularioNuevoUsuario() {
 }
 
 function editarUsuario(idx) {
-  const filtered = usuariosState.usuarios.filter(u =>
-    u.username.toLowerCase().includes(usuariosState.filtro.toLowerCase())
-  );
+  const filtered = _filtrarLista();
   const usuario = filtered[idx];
   if (!usuario) return;
 
@@ -310,9 +354,7 @@ function cerrarFormularioUsuario() {
 
 // ── ACCIONES ESPECIALES ─────────────────────────────
 function abrirCambioPassword(idx) {
-  const filtered = usuariosState.usuarios.filter(u =>
-    u.username.toLowerCase().includes(usuariosState.filtro.toLowerCase())
-  );
+  const filtered = _filtrarLista();
   const usuario = filtered[idx];
   if (!usuario) return;
 
@@ -362,9 +404,7 @@ async function guardarNuevaPassword() {
 }
 
 function confirmarEliminarUsuario(idx) {
-  const filtered = usuariosState.usuarios.filter(u =>
-    u.username.toLowerCase().includes(usuariosState.filtro.toLowerCase())
-  );
+  const filtered = _filtrarLista();
   const usuario = filtered[idx];
   if (!usuario) return;
 
@@ -400,9 +440,7 @@ function confirmarEliminarFinal() {
 }
 
 async function toggleUsuario(idx) {
-  const filtered = usuariosState.usuarios.filter(u =>
-    u.username.toLowerCase().includes(usuariosState.filtro.toLowerCase())
-  );
+  const filtered = _filtrarLista();
   const usuario = filtered[idx];
   if (!usuario) return;
 
@@ -424,9 +462,7 @@ async function toggleUsuario(idx) {
 
 // ── HISTORIAL DE ACCESOS ────────────────────────────
 async function abrirHistorialUsuario(idx) {
-  const filtered = usuariosState.usuarios.filter(u =>
-    u.username.toLowerCase().includes(usuariosState.filtro.toLowerCase())
-  );
+  const filtered = _filtrarLista();
   const usuario = filtered[idx];
   if (!usuario) return;
 
@@ -474,41 +510,3 @@ function exportarUsuariosExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'Usuarios');
   XLSX.write(wb, { bookType: 'xlsx', type: 'binary', filename: 'usuarios.xlsx' });
 }
-
-// ── HELPER ───────────────────────────────────────────
-function esc(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function tsToHHMM(ts) {
-  const d = new Date(ts);
-  return d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-}
-
-function openModal(id) {
-  const m = document.getElementById(id);
-  if (m) m.style.display = 'flex';
-}
-
-function closeModal(id) {
-  const m = document.getElementById(id);
-  if (m) m.style.display = 'none';
-}
-
-// Cerrar modales con ESC
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.modal').forEach(m => {
-      if (m.style.display === 'flex') m.style.display = 'none';
-    });
-  }
-});
-
-// Cerrar modales al hacer click fuera
-document.addEventListener('click', e => {
-  if (e.target.classList.contains('modal')) {
-    e.target.style.display = 'none';
-  }
-});

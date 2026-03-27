@@ -39,22 +39,27 @@ CREATE TABLE modulos (
 -- Tabla turnos
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='turnos' AND xtype='U')
 CREATE TABLE turnos (
-  id           INT IDENTITY(1,1) PRIMARY KEY,
-  codigo       NVARCHAR(20)  NOT NULL,
-  paciente     NVARCHAR(120) NOT NULL,
-  documento    NVARCHAR(30)  NULL,
-  servicio     NVARCHAR(80)  NULL,
-  modulo       NVARCHAR(80)  NOT NULL DEFAULT '-',
+  id             INT IDENTITY(1,1) PRIMARY KEY,
+  codigo         NVARCHAR(20)  NOT NULL,
+  paciente       NVARCHAR(120) NOT NULL,
+  documento      NVARCHAR(30)  NULL,
+  servicio       NVARCHAR(80)  NULL,
+  modulo         NVARCHAR(80)  NOT NULL DEFAULT '-',
   estado         NVARCHAR(30)  NOT NULL DEFAULT 'En fila',
   atendido_por   NVARCHAR(120) NULL,
   registrado_por NVARCHAR(120) NULL,
   nota           NVARCHAR(500) NULL,
-  llamadas     INT           NOT NULL DEFAULT 0,
-  ts_creado    BIGINT        NOT NULL,
-  ts_llamado   BIGINT        NULL,
-  ts_atendido  BIGINT        NULL,
-  ts_fin       BIGINT        NULL
+  llamadas       INT           NOT NULL DEFAULT 0,
+  ts_creado      BIGINT        NOT NULL,
+  ts_llamado     BIGINT        NULL,
+  ts_atendido    BIGINT        NULL,
+  ts_fin         BIGINT        NULL,
+  fecha_turno    DATE          NOT NULL DEFAULT CAST(GETDATE() AS DATE)
 );
+
+-- Índice de rendimiento por fecha
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('turnos') AND name='IX_turnos_fecha')
+  CREATE INDEX IX_turnos_fecha ON turnos(fecha_turno);
 
 -- Tabla config
 IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='config' AND xtype='U')
@@ -98,3 +103,23 @@ CREATE TABLE historial_turnos (
   usuario      NVARCHAR(120) NULL,
   ts           BIGINT        NOT NULL
 );
+
+-- Tabla logs_turnos (auditoría detallada por turno)
+IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='logs_turnos' AND xtype='U')
+CREATE TABLE logs_turnos (
+  id_log      INT IDENTITY(1,1) PRIMARY KEY,
+  id_turno    INT           NOT NULL,
+  usuario     NVARCHAR(120) NULL,
+  accion      NVARCHAR(30)  NOT NULL,   -- CREADO | LLAMADO | RELLAMADO | ATENDIDO | FINALIZADO | CANCELADO
+  fecha_hora  DATETIME2     NOT NULL DEFAULT SYSDATETIME(),
+  descripcion NVARCHAR(500) NULL
+);
+
+-- Migración: agregar fecha_turno si la tabla ya existe
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name='turnos' AND xtype='U')
+AND NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('turnos') AND name='fecha_turno')
+BEGIN
+  ALTER TABLE turnos ADD fecha_turno DATE NULL;
+  UPDATE turnos SET fecha_turno = CAST(DATEADD(SECOND, ts_creado/1000, '19700101') AS DATE) WHERE fecha_turno IS NULL;
+  ALTER TABLE turnos ADD CONSTRAINT DF_turnos_fecha_turno DEFAULT CAST(GETDATE() AS DATE) FOR fecha_turno;
+END;

@@ -150,10 +150,31 @@
     }
 
     .turno-paciente {
-      font-size: 32px;
+      font-size: 20px;
       font-weight: bold;
-      color: #ffffff;
+      color: #000000;
       text-transform: uppercase;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 10px 15px;
+      border-radius: 6px;
+    }
+
+    .turno-estado {
+      font-size: 20px;
+      font-weight: bold;
+      color: #000000;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+
+    .turno-atendido {
+      font-size: 20px;
+      font-weight: bold;
+      color: #000000;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 8px 12px;
+      border-radius: 6px;
     }
 
     .turno-funcionario {
@@ -274,7 +295,7 @@
     }
 
     .slider-placeholder {
-      weight: 100%;
+      width: 100%;
       height: 100%;
       display: flex;
       align-items: center;
@@ -509,7 +530,7 @@
     const CONFIG = {
       URL_API: 'http://' + (window.location.hostname || 'localhost') + ':3001',
       INTERVALO_POLLING: 1000, // Actualizar cada 1 segundo
-      INTERVALO_SLIDER: 8000, // Cambiar imagen cada 8 segundos
+      INTERVALO_SLIDER: 60000, // Cambiar imagen cada 60 segundos (1 minuto)
       CARPETA_IMG: '/img/', // Carpeta de imágenes
     };
 
@@ -565,8 +586,18 @@
     // PROCESAMIENTO DE TURNOS
     // ═══════════════════════════════════════════════════════════════
     function procesarTurnos() {
-      estado.turnosAtencion = estado.turnos.filter(t => t.estado === 'Atendiendo').slice(0, 2);
+      const turnosAtencionAnterior = estado.turnosAtencion.map(t => t.id);
+      
+      estado.turnosAtencion = estado.turnos.filter(t => t.estado === 'Atendiendo' || t.estado === 'Llamando').slice(0, 2);
       estado.turnosFila = estado.turnos.filter(t => t.estado === 'En fila').slice(0, 8);
+
+      // Detectar si hay turnos nuevos siendo atendidos
+      const turnosAtencionActual = estado.turnosAtencion.map(t => t.id);
+      const nuevosTurnos = turnosAtencionActual.filter(id => !turnosAtencionAnterior.includes(id));
+      
+      if (nuevosTurnos.length > 0) {
+        reproducirSonidoLlamado();
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -585,16 +616,20 @@
         return;
       }
 
-      contenedor.innerHTML = estado.turnosAtencion.map(turno => `
+      contenedor.innerHTML = estado.turnosAtencion.map(turno => {
+        const esLlamando = turno.estado === 'Llamando';
+        return `
         <div class="tarjeta-turno">
           <div class="turno-numero">${turno.codigo}</div>
           <div class="turno-paciente">${turno.paciente.toUpperCase()}</div>
+          <div class="turno-estado">${esLlamando ? '🔔 LLAMANDO' : '✅ ATENDIENDO'}</div>
+          <div class="turno-atendido">${esLlamando ? 'Llamado' : 'Atendido'} por: ${turno.atendido_por || 'Sin asignar'}</div>
           <div class="turno-funcionario">
-            <span>👤 ${turno.atendido_por || 'Sin asignar'}</span>
             <div class="turno-modulo">Módulo ${turno.modulo || '-'}</div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -633,59 +668,84 @@
     // CARGAR IMÁGENES
     // ═══════════════════════════════════════════════════════════════
     async function cargarImagenes() {
+      // Cargar imágenes de Higiene (1.png a 10.png)
+      const higiene = [];
+      for (let i = 1; i <= 10; i++) {
+        higiene.push({
+          ruta: `${CONFIG.URL_API}${CONFIG.CARPETA_IMG}Higiene/${i}.png`,
+          tipo: 'higiene',
+          nombre: `${i}.png`
+        });
+      }
+
+      // Cargar imágenes generales desde la API (img/)
+      let generales = [];
       try {
-        // Listar imágenes disponibles en la carpeta /img
         const respuesta = await fetch(`${CONFIG.URL_API}/api/imagenes`);
-        
         if (respuesta.ok) {
           const datos = await respuesta.json();
-          estado.imagenes = datos.imagenes || [];
-        } else {
-          // Fallback: usar imágenes conocidas
-          estado.imagenes = [
-            'DerechoDeber.png',
-            'LavadoManos.png',
-            'Recomendaciones.png'
-          ];
+          if (datos.ok && Array.isArray(datos.imagenes)) {
+            generales = datos.imagenes
+              .filter(n => !/^Higiene\//i.test(n) && !/^\d+\.png$/.test(n))
+              .map(n => ({
+                ruta: `${CONFIG.URL_API}${CONFIG.CARPETA_IMG}${encodeURIComponent(n)}`,
+                tipo: 'general',
+                nombre: n
+              }));
+          }
         }
-
-        inicializarSlider();
       } catch (error) {
-        console.warn('Error al cargar imágenes:', error.message);
-        // Fallback
-        estado.imagenes = [
-          'DerechoDeber.png',
-          'LavadoManos.png',
-          'Recomendaciones.png'
+        console.warn('Error al cargar imágenes generales:', error.message);
+        generales = [
+          { ruta: `${CONFIG.URL_API}${CONFIG.CARPETA_IMG}DerechoDeber.png`, tipo: 'general', nombre: 'DerechoDeber.png' },
+          { ruta: `${CONFIG.URL_API}${CONFIG.CARPETA_IMG}LavadoManos.png`, tipo: 'general', nombre: 'LavadoManos.png' },
+          { ruta: `${CONFIG.URL_API}${CONFIG.CARPETA_IMG}Recomendaciones.png`, tipo: 'general', nombre: 'Recomendaciones.png' }
         ];
-        inicializarSlider();
       }
+
+      // Unir: primero Higiene, luego generales
+      estado.imagenes = [...higiene, ...generales];
+      estado.imagenActual = 0;
+      inicializarSlider();
     }
 
     // ═══════════════════════════════════════════════════════════════
     // INICIALIZAR SLIDER
     // ═══════════════════════════════════════════════════════════════
+    let intervaloSlider = null;
+
     function inicializarSlider() {
       if (estado.imagenes.length === 0) {
-        document.getElementById('sliderContenedor').innerHTML = 
+        document.getElementById('sliderContenedor').innerHTML =
           '<div class="slider-placeholder">No hay anuncios disponibles</div>';
+        document.getElementById('indicadoresSlider').innerHTML = '';
         return;
       }
 
       // Renderizar indicadores
       const indicadores = document.getElementById('indicadoresSlider');
-      indicadores.innerHTML = estado.imagenes.map((_, i) => 
+      indicadores.innerHTML = estado.imagenes.map((img, i) =>
         `<div class="punto-indicador ${i === 0 ? 'activo' : ''}" onclick="irAImagen(${i})"></div>`
       ).join('');
 
       // Mostrar primera imagen
       mostrarImagen(0);
 
+      // Detener intervalo anterior si existe
+      if (intervaloSlider) clearInterval(intervaloSlider);
+
       // Cambiar imagen automáticamente
-      setInterval(() => {
-        estado.imagenActual = (estado.imagenActual + 1) % estado.imagenes.length;
-        mostrarImagen(estado.imagenActual);
-      }, CONFIG.INTERVALO_SLIDER);
+      if (estado.imagenes.length > 1) {
+        intervaloSlider = setInterval(() => {
+          avanzarImagen();
+        }, 15000); // 15 segundos por imagen
+      }
+    }
+
+    function avanzarImagen() {
+      // Si estamos en la última de Higiene, pasar a generales, luego reiniciar ciclo
+      estado.imagenActual = (estado.imagenActual + 1) % estado.imagenes.length;
+      mostrarImagen(estado.imagenActual);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -694,14 +754,22 @@
     function mostrarImagen(indice) {
       if (indice >= estado.imagenes.length) indice = 0;
       if (indice < 0) indice = estado.imagenes.length - 1;
-      
+
       estado.imagenActual = indice;
       const imagen = estado.imagenes[indice];
       const contenedor = document.getElementById('sliderContenedor');
-      
-      const ruta = `${CONFIG.URL_API}${CONFIG.CARPETA_IMG}${imagen}`;
-      contenedor.innerHTML = `<img src="${ruta}" class="slider-imagen" alt="Anuncio">`;
-      
+
+      const img = document.createElement('img');
+      img.src = imagen.ruta;
+      img.alt = `Anuncio - ${imagen.nombre}`;
+      img.className = 'slider-imagen';
+      img.onerror = () => {
+        contenedor.innerHTML = '<div class="slider-placeholder">Error cargando imagen</div>';
+      };
+
+      contenedor.innerHTML = '';
+      contenedor.appendChild(img);
+
       // Actualizar indicadores
       document.querySelectorAll('.punto-indicador').forEach((p, i) => {
         p.classList.toggle('activo', i === indice);
@@ -737,23 +805,33 @@
     // ═══════════════════════════════════════════════════════════════
     // REPRODUCIR SONIDO
     // ═══════════════════════════════════════════════════════════════
-    function reproducirSonido() {
-      // Web Audio API para generar sonido sin archivo externo
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscilador = audioContext.createOscillator();
-      const ganancia = audioContext.createGain();
-      
-      oscilador.connect(ganancia);
-      ganancia.connect(audioContext.destination);
-      
-      oscilador.frequency.value = 800; // Frecuencia en Hz
-      oscilador.type = 'sine';
-      
-      ganancia.gain.setValueAtTime(0.3, audioContext.currentTime);
-      ganancia.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
-      oscilador.start(audioContext.currentTime);
-      oscilador.stop(audioContext.currentTime + 0.5);
+    function reproducirSonido(frecuencia = 800, duracion = 500) {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscilador = audioContext.createOscillator();
+        const ganancia = audioContext.createGain();
+        
+        oscilador.connect(ganancia);
+        ganancia.connect(audioContext.destination);
+        
+        oscilador.frequency.value = frecuencia;
+        oscilador.type = 'sine';
+        
+        ganancia.gain.setValueAtTime(0.3, audioContext.currentTime);
+        ganancia.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duracion / 1000);
+        
+        oscilador.start(audioContext.currentTime);
+        oscilador.stop(audioContext.currentTime + duracion / 1000);
+      } catch (e) {
+        console.warn('No se puede reproducir sonido:', e.message);
+      }
+    }
+
+    // Secuencia de sonidos para llamado
+    function reproducirSonidoLlamado() {
+      reproducirSonido(800, 300);
+      setTimeout(() => reproducirSonido(1000, 300), 350);
+      setTimeout(() => reproducirSonido(800, 300), 700);
     }
 
     // ═══════════════════════════════════════════════════════════════

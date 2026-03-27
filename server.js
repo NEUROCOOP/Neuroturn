@@ -46,6 +46,10 @@ try {
   process.exit(1);
 }
 
+/* ExcelJS — opcional, para exportación XLSX. Si no está, se usa CSV */
+let ExcelJS = null;
+try { ExcelJS = require('exceljs'); } catch (_) {}
+
 /* ═══════════════════════════════════════════════════════════════════
    3. LEER .env  (sin dotenv — solo Node.js puro)
 ═══════════════════════════════════════════════════════════════════ */
@@ -141,11 +145,12 @@ async function conectarDB() {
       console.log(`   Probando driver: ${driver}...`);
       const cfg = construirConfigDB(driver);
       pool    = await sql.connect(cfg);
-      dbReady = true;
       console.log(`✅ SQL Server conectado [${driver}]  →  ${DB_SERVER} / ${DB_NAME}`);
       await inicializarEsquema();
+      dbReady = true;
       return;                       // éxito — salir del loop
     } catch (err) {
+      dbReady = false;
       console.warn(`   ✗ ${driver}: ${err.message}`);
       try { if (pool) await pool.close(); } catch (_) {}
       pool = null;
@@ -220,7 +225,9 @@ async function inicializarEsquema() {
       ts_creado    BIGINT        NOT NULL,
       ts_llamado   BIGINT        NULL,
       ts_atendido  BIGINT        NULL,
-      ts_fin       BIGINT        NULL
+      ts_fin       BIGINT        NULL,
+      registrado_por NVARCHAR(120) NULL,
+      fecha_turno  DATE          NOT NULL DEFAULT CAST(GETDATE() AS DATE)
     );
   `);
 
@@ -232,11 +239,11 @@ async function inicializarEsquema() {
     );
   `);
 
-  /* Migración: agregar columnas nuevas si no existen */
-  await r.query(`
+  /* Migraciones: columnas nuevas — cada una aislada para no abortar si falla */
+  try { await r.query(`
     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('turnos') AND name='registrado_por')
       ALTER TABLE turnos ADD registrado_por NVARCHAR(120) NULL;
-  `);
+  `); } catch(e) { console.warn('[esquema] registrado_por:', e.message); }
 
   await r.query(`
     IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='historial_turnos' AND xtype='U')
@@ -260,6 +267,43 @@ async function inicializarEsquema() {
       detalles     NVARCHAR(500) NULL,
       ip           NVARCHAR(45)  NULL,
       ts           DATETIME2     NOT NULL DEFAULT SYSDATETIME()
+    );
+  `);
+
+  /* Migración: fecha_turno — pasos aislados para evitar error de compilación */
+  try { await r.query(`
+    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('turnos') AND name='fecha_turno')
+      ALTER TABLE turnos ADD fecha_turno DATE NULL;
+  `); } catch(e) { console.warn('[esquema] fecha_turno col:', e.message); }
+
+  try { await r.query(`
+    EXEC('UPDATE turnos SET fecha_turno = CAST(DATEADD(SECOND, ts_creado/1000, ''19700101'') AS DATE) WHERE fecha_turno IS NULL AND ts_creado IS NOT NULL');
+  `); } catch(e) { /* ignorar si columna no existe aún */ }
+
+  try { await r.query(`
+    IF NOT EXISTS (SELECT 1 FROM sys.default_constraints WHERE parent_object_id=OBJECT_ID('turnos') AND name='DF_turnos_fecha_turno')
+      AND EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('turnos') AND name='fecha_turno')
+    BEGIN
+      ALTER TABLE turnos ADD CONSTRAINT DF_turnos_fecha_turno DEFAULT CAST(GETDATE() AS DATE) FOR fecha_turno;
+    END
+  `); } catch(e) { console.warn('[esquema] fecha_turno default:', e.message); }
+
+  try { await r.query(`
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('turnos') AND name='IX_turnos_fecha')
+       AND EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('turnos') AND name='fecha_turno')
+      CREATE INDEX IX_turnos_fecha ON turnos(fecha_turno);
+  `); } catch(e) { console.warn('[esquema] IX_turnos_fecha:', e.message); }
+
+  /* Audit: logs_turnos */
+  await r.query(`
+    IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='logs_turnos' AND xtype='U')
+    CREATE TABLE logs_turnos (
+      id_log      INT IDENTITY(1,1) PRIMARY KEY,
+      id_turno    INT           NOT NULL,
+      usuario     NVARCHAR(120) NULL,
+      accion      NVARCHAR(30)  NOT NULL,
+      fecha_hora  DATETIME2     NOT NULL DEFAULT SYSDATETIME(),
+      descripcion NVARCHAR(500) NULL
     );
   `);
 
@@ -323,7 +367,8 @@ async function dbQ(queryStr, params) {
 /* ═══════════════════════════════════════════════════════════════════
    9. MODO MEMORIA  (fallback sin BD)
 ═══════════════════════════════════════════════════════════════════ */
-const mem = { usuarios: [], turnos: [], contador: 0, modulosActuales: {} };
+const mem = { usuarios: [], turnos: [], contador: 0, contadorFecha: '', modulosActuales: {} };
+let contadorFechaActual = ''; // Para resetear el contador en BD al cambiar de día
 
 // Inicializar usuarios de prueba si no hay base de datos
 async function inicializarMemoria() {
@@ -456,10 +501,27 @@ async function asegurarUsuarioAdmin() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   10. CONTADOR ATÓMICO DE TURNOS
+   10. CONTADOR ATÓMICO DE TURNOS (se reinicia a 0 cada día)
 ═══════════════════════════════════════════════════════════════════ */
+let ultimaFechaContador = ''; // para modo memoria
+
 async function siguienteNumero() {
+  const hoy = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
   if (dbReady) {
+    // Verificar si cambió la fecha → reiniciar contador
+    const f = await dbQ(`SELECT valor FROM config WHERE clave = 'contador_fecha'`);
+    const fechaGuardada = f.recordset[0]?.valor || '';
+    if (fechaGuardada !== hoy) {
+      await dbQ(`UPDATE config SET valor = '0' WHERE clave = 'contador'`);
+      if (f.recordset.length) {
+        await dbQ(`UPDATE config SET valor = @v WHERE clave = 'contador_fecha'`, { v: hoy });
+      } else {
+        await dbQ(`INSERT INTO config (clave, valor) VALUES ('contador_fecha', @v)`, { v: hoy });
+      }
+      console.log(`[Contador] Nuevo día ${hoy} — contador reiniciado a 0`);
+    }
+    // Incremento atómico
     const r = await dbQ(`
       UPDATE config
       SET    valor = CAST(CAST(valor AS INT) + 1 AS NVARCHAR(20))
@@ -467,6 +529,12 @@ async function siguienteNumero() {
       WHERE  clave = 'contador'
     `);
     return parseInt(r.recordset[0].valor, 10);
+  }
+
+  // Modo memoria: reiniciar si cambió el día
+  if (ultimaFechaContador !== hoy) {
+    mem.contador = 0;
+    ultimaFechaContador = hoy;
   }
   return ++mem.contador;
 }
@@ -524,7 +592,8 @@ const json = (res, status, data) => {
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8', '.json': 'application/json',
-  '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2',
 };
 
@@ -542,7 +611,9 @@ function servirEstatico(res, pathname) {
     // Security: resolved path must stay inside the base directory
     if (!resolved.startsWith(baseAbs + path.sep) && resolved !== baseAbs) continue;
     // Security: from __dirname root, solo servir archivos permitidos (never expose server code / .env / schema)
-    if (base === __dirname && !permitidosRaiz.includes(path.basename(resolved))) continue;
+    const imgDir = path.resolve(path.join(__dirname, 'img'));
+    const isImgFile = resolved.startsWith(imgDir + path.sep) && /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(resolved);
+    if (base === __dirname && !permitidosRaiz.includes(path.basename(resolved)) && !isImgFile) continue;
     if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) { fp = resolved; break; }
   }
   if (!fp) {
@@ -615,6 +686,7 @@ async function routerAPI(req, res, ruta, metodo, qp) {
     return;
   }
   if (ruta === '/api/imagenes'      && metodo === 'GET')  { await obtenerImagenes(res); return; }
+  if (ruta === '/api/turnos'        && metodo === 'GET')  { await getTurnos(res); return; }
 
   /* ── Autenticación requerida ────────────────────────────────── */
   const usuario = autenticar(req);
@@ -624,7 +696,6 @@ async function routerAPI(req, res, ruta, metodo, qp) {
   if (ruta === '/api/auth/me' && metodo === 'GET') { json(res, 200, { ok: true, usuario }); return; }
 
   /* Turnos */
-  if (ruta === '/api/turnos'           && metodo === 'GET')  { await getTurnos(res);                        return; }
   if (ruta === '/api/turnos'           && metodo === 'POST') { await crearTurno(req, res, usuario);         return; }
   if (ruta === '/api/turnos/siguiente' && metodo === 'POST') { await siguienteTurno(req, res, usuario);          return; }
 
@@ -650,9 +721,11 @@ async function routerAPI(req, res, ruta, metodo, qp) {
   const mHistorialId = ruta.match(/^\/api\/usuarios\/(\d+)\/historial$/);
   if (mHistorialId && metodo === 'GET') { await getHistorialUsuario(res, parseInt(mHistorialId[1], 10)); return; }
 
-  if (ruta === '/api/dashboard'    && metodo === 'GET') { await getDashboard(res); return; }
-  if (ruta === '/api/historial'     && metodo === 'GET') { await getHistorial(res, qp); return; }
-  if (ruta === '/api/estadisticas'  && metodo === 'GET') { await getEstadisticas(res, qp); return; }
+  if (ruta === '/api/dashboard'    && metodo === 'GET') { await getDashboard(res, qp); return; }
+  if (ruta === '/api/historial/exportar' && metodo === 'POST') { await handleExportarHistorico(req, res, qp, usuario); return; }
+  if (ruta === '/api/historial'          && metodo === 'GET') { await getHistorial(res, qp); return; }
+  if (ruta === '/api/estadisticas/mes'  && metodo === 'GET') { await getEstadisticasMes(res, qp); return; }
+  if (ruta === '/api/estadisticas'      && metodo === 'GET') { await getEstadisticas(res, qp); return; }
 
   json(res, 404, { error: `Ruta no encontrada: ${metodo} ${ruta}` });
 }
@@ -726,11 +799,16 @@ async function login(req, res) {
   let fila;
 
   if (dbReady) {
-    const r = await dbQ(`
-      SELECT id, nombre, username, password_hash, rol, modulo, activo, color
-      FROM   usuarios WHERE username = @u
-    `, { u: user });
-    fila = r.recordset[0];
+    try {
+      const r = await dbQ(`
+        SELECT id, nombre, username, password_hash, rol, modulo, activo, color
+        FROM   usuarios WHERE username = @u
+      `, { u: user });
+      fila = r.recordset[0];
+    } catch (dbErr) {
+      console.warn('[login] Fallo consulta BD, intentando memoria:', dbErr.message);
+      fila = mem.usuarios.find(u => u.username === user);
+    }
   } else {
     fila = mem.usuarios.find(u => u.username === user);
   }
@@ -750,25 +828,36 @@ async function login(req, res) {
    18. TURNOS — GET todos los del día
 ═══════════════════════════════════════════════════════════════════ */
 async function getTurnos(res) {
+  try {
   if (dbReady) {
     const r = await dbQ(`
       SELECT id, codigo, paciente, documento, servicio, modulo, estado,
-             atendido_por, registrado_por, nota, llamadas, ts_creado, ts_llamado, ts_atendido, ts_fin
+             atendido_por, registrado_por, nota, llamadas,
+             ts_creado, ts_llamado, ts_atendido, ts_fin, fecha_turno
       FROM   turnos
-      WHERE  CAST(DATEADD(SECOND, ts_creado/1000, '1970-01-01') AS DATE) >= CAST(DATEADD(DAY, -7, GETDATE()) AS DATE)
+      WHERE  fecha_turno = CAST(GETDATE() AS DATE)
       ORDER  BY ts_creado ASC
     `);
-    // Asegurar que los timestamps son números válidos
     const turnos = r.recordset.map(t => ({
       ...t,
-      ts_creado: t.ts_creado ? Number(t.ts_creado) : null,
+      ts_creado:  t.ts_creado  ? Number(t.ts_creado)  : null,
       ts_llamado: t.ts_llamado ? Number(t.ts_llamado) : null,
-      ts_atendido: t.ts_atendido ? Number(t.ts_atendido) : null,
-      ts_fin: t.ts_fin ? Number(t.ts_fin) : null,
+      ts_atendido:t.ts_atendido? Number(t.ts_atendido): null,
+      ts_fin:     t.ts_fin     ? Number(t.ts_fin)     : null,
     }));
     return json(res, 200, { ok: true, turnos });
   }
-  json(res, 200, { ok: true, turnos: mem.turnos });
+  // Memory mode: filter by today
+  const hoy = new Date().toISOString().slice(0, 10);
+  const turnosHoy = mem.turnos.filter(t => {
+    if (t.fecha_turno) return t.fecha_turno === hoy;
+    return t.ts_creado && new Date(t.ts_creado).toISOString().slice(0, 10) === hoy;
+  });
+  json(res, 200, { ok: true, turnos: turnosHoy });
+  } catch(e) {
+    console.error('[getTurnos]', e.message);
+    return json(res, 500, { error: 'Error al obtener turnos: ' + e.message });
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -797,24 +886,26 @@ async function crearTurno(req, res, usuario) {
 
     if (dbReady) {
       const ins = await dbQ(`
-        INSERT INTO turnos (codigo, paciente, documento, servicio, registrado_por, ts_creado)
+        INSERT INTO turnos (codigo, paciente, documento, servicio, registrado_por, ts_creado, fecha_turno)
         OUTPUT INSERTED.id, INSERTED.codigo, INSERTED.paciente, INSERTED.documento,
                INSERTED.servicio, INSERTED.modulo, INSERTED.estado,
-               INSERTED.registrado_por, INSERTED.atendido_por, INSERTED.ts_creado
-        VALUES (@codigo, @paciente, @doc, @servicio, @regPor, @ts)
+               INSERTED.registrado_por, INSERTED.atendido_por, INSERTED.ts_creado, INSERTED.fecha_turno
+        VALUES (@codigo, @paciente, @doc, @servicio, @regPor, @ts, CAST(GETDATE() AS DATE))
       `, { codigo, paciente: paciente.trim(), doc: documento?.trim() || null, servicio, regPor: usuario.nombre, ts });
 
       let t = ins.recordset[0];
       // Asegurar que ts_creado es un número válido
       t = { ...t, ts_creado: t.ts_creado ? Number(t.ts_creado) : null };
       await registrarHistorial(t.id, t.codigo, 'CREADO', usuario.nombre);
+      await registrarLog(t.id, usuario.nombre, 'CREADO', `Turno ${t.codigo} - ${t.paciente}`);
       emitir('turno_nuevo', { turno: t });
       return json(res, 201, { ok: true, turno: t });
     }
 
     const t = { id: mem.turnos.length + 1, codigo, paciente: paciente.trim(), documento: documento || null,
                 servicio, modulo: '-', estado: 'En fila', atendido_por: null, registrado_por: usuario.nombre, nota: null,
-                llamadas: 0, ts_creado: ts, ts_llamado: null, ts_atendido: null, ts_fin: null };
+                llamadas: 0, ts_creado: ts, ts_llamado: null, ts_atendido: null, ts_fin: null,
+                fecha_turno: new Date().toISOString().slice(0, 10) };
     mem.turnos.push(t);
     emitir('turno_nuevo', { turno: t });
     return json(res, 201, { ok: true, turno: t });
@@ -829,7 +920,7 @@ async function crearTurno(req, res, usuario) {
 ═══════════════════════════════════════════════════════════════════ */
 async function actualizarTurno(req, res, id, usuario) {
   const b = await leerBody(req);
-  const { estado, nota, modulo } = b;
+  const { estado, nota, modulo, rellamar } = b;
   const ahora = Date.now();
 
   const sets = [];
@@ -852,6 +943,13 @@ async function actualizarTurno(req, res, id, usuario) {
     }
     if (['Finalizado','Cancelado','No atendido'].includes(estado)) {
       sets.push('ts_fin = @ahora'); p.ahora = ahora;
+      // Si nadie atendió aún, asignar al usuario que finaliza
+      if (!p.op) { sets.push('atendido_por = COALESCE(atendido_por, @op)'); p.op = usuario.nombre; }
+      // Si no hay modulo asignado, asignar el del usuario
+      if (!p.modulo && usuario.modulo && usuario.modulo !== 'Sin módulo') {
+        sets.push('modulo = CASE WHEN modulo = \'-\' OR modulo IS NULL THEN @modulo ELSE modulo END');
+        p.modulo = usuario.modulo;
+      }
     }
   }
   if (nota !== undefined) { sets.push('nota = @nota'); p.nota = nota; }
@@ -861,7 +959,7 @@ async function actualizarTurno(req, res, id, usuario) {
   if (dbReady) {
     /* Bloqueo optimista: evita que dos usuarios atiendan el mismo turno */
     let whereExtra = '';
-    if (estado === 'Llamando')   whereExtra = ` AND estado = 'En fila'`;
+    if (estado === 'Llamando' && !rellamar)  whereExtra = ` AND estado = 'En fila'`;
     if (estado === 'Atendiendo') whereExtra = ` AND estado IN ('En fila','Llamando')`;
 
     const r = await dbQ(`
@@ -883,7 +981,14 @@ async function actualizarTurno(req, res, id, usuario) {
     };
     if (estado) {
       const accionMap = { Llamando:'LLAMADO', Atendiendo:'ATENDIDO', Finalizado:'FINALIZADO', Cancelado:'CANCELADO', 'No atendido':'CANCELADO' };
-      if (accionMap[estado]) await registrarHistorial(t.id, t.codigo, accionMap[estado], usuario.nombre);
+      if (accionMap[estado]) {
+        await registrarHistorial(t.id, t.codigo, accionMap[estado], usuario.nombre);
+        await registrarLog(t.id, usuario.nombre, accionMap[estado], `${estado}: ${t.codigo} → ${t.modulo || '-'}`);
+      }
+      // Guardar backup CSV al finalizar un turno
+      if (['Finalizado','Cancelado','No atendido'].includes(estado)) {
+        guardarBackupCSV().catch(() => {});
+      }
     }
     emitir('turno_actualizado', { turno: t });
     return json(res, 200, { ok: true, turno: t });
@@ -892,14 +997,18 @@ async function actualizarTurno(req, res, id, usuario) {
   const t = mem.turnos.find(x => x.id === id);
   if (!t) return json(res, 404, { error: 'Turno no encontrado.' });
   /* Bloqueo en memoria */
-  if (estado === 'Llamando'   && t.estado !== 'En fila')                       return json(res, 409, { error: 'El turno ya está siendo atendido.' });
+  if (estado === 'Llamando' && !rellamar && t.estado !== 'En fila')            return json(res, 409, { error: 'El turno ya está siendo atendido.' });
   if (estado === 'Atendiendo' && !['En fila','Llamando'].includes(t.estado))   return json(res, 409, { error: 'El turno ya está siendo atendido.' });
   if (estado) t.estado = estado;
   if (nota !== undefined) t.nota = nota;
   if (modulo) t.modulo = modulo;
   if (estado === 'Llamando')  { t.ts_llamado  = ahora; t.atendido_por = usuario.nombre; t.llamadas++; }
   if (estado === 'Atendiendo'){ t.ts_atendido = ahora; if (!t.atendido_por) t.atendido_por = usuario.nombre; }
-  if (['Finalizado','Cancelado','No atendido'].includes(estado)) t.ts_fin = ahora;
+  if (['Finalizado','Cancelado','No atendido'].includes(estado)) {
+    t.ts_fin = ahora;
+    if (!t.atendido_por) t.atendido_por = usuario.nombre;
+    if (t.modulo === '-' && usuario.modulo && usuario.modulo !== 'Sin módulo') t.modulo = usuario.modulo;
+  }
   emitir('turno_actualizado', { turno: t });
   return json(res, 200, { ok: true, turno: t });
 }
@@ -914,11 +1023,33 @@ async function siguienteTurno(req, res, usuario) {
   const ahora = Date.now();
 
   if (dbReady) {
+    // Auto-cerrar cualquier turno Llamando/Atendiendo previo del mismo módulo
+    try {
+      const previos = await dbQ(`
+        SELECT id, codigo FROM turnos
+        WHERE  modulo = @mod
+          AND  estado IN ('Llamando','Atendiendo')
+          AND  fecha_turno = CAST(GETDATE() AS DATE)
+      `, { mod: modOp });
+      for (const prev of previos.recordset) {
+        await dbQ(`
+          UPDATE turnos
+          SET estado='Finalizado', ts_fin=@ahora, atendido_por=COALESCE(atendido_por, @op)
+          WHERE id=@id AND estado IN ('Llamando','Atendiendo')
+        `, { ahora, id: prev.id, op: usuario.nombre });
+        await registrarHistorial(prev.id, prev.codigo, 'FINALIZADO', usuario.nombre);
+        emitir('turno_actualizado', {
+          turno: { id: prev.id, codigo: prev.codigo, estado: 'Finalizado', ts_fin: ahora }
+        });
+        guardarBackupCSV().catch(() => {});
+      }
+    } catch(e) { console.warn('[siguiente] Error cerrando previos:', e.message); }
+
     // Buscar el PRIMER turno en fila (sin filtrar por módulo) - en orden secuencial
     const next = await dbQ(`
       SELECT TOP 1 id FROM turnos
       WHERE  estado = 'En fila'
-        AND  CAST(DATEADD(SECOND, ts_creado/1000, '1970-01-01') AS DATE) >= CAST(DATEADD(DAY, -7, GETDATE()) AS DATE)
+        AND  fecha_turno = CAST(GETDATE() AS DATE)
       ORDER  BY ts_creado ASC
     `);
     if (!next.recordset.length) return json(res, 200, { ok: false, mensaje: 'No hay turnos en espera.' });
@@ -943,9 +1074,18 @@ async function siguienteTurno(req, res, usuario) {
       ts_llamado: t.ts_llamado ? Number(t.ts_llamado) : null,
     };
     await registrarHistorial(t.id, t.codigo, 'LLAMADO', usuario.nombre);
+    await registrarLog(t.id, usuario.nombre, 'LLAMADO', `${t.codigo} llamado a ${modOp}`);
     emitir('turno_llamado', { turno: t });
     return json(res, 200, { ok: true, turno: t });
   }
+
+  // En memoria: auto-cerrar turno previo del módulo
+  mem.turnos.filter(t => t.modulo === modOp && (t.estado === 'Llamando' || t.estado === 'Atendiendo'))
+    .forEach(prev => {
+      prev.estado = 'Finalizado'; prev.ts_fin = ahora;
+      if (!prev.atendido_por) prev.atendido_por = usuario.nombre;
+      emitir('turno_actualizado', { turno: prev });
+    });
 
   // En memoria: buscar el PRIMER turno en fila (sin filtrar por módulo)
   const idx = mem.turnos.findIndex(t => t.estado === 'En fila');
@@ -977,8 +1117,64 @@ async function registrarHistorial(turnoId, turnoCodigo, accion, usuario) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   22b-2. AUDIT LOG — logs_turnos
+═══════════════════════════════════════════════════════════════════ */
+async function registrarLog(idTurno, usuario, accion, descripcion) {
+  if (!dbReady) return;
+  try {
+    await dbQ(`
+      INSERT INTO logs_turnos (id_turno, usuario, accion, descripcion)
+      VALUES (@id, @usr, @accion, @desc)
+    `, { id: idTurno, usr: usuario || null, accion, desc: descripcion || null });
+  } catch (e) {
+    console.warn('[logs_turnos]', e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    22c. ESTADÍSTICAS POR FUNCIONARIO
 ═══════════════════════════════════════════════════════════════════ */
+async function getEstadisticasMes(res, qp) {
+  // qp.mes = "YYYY-MM"
+  const mesRaw = (qp.mes || '').replace(/[^\d\-]/g, '');
+  const match  = mesRaw.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return json(res, 400, { error: 'Parámetro mes requerido (YYYY-MM)' });
+
+  const anio = parseInt(match[1], 10);
+  const mes  = parseInt(match[2], 10);
+
+  if (!dbReady) {
+    // Modo memoria: calcular desde mem.turnos
+    const dias = {};
+    for (const t of mem.turnos) {
+      const d = new Date(t.ts_creado);
+      if (d.getFullYear() !== anio || d.getMonth() + 1 !== mes) continue;
+      const key = `${anio}-${String(mes).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if (!dias[key]) dias[key] = { fecha: key, finalizados: 0, cancelados: 0, operadores: new Set() };
+      if (t.estado === 'Finalizado') { dias[key].finalizados++; if (t.atendido_por) dias[key].operadores.add(t.atendido_por); }
+      if (t.estado === 'Cancelado' || t.estado === 'No atendido') dias[key].cancelados++;
+    }
+    const result = Object.values(dias).map(d => ({
+      fecha: d.fecha, finalizados: d.finalizados, cancelados: d.cancelados, operadores_activos: d.operadores.size
+    }));
+    return json(res, 200, { ok: true, dias: result });
+  }
+
+  const r = await dbQ(`
+    SELECT
+      CONVERT(NVARCHAR(10), fecha_turno, 23)                                   AS fecha,
+      SUM(CASE WHEN estado = 'Finalizado'  THEN 1 ELSE 0 END)                 AS finalizados,
+      SUM(CASE WHEN estado IN ('Cancelado','No atendido') THEN 1 ELSE 0 END)  AS cancelados,
+      COUNT(DISTINCT CASE WHEN estado = 'Finalizado' THEN atendido_por END)   AS operadores_activos
+    FROM turnos
+    WHERE YEAR(fecha_turno) = @anio
+      AND MONTH(fecha_turno) = @mes
+    GROUP BY CONVERT(NVARCHAR(10), fecha_turno, 23)
+    ORDER BY fecha
+  `, { anio, mes });
+  return json(res, 200, { ok: true, dias: r.recordset });
+}
+
 async function getEstadisticas(res, qp) {
   if (!dbReady) {
     /* Modo memoria: calcular desde mem.turnos */
@@ -1001,9 +1197,8 @@ async function getEstadisticas(res, qp) {
     return json(res, 200, { ok: true, estadisticas: stats });
   }
 
-  const fechaFiltro = qp.fecha
-    ? `CAST(DATEADD(SECOND, ts_creado/1000,'19700101') AS DATE) = CAST('${qp.fecha.replace(/[^\d\-]/g,'')}' AS DATE)`
-    : `CAST(DATEADD(SECOND, ts_creado/1000,'19700101') AS DATE) = CAST(GETDATE() AS DATE)`;
+  const useFecha = qp.fecha && /^\d{4}-\d{2}-\d{2}$/.test(qp.fecha.replace(/[^\d\-]/g,''));
+  const fechaClean = useFecha ? qp.fecha.replace(/[^\d\-]/g,'') : null;
 
   const r = await dbQ(`
     SELECT
@@ -1015,10 +1210,10 @@ async function getEstadisticas(res, qp) {
     FROM turnos
     WHERE estado = 'Finalizado'
       AND atendido_por IS NOT NULL
-      AND ${fechaFiltro}
+      AND fecha_turno = ${useFecha ? 'CAST(@fecha AS DATE)' : 'CAST(GETDATE() AS DATE)'}
     GROUP BY atendido_por
     ORDER BY turnos_atendidos DESC
-  `);
+  `, useFecha ? { fecha: fechaClean } : {});
   return json(res, 200, { ok: true, estadisticas: r.recordset });
 }
 
@@ -1038,10 +1233,21 @@ async function getServicios(res) {
 
 async function getModulos(res) {
   if (dbReady) {
-    const r = await dbQ(`SELECT id, nombre, servicio FROM modulos WHERE activo=1 ORDER BY nombre`);
+    const r = await dbQ(`SELECT id, nombre, servicio, activo FROM modulos ORDER BY nombre`);
     return json(res, 200, { ok: true, modulos: r.recordset });
   }
-  json(res, 200, { ok: true, modulos: [] });
+  // Modo memoria: devolver los 8 módulos por defecto
+  const modulosMem = [
+    { id: 1, nombre: 'Módulo 01', servicio: 'Neurología', activo: true },
+    { id: 2, nombre: 'Módulo 02', servicio: 'General', activo: true },
+    { id: 3, nombre: 'Módulo 03', servicio: 'Psiquiatría', activo: true },
+    { id: 4, nombre: 'Módulo 04', servicio: 'Neurología', activo: true },
+    { id: 5, nombre: 'Módulo 05', servicio: 'Kinesiología', activo: true },
+    { id: 6, nombre: 'Módulo 06', servicio: 'Laboratorio', activo: true },
+    { id: 7, nombre: 'Módulo 07', servicio: 'Psiquiatría', activo: true },
+    { id: 8, nombre: 'Módulo 08', servicio: 'General', activo: true },
+  ];
+  json(res, 200, { ok: true, modulos: modulosMem });
 }
 
 async function getUsuarios(res) {
@@ -1135,7 +1341,12 @@ async function actualizarUsuario(req, res, id, usuario) {
 
     if (nombre?.trim()) { sets.push('nombre = @nom'); p.nom = nombre.trim().slice(0, 120); }
     if (email !== undefined) { sets.push('email = @email'); p.email = email?.trim() || null; }
-    if (rol) { sets.push('modulo = @mod'); p.mod = modulos ? JSON.stringify(Array.isArray(modulos) ? modulos : []) : '[]'; }
+    if (rol) {
+      sets.push('rol = @rol');
+      p.rol = ['Administrador','Médico','Enfermero','Recepcionista','Operador','Linea de frente'].includes(rol) ? rol : 'Recepcionista';
+      sets.push('modulo = @mod');
+      p.mod = modulos ? JSON.stringify(Array.isArray(modulos) ? modulos : []) : '[]';
+    }
     if (activo !== undefined) { sets.push('activo = @act'); p.act = activo ? 1 : 0; }
 
     if (!sets.length) return json(res, 400, { error: 'Sin cambios.' });
@@ -1161,7 +1372,10 @@ async function actualizarUsuario(req, res, id, usuario) {
 
     if (nombre?.trim()) mem_u.nombre = nombre.trim();
     if (email !== undefined) mem_u.email = email || null;
-    if (rol) mem_u.modulo = modulos ? JSON.stringify(modulos) : '[]';
+    if (rol) {
+      mem_u.rol = ['Administrador','Médico','Enfermero','Recepcionista','Operador','Linea de frente'].includes(rol) ? rol : mem_u.rol;
+      mem_u.modulo = modulos ? JSON.stringify(modulos) : '[]';
+    }
     if (activo !== undefined) mem_u.activo = activo;
 
     return json(res, 200, { ok: true, usuario: mem_u });
@@ -1359,8 +1573,41 @@ async function obtenerImagenes(res) {
   }
 }
 
-async function getDashboard(res) {
+async function getDashboard(res, qp) {
   if (!dbReady) return json(res, 200, { ok: true, stats: {}, turnos: [] });
+
+  // Construir filtro de fecha con parámetros seguros
+  let filtroWhere = 'fecha_turno = CAST(GETDATE() AS DATE)';
+  const p = {};
+  let modo = 'hoy';
+
+  if (qp) {
+    const limpio = s => (s || '').replace(/[^\d\-]/g, '');
+    if (qp.fecha && /^\d{4}-\d{2}-\d{2}$/.test(limpio(qp.fecha))) {
+      filtroWhere = 'fecha_turno = CAST(@dashFecha AS DATE)';
+      p.dashFecha = limpio(qp.fecha);
+      modo = limpio(qp.fecha);
+    } else if (qp.desde && qp.hasta &&
+               /^\d{4}-\d{2}-\d{2}$/.test(limpio(qp.desde)) &&
+               /^\d{4}-\d{2}-\d{2}$/.test(limpio(qp.hasta))) {
+      filtroWhere = 'fecha_turno BETWEEN CAST(@dashDesde AS DATE) AND CAST(@dashHasta AS DATE)';
+      p.dashDesde = limpio(qp.desde);
+      p.dashHasta = limpio(qp.hasta);
+      modo = `${limpio(qp.desde)} / ${limpio(qp.hasta)}`;
+    } else if (qp.semana === '1') {
+      filtroWhere = `fecha_turno >= CAST(DATEADD(DAY, 2-DATEPART(WEEKDAY,GETDATE()), GETDATE()) AS DATE)
+                     AND fecha_turno <= CAST(GETDATE() AS DATE)`;
+      modo = 'semana';
+    } else if (qp.mes && /^\d{4}-\d{2}$/.test(limpio(qp.mes))) {
+      const [y, m] = limpio(qp.mes).split('-');
+      filtroWhere = 'YEAR(fecha_turno) = @dashAnio AND MONTH(fecha_turno) = @dashMes';
+      p.dashAnio = parseInt(y, 10);
+      p.dashMes  = parseInt(m, 10);
+      modo = limpio(qp.mes);
+    }
+  }
+
+  const params = Object.keys(p).length ? p : undefined;
   const [s, u] = await Promise.all([
     dbQ(`
       SELECT
@@ -1372,17 +1619,17 @@ async function getDashboard(res) {
         AVG(CASE WHEN ts_atendido IS NOT NULL
                  THEN CAST(ts_atendido - ts_creado AS FLOAT)/60000.0 ELSE NULL END) AS promedio_espera_min
       FROM turnos
-      WHERE CAST(DATEADD(SECOND, ts_creado/1000,'19700101') AS DATE) = CAST(GETDATE() AS DATE)
-    `),
+      WHERE ${filtroWhere}
+    `, params),
     dbQ(`
-      SELECT TOP 10 codigo, paciente, servicio, estado, modulo, atendido_por,
-                    ts_creado, ts_llamado, ts_atendido, ts_fin
+      SELECT TOP 50 codigo, paciente, servicio, estado, modulo, atendido_por,
+                    ts_creado, ts_llamado, ts_atendido, ts_fin, fecha_turno
       FROM  turnos
-      WHERE CAST(DATEADD(SECOND, ts_creado/1000,'19700101') AS DATE) = CAST(GETDATE() AS DATE)
+      WHERE ${filtroWhere}
       ORDER BY ts_creado DESC
-    `),
+    `, params),
   ]);
-  json(res, 200, { ok: true, stats: s.recordset[0], turnos: u.recordset });
+  json(res, 200, { ok: true, stats: s.recordset[0], turnos: u.recordset, modo });
 }
 
 async function getHistorial(res, qp) {
@@ -1395,10 +1642,21 @@ async function getHistorial(res, qp) {
   if (qp.buscar)   { conds.push(`(paciente LIKE @q OR codigo LIKE @q OR documento LIKE @q)`); p.q = `%${qp.buscar}%`; }
   if (qp.desde)    { conds.push(`ts_creado >= @desde`);     p.desde  = parseInt(qp.desde, 10); }
   if (qp.hasta)    { conds.push(`ts_creado <= @hasta`);     p.hasta  = parseInt(qp.hasta, 10); }
+  // Filtros por fecha_turno (YYYY-MM-DD) — más precisos que timestamps
+  const limpio = s => (s || '').replace(/[^\d\-]/g, '');
+  if (qp.fecha_desde && /^\d{4}-\d{2}-\d{2}$/.test(limpio(qp.fecha_desde))) {
+    conds.push(`fecha_turno >= CAST(@fd AS DATE)`);
+    p.fd = limpio(qp.fecha_desde);
+  }
+  if (qp.fecha_hasta && /^\d{4}-\d{2}-\d{2}$/.test(limpio(qp.fecha_hasta))) {
+    conds.push(`fecha_turno <= CAST(@fh AS DATE)`);
+    p.fh = limpio(qp.fecha_hasta);
+  }
 
   const r = await dbQ(`
-    SELECT TOP 200 id, codigo, paciente, documento, servicio, modulo, estado,
-                   atendido_por, nota, ts_creado, ts_llamado, ts_atendido, ts_fin
+    SELECT TOP 2000 id, codigo, paciente, documento, servicio, modulo, estado,
+                    atendido_por, registrado_por, nota,
+                    ts_creado, ts_llamado, ts_atendido, ts_fin, fecha_turno
     FROM  turnos WHERE ${conds.join(' AND ')}
     ORDER BY ts_creado DESC
   `, p);
@@ -1424,21 +1682,337 @@ function ipsLocales() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   LIMPIEZA — Eliminar turnos antiguos finalizados
+   BACKUP DIARIO — Guardar turnos del día en CSV
 ═══════════════════════════════════════════════════════════════════ */
-async function limpiarTurnosAntiguos() {
-  if (!dbReady) return;
+async function guardarBackupCSV(fecha) {
   try {
-    const r = await dbQ(`
-      DELETE FROM turnos
-      WHERE estado IN ('Finalizado', 'Cancelado', 'No atendido')
-        AND CAST(DATEADD(SECOND, ts_creado/1000, '1970-01-01') AS DATE) < CAST(GETDATE() AS DATE)
+    const f = fecha || new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const [anio, mes] = f.split('-');
+    let turnos = [];
+
+    if (dbReady) {
+      const r = await dbQ(`
+        SELECT codigo, paciente, documento, servicio, atendido_por, modulo, estado,
+               ts_creado, ts_llamado, ts_atendido, ts_fin, nota
+        FROM   turnos
+        WHERE  CAST(DATEADD(SECOND, ts_creado/1000, '1970-01-01') AS DATE) = @fecha
+        ORDER  BY ts_creado ASC
+      `, { fecha: f });
+      turnos = r.recordset;
+    } else {
+      const dayStart = new Date(f + 'T00:00:00').getTime();
+      const dayEnd   = dayStart + 86400000;
+      turnos = mem.turnos.filter(t => t.ts_creado >= dayStart && t.ts_creado < dayEnd);
+    }
+
+    if (!turnos.length) return;
+
+    const dir = path.join(__dirname, 'turnos', anio, mes);
+    fs.mkdirSync(dir, { recursive: true });
+
+    const tsToStr = ts => {
+      if (!ts) return '';
+      const d = new Date(Number(ts));
+      return d.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+    };
+    const espera = (tc, ta) => (tc && ta) ? Math.round((Number(ta) - Number(tc)) / 60000) : '';
+    const atencion = (ta, tf) => (ta && tf) ? Math.round((Number(tf) - Number(ta)) / 60000) : '';
+
+    const header = 'turno,paciente,documento,servicio,operador,modulo,hora_creacion,tiempo_espera_min,tiempo_atencion_min,estado';
+    const rows = turnos.map(t => {
+      const esc = v => `"${String(v || '').replace(/"/g, '""')}"`;  
+      return [
+        esc(t.codigo), esc(t.paciente), esc(t.documento),
+        esc(t.servicio), esc(t.atendido_por), esc(t.modulo),
+        esc(tsToStr(t.ts_creado)),
+        espera(t.ts_creado, t.ts_atendido || t.ts_llamado),
+        atencion(t.ts_atendido, t.ts_fin),
+        esc(t.estado)
+      ].join(',');
+    });
+
+    const csvPath = path.join(dir, `${f}.csv`);
+    fs.writeFileSync(csvPath, header + '\n' + rows.join('\n'), 'utf8');
+    console.log(`📁 Backup CSV guardado: ${csvPath} (${turnos.length} turnos)`);
+  } catch (e) {
+    console.warn('[guardarBackupCSV]', e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PERSISTENCIA — Todos los turnos se conservan permanentemente.
+   Los CSV se generan como backup redundante (no se borra nada de la BD).
+═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   CIERRE DIARIO — Expirar turnos activos de días anteriores
+   Los turnos pasan a estado 'Expirado' y su código se prefija con la
+   fecha (p.ej. G-001 → 2026-03-25-G-001) para liberar el código del día.
+═══════════════════════════════════════════════════════════════════ */
+async function vencerTurnosAntiguos() {
+  const hoy      = new Date().toISOString().slice(0, 10);
+  const hoyStart = new Date(hoy + 'T00:00:00').getTime();
+
+  if (!dbReady) {
+    // Modo memoria
+    let count = 0;
+    mem.turnos.forEach(t => {
+      if ((t.ts_creado || 0) < hoyStart && ['En fila', 'Llamando', 'Atendiendo'].includes(t.estado)) {
+        const fecha = new Date(t.ts_creado || hoyStart - 86400000).toISOString().slice(0, 10);
+        t.codigo = `${fecha}-${t.codigo}`;
+        t.estado = 'Expirado';
+        if (!t.ts_fin) t.ts_fin = Date.now();
+        count++;
+      }
+    });
+    if (count) console.log(`[CierreDia] ${count} turno(s) de días anteriores marcados como Expirado (memoria)`);
+    return;
+  }
+
+  try {
+    // Guardar CSV de cada día afectado antes de expirar
+    const diasR = await dbQ(`
+      SELECT DISTINCT CONVERT(NVARCHAR(10), fecha_turno, 23) AS fecha
+      FROM   turnos
+      WHERE  fecha_turno < CAST(GETDATE() AS DATE)
+        AND  estado IN ('En fila', 'Llamando', 'Atendiendo')
     `);
-    if (r.rowsAffected[0] > 0) {
-      console.log(`✅ Limpios ${r.rowsAffected[0]} turnos antiguos finalizados.`);
+    for (const row of diasR.recordset || []) {
+      await guardarBackupCSV(row.fecha).catch(() => {});
+    }
+
+    // Renombrar código + marcar Expirado en un solo UPDATE
+    const r = await dbQ(`
+      UPDATE turnos
+      SET    estado  = 'Expirado',
+             codigo  = CONVERT(NVARCHAR(10), fecha_turno, 23) + '-' + codigo,
+             ts_fin  = CASE WHEN ts_fin IS NULL THEN @ahora ELSE ts_fin END
+      OUTPUT INSERTED.id
+      WHERE  fecha_turno < CAST(GETDATE() AS DATE)
+        AND  estado IN ('En fila', 'Llamando', 'Atendiendo')
+    `, { ahora: Date.now() });
+
+    const count = r.recordset?.length || 0;
+    if (count > 0) {
+      console.log(`[CierreDia] ${count} turno(s) de días anteriores → Expirado (código prefijado con fecha)`);
+      emitir('turnos_expirados', { count });
     }
   } catch (e) {
-    console.warn('[Limpieza de turnos]', e.message);
+    console.warn('[vencerTurnosAntiguos]', e.message);
+  }
+}
+
+/* Programa el cierre automático a las 00:00:05 de cada día */
+function programarCierreDia() {
+  const ahora   = Date.now();
+  const mañana  = new Date();
+  mañana.setDate(mañana.getDate() + 1);
+  mañana.setHours(0, 0, 5, 0);
+  const ms = mañana.getTime() - ahora;
+
+  setTimeout(async () => {
+    const ayer      = new Date(); ayer.setDate(ayer.getDate() - 1);
+    const fechaAyer = ayer.toISOString().slice(0, 10);
+    console.log(`\n[Medianoche] Iniciando cierre del día ${fechaAyer}...`);
+    try { await guardarBackupCSV(fechaAyer); } catch (_) {}
+    await vencerTurnosAntiguos();
+    await sincronizarContador();
+    console.log(`[Medianoche] Cierre de día ${fechaAyer} completado.`);
+    programarCierreDia(); // re-programar para la siguiente medianoche
+  }, ms);
+
+  const minutos = Math.round(ms / 60000);
+  console.log(`[CierreDia] Cierre diario automático programado en ${minutos} min`);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   EXPORTACIÓN HISTÓRICO XLSX / CSV
+   /historico_turnos/AÑO/MES/turnos_FECHA.xlsx  (o .csv sin exceljs)
+═══════════════════════════════════════════════════════════════════ */
+async function exportarHistoricoXLSX(fecha) {
+  try {
+    const f = (fecha || new Date().toISOString().slice(0, 10)).replace(/[^\d\-]/g, '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) return;
+
+    const [anio, mes] = f.split('-');
+    let turnos = [];
+
+    if (dbReady) {
+      const r = await dbQ(`
+        SELECT codigo AS turno, paciente, documento, servicio,
+               registrado_por AS operador, modulo,
+               ts_creado AS hora_llegada, ts_llamado,
+               ts_atendido AS hora_inicio_atencion, ts_fin AS hora_finalizacion,
+               estado, fecha_turno
+        FROM   turnos
+        WHERE  fecha_turno = CAST(@fecha AS DATE)
+        ORDER  BY ts_creado ASC
+      `, { fecha: f });
+      turnos = r.recordset;
+    } else {
+      const dayStart = new Date(f + 'T00:00:00').getTime();
+      const dayEnd   = dayStart + 86400000;
+      turnos = mem.turnos.filter(t => t.ts_creado >= dayStart && t.ts_creado < dayEnd);
+    }
+
+    if (!turnos.length) { console.log(`[Histórico] Sin turnos para ${f}`); return; }
+
+    const dir = path.join(__dirname, 'historico_turnos', anio, mes);
+    fs.mkdirSync(dir, { recursive: true });
+
+    const tsToStr = ts => {
+      if (!ts) return '';
+      return new Date(Number(ts)).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+    };
+    const espera   = (tc, ta) => (tc && ta) ? Math.round((Number(ta) - Number(tc)) / 60000) : '';
+    const atencion = (ta, tf) => (ta && tf) ? Math.round((Number(tf) - Number(ta)) / 60000) : '';
+
+    if (ExcelJS) {
+      const wb    = new ExcelJS.Workbook();
+      wb.creator  = 'NeuroTurn';
+      const sheet = wb.addWorksheet(`Turnos ${f}`);
+
+      sheet.columns = [
+        { header: 'Turno',                  key: 'turno',                 width: 12 },
+        { header: 'Paciente',               key: 'paciente',              width: 30 },
+        { header: 'Documento',              key: 'documento',             width: 15 },
+        { header: 'Servicio',               key: 'servicio',              width: 20 },
+        { header: 'Operador',               key: 'operador',              width: 25 },
+        { header: 'Módulo',                 key: 'modulo',                width: 15 },
+        { header: 'Hora Llegada',           key: 'hora_llegada',          width: 22 },
+        { header: 'Inicio Atención',        key: 'hora_inicio_atencion',  width: 22 },
+        { header: 'Hora Finalización',      key: 'hora_finalizacion',     width: 22 },
+        { header: 'Espera (min)',            key: 'tiempo_espera',         width: 14 },
+        { header: 'Atención (min)',          key: 'tiempo_atencion',       width: 14 },
+        { header: 'Estado',                 key: 'estado',                width: 15 },
+        { header: 'Fecha',                  key: 'fecha_turno',           width: 12 },
+      ];
+
+      /* Estilo encabezado */
+      const header = sheet.getRow(1);
+      header.eachCell(cell => {
+        cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E5F8E' } };
+        cell.font   = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.border = { bottom: { style: 'medium', color: { argb: 'FF0A3D62' } } };
+      });
+
+      for (const t of turnos) {
+        sheet.addRow({
+          turno:                t.turno   || t.codigo,
+          paciente:             t.paciente,
+          documento:            t.documento    || '',
+          servicio:             t.servicio     || '',
+          operador:             t.operador     || t.atendido_por || '',
+          modulo:               t.modulo       || '',
+          hora_llegada:         tsToStr(t.hora_llegada   || t.ts_creado),
+          hora_inicio_atencion: tsToStr(t.hora_inicio_atencion || t.ts_atendido),
+          hora_finalizacion:    tsToStr(t.hora_finalizacion    || t.ts_fin),
+          tiempo_espera:        espera(t.hora_llegada   || t.ts_creado,
+                                       t.hora_inicio_atencion || t.ts_atendido || t.ts_llamado),
+          tiempo_atencion:      atencion(t.hora_inicio_atencion || t.ts_atendido,
+                                         t.hora_finalizacion    || t.ts_fin),
+          estado:               t.estado,
+          fecha_turno:          f,
+        });
+      }
+
+      const xlsxPath = path.join(dir, `turnos_${f}.xlsx`);
+      await wb.xlsx.writeFile(xlsxPath);
+      console.log(`📊 Histórico XLSX: ${xlsxPath} (${turnos.length} turnos)`);
+      return;
+    }
+
+    /* Fallback CSV sin exceljs */
+    const esc = v => `"${String(v || '').replace(/"/g, '""')}"`;
+    const hdr = 'turno,paciente,documento,servicio,operador,modulo,hora_llegada,hora_inicio_atencion,hora_finalizacion,tiempo_espera_min,tiempo_atencion_min,estado,fecha_turno';
+    const rows = turnos.map(t => [
+      esc(t.turno || t.codigo), esc(t.paciente), esc(t.documento), esc(t.servicio),
+      esc(t.operador || t.atendido_por || ''), esc(t.modulo),
+      esc(tsToStr(t.hora_llegada   || t.ts_creado)),
+      esc(tsToStr(t.hora_inicio_atencion || t.ts_atendido)),
+      esc(tsToStr(t.hora_finalizacion    || t.ts_fin)),
+      espera(t.hora_llegada   || t.ts_creado, t.hora_inicio_atencion || t.ts_atendido || t.ts_llamado),
+      atencion(t.hora_inicio_atencion || t.ts_atendido, t.hora_finalizacion || t.ts_fin),
+      esc(t.estado), esc(f),
+    ].join(','));
+    const csvPath = path.join(dir, `turnos_${f}.csv`);
+    fs.writeFileSync(csvPath, hdr + '\n' + rows.join('\n'), 'utf8');
+    console.log(`📁 Histórico CSV: ${csvPath} (${turnos.length} turnos)`);
+  } catch (e) {
+    console.warn('[exportarHistoricoXLSX]', e.message);
+  }
+}
+
+/* Exportación manual vía API POST /api/historial/exportar (admin) */
+async function handleExportarHistorico(req, res, qp, usuario) {
+  if (usuario.rol !== 'Administrador') return json(res, 403, { error: 'Solo administradores pueden exportar.' });
+  const f = ((qp && qp.fecha) || new Date().toISOString().slice(0, 10)).replace(/[^\d\-]/g, '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) return json(res, 400, { error: 'Fecha inválida. Use YYYY-MM-DD.' });
+  await exportarHistoricoXLSX(f);
+  return json(res, 200, { ok: true, mensaje: `Histórico de ${f} exportado a /historico_turnos/` });
+}
+
+/* Programar exportación automática a las 23:59 cada día */
+function programar23_59() {
+  const ahora = Date.now();
+  const obj   = new Date();
+  obj.setHours(23, 59, 0, 0);
+  if (obj.getTime() <= ahora) obj.setDate(obj.getDate() + 1);
+  const ms = obj.getTime() - ahora;
+
+  setTimeout(async () => {
+    const hoyStr = new Date().toISOString().slice(0, 10);
+    console.log(`\n[23:59] Exportando histórico del día ${hoyStr}...`);
+    try { await exportarHistoricoXLSX(hoyStr); } catch (e) { console.warn('[23:59]', e.message); }
+    programar23_59(); // re-programar para mañana
+  }, ms);
+
+  console.log(`[Histórico] Exportación automática programada en ${Math.round(ms / 60000)} min`);
+}
+
+async function sincronizarContador() {
+  if (!dbReady) return;
+  try {
+    const hoy = new Date().toISOString().slice(0, 10);
+
+    // Eliminar restricción UNIQUE sobre codigo si existe (los códigos se repiten entre días)
+    try {
+      await dbQ(`
+        DECLARE @cname NVARCHAR(200);
+        SELECT @cname = name FROM sys.key_constraints
+        WHERE parent_object_id = OBJECT_ID('turnos') AND type = 'UQ'
+          AND OBJECT_NAME(parent_object_id) = 'turnos'
+          AND EXISTS (SELECT 1 FROM sys.index_columns ic
+                      JOIN sys.columns c ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+                      WHERE ic.object_id = parent_object_id AND ic.index_id = unique_index_id AND c.name = 'codigo');
+        IF @cname IS NOT NULL
+          EXEC('ALTER TABLE turnos DROP CONSTRAINT ' + @cname);
+      `);
+    } catch(_) { /* puede no existir */ }
+
+    // Máximo número usado HOY
+    const r = await dbQ(`
+      SELECT MAX(CAST(SUBSTRING(codigo, CHARINDEX('-', codigo) + 1, 10) AS INT)) AS max_num
+      FROM   turnos
+      WHERE  CHARINDEX('-', codigo) > 0
+        AND  CAST(DATEADD(SECOND, ts_creado/1000, '19700101') AS DATE) = CAST(GETDATE() AS DATE)
+    `);
+    const maxUsed = r.recordset[0]?.max_num || 0;
+
+    // Fijar contador al máximo de hoy
+    await dbQ(`UPDATE config SET valor = @v WHERE clave = 'contador'`, { v: String(maxUsed) });
+
+    // Guardar fecha del contador
+    const f = await dbQ(`SELECT valor FROM config WHERE clave = 'contador_fecha'`);
+    if (f.recordset.length) {
+      await dbQ(`UPDATE config SET valor = @v WHERE clave = 'contador_fecha'`, { v: hoy });
+    } else {
+      await dbQ(`INSERT INTO config (clave, valor) VALUES ('contador_fecha', @v)`, { v: hoy });
+    }
+
+    console.log(`[Contador] Sincronizado para ${hoy}: máximo usado hoy = ${maxUsed}`);
+  } catch (e) {
+    console.warn('[sincronizarContador]', e.message);
   }
 }
 
@@ -1448,10 +2022,17 @@ async function arrancar() {
   console.log('└────────────────────────────────────────────────────────────┘');
 
   await conectarDB();
-  await limpiarTurnosAntiguos();
+  await vencerTurnosAntiguos();
+  await sincronizarContador();
   await inicializarMemoria();
   await insertarUsuariosDePrueba();
   await asegurarUsuarioAdmin();
+
+  programarCierreDia();
+  programar23_59();
+
+  // Backup CSV automático cada hora
+  setInterval(() => guardarBackupCSV().catch(() => {}), 60 * 60 * 1000);
 
   servidor.listen(PORT, HOST, () => {
     const ips      = ipsLocales();
@@ -1493,6 +2074,7 @@ process.on('SIGTERM', cerrar);
 
 async function cerrar() {
   console.log('\n🛑  Cerrando...');
+  try { await guardarBackupCSV(); } catch (_) {}
   try { if (pool) await pool.close(); } catch (_) {}
   process.exit(0);
 }
