@@ -32,7 +32,7 @@ const ROLES = [
     { id: 'enfermero', label: 'Enfermero', color: '#22C55E' },
     { id: 'recepcion', label: 'Recepcionista', color: '#F59E0B' },
     { id: 'operador', label: 'Operador', color: '#06B6D4' },
-    { id: 'linea', label: 'Linea de frente', color: '#EC4899' }
+    { id: 'linea', label: 'Linea de Frente', color: '#EC4899' }
 ];
 
 const MODULOS = [

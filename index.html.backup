@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -1028,66 +1028,66 @@
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section-label">Principal</div>
-        <a class="nav-item" data-page="inicio" onclick="navTo('inicio')">
+        <a class="nav-item" onclick="navTo('inicio')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           Inicio
         </a>
         <div class="nav-section-label" style="margin-top:8px">Atención</div>
-        <a class="nav-item" data-page="recepcion" onclick="navTo('recepcion')">
+        <a class="nav-item" onclick="navTo('recepcion')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
           Recepción
         </a>
-        <a class="nav-item" data-page="turnos" onclick="navTo('turnos')">
+        <a class="nav-item" onclick="navTo('turnos')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Turnos
         </a>
-        <a class="nav-item" data-page="panel" onclick="navTo('panel')">
+        <a class="nav-item" onclick="navTo('panel')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
           Panel De Atención
         </a>
-        <a class="nav-item" data-page="historial" onclick="navTo('historial')">
+        <a class="nav-item" onclick="navTo('historial')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Historial de Turnos
         </a>
-        <a class="nav-item" data-page="estadisticas" onclick="navTo('estadisticas')">
+        <a class="nav-item" onclick="navTo('estadisticas')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
           Estadísticas
         </a>
-        <a class="nav-item" data-page="tv" onclick="navTo('tv')">
+        <a class="nav-item" onclick="navTo('tv')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Ventana Televisor
         </a>
-        <a class="nav-item" data-page="anuncios" onclick="navTo('anuncios')">
+        <a class="nav-item" onclick="navTo('anuncios')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/><circle cx="12" cy="12" r="1"/></svg>
           Ventana de Anuncios
         </a>
-        <div class="nav-section-label" data-section="admin" style="margin-top:8px">Administración</div>
-        <a class="nav-item" data-page="usuarios" onclick="navTo('usuarios')">
+        <div class="nav-section-label" style="margin-top:8px">Administración</div>
+        <a class="nav-item" onclick="navTo('usuarios')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           Gestión De Usuarios
         </a>
-        <a class="nav-item nav-item-soon" data-page="servicios" onclick="navTo('servicios')">
+        <a class="nav-item nav-item-soon" onclick="navTo('servicios')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>
           Servicios Médicos
           <span class="nav-soon-badge">Próximamente</span>
         </a>
-        <a class="nav-item" data-page="dashboard" onclick="navTo('dashboard')">
+        <a class="nav-item" onclick="navTo('dashboard')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           Dashboard
         </a>
-        <a class="nav-item nav-item-soon" data-page="modulos" onclick="navTo('modulos')">
+        <a class="nav-item nav-item-soon" onclick="navTo('modulos')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           Gestión de Módulos
           <span class="nav-soon-badge">Próximamente</span>
         </a>
-        <a class="nav-item nav-item-soon" data-page="gservicios" onclick="navTo('gservicios')">
+        <a class="nav-item nav-item-soon" onclick="navTo('gservicios')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 115 19.07"/></svg>
           Gestión de Servicios
           <span class="nav-soon-badge">Próximamente</span>
         </a>
       </nav>
       <div class="sidebar-footer">
-        <a class="nav-item" data-page="config" onclick="navTo('config')">
+        <a class="nav-item" onclick="navTo('config')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 115 19.07"/></svg>
           Configuración
         </a>
@@ -1715,81 +1715,18 @@
 
         <!-- ESTADÍSTICAS POR FUNCIONARIO -->
         <div class="page" id="page-estadisticas">
-          <!-- ENCABEZADO -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <h2 style="font-size:20px;font-weight:700;margin:0">Estadísticas por Funcionario</h2>
-            <button class="btn-sm primary" onclick="estCargarMes()" style="display:flex;align-items:center;gap:6px">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              Actualizar
-            </button>
-          </div>
-
-          <!-- CALENDARIO -->
-          <div class="card" style="padding:20px;margin-bottom:16px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-              <div style="display:flex;align-items:center;gap:12px">
-                <button class="btn-sm" onclick="estMesPrev()" style="padding:6px 10px">&lt;</button>
-                <span id="est-cal-titulo" style="font-size:16px;font-weight:700;min-width:160px;text-align:center"></span>
-                <button class="btn-sm" onclick="estMesNext()" style="padding:6px 10px">&gt;</button>
-                <button class="btn-sm" onclick="estHoy()" style="margin-left:8px;font-size:12px">Hoy</button>
-              </div>
-              <div style="display:flex;align-items:center;gap:12px;font-size:12px">
-                <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#22C55E;display:inline-block"></span> CSV completo</span>
-                <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block"></span> Auditoría BD</span>
-              </div>
+          <div class="card table-card" style="margin-bottom:16px">
+            <div class="table-header">
+              <h3>Estadísticas por Funcionario — Hoy</h3>
+              <button class="btn-sm primary" onclick="renderEstadisticasFuncionarios()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                Actualizar
+              </button>
             </div>
-            <div id="est-calendario" style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
-          </div>
-
-          <!-- DETALLE DEL DÍA -->
-          <div id="est-detalle-dia" style="display:none">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <h3 id="est-detalle-titulo" style="font-size:16px;font-weight:700;margin:0"></h3>
-              <button class="btn-sm" onclick="estCerrarDetalle()" style="font-size:12px">✕ Cerrar</button>
-            </div>
-
-            <!-- BANNER FUENTE DE DATOS -->
-            <div id="est-fuente-banner" style="display:none"></div>
-
-            <!-- RESUMEN KPIs -->
-            <div id="est-resumen-kpis" style="display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:16px"></div>
-
-            <!-- FUNCIONARIOS DEL DÍA -->
-            <div class="card" style="padding:20px;margin-bottom:16px">
-              <h4 style="font-size:14px;font-weight:700;margin:0 0 14px 0;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                FUNCIONARIOS DEL DÍA
-              </h4>
-              <div id="est-funcionarios" style="display:flex;flex-wrap:wrap;gap:12px"></div>
-            </div>
-
-            <!-- DETALLE POR FUNCIONARIO -->
-            <div id="est-func-detalle" style="display:none">
-              <div class="card" style="padding:20px">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-                  <h4 id="est-func-detalle-titulo" style="font-size:14px;font-weight:700;margin:0"></h4>
-                  <button class="btn-sm" onclick="document.getElementById('est-func-detalle').style.display='none'" style="font-size:12px">✕ Cerrar detalle</button>
-                </div>
-                <div style="overflow-x:auto">
-                  <table style="width:100%;border-collapse:collapse;font-size:12px">
-                    <thead>
-                      <tr style="background:var(--bg)">
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">TURNO</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">PACIENTE</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">DOCUMENTO</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">SERVICIO</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">MÓDULO</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">HORA CREACIÓN</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">ESPERA</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">ATENCIÓN</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">ESTADO</th>
-                      </tr>
-                    </thead>
-                    <tbody id="est-func-detalle-body"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+            <table id="est-func-table">
+              <thead><tr><th>FUNCIONARIO</th><th>TURNOS ATENDIDOS</th><th>T. PROM. ATENCIÓN</th><th>MÓDULO PRINCIPAL</th></tr></thead>
+              <tbody id="est-func-body"><tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+            </table>
           </div>
         </div>
 
@@ -2373,7 +2310,6 @@
           <option>Médico</option>
           <option>Enfermero</option>
           <option>Recepcionista</option>
-          <option>Linea de Frente</option>
           <option>Administrativo</option>
         </select>
       </div>
@@ -2599,7 +2535,7 @@ const DEFAULT_USERS = [
   { name:'Dra. Ana Torres',    username:'atores',   password:'1234', role:'Médico',          email:'a.torres@neurocoop.com',   modulo:'Módulo 02', active:true,  color:'#8B5CF6' },
   { name:'Enf. Pedro Lima',    username:'plima',    password:'1234', role:'Enfermero',       email:'p.lima@neurocoop.com',     modulo:'Módulo 03', active:true,  color:'#22C55E' },
   { name:'Dr. Marco Silva',    username:'msilva',   password:'1234', role:'Médico',          email:'m.silva@neurocoop.com',    modulo:'Sin módulo',active:false, color:'#F97316' },
-  { name:'Rec. Julia Méndez',  username:'jmendez',  password:'1234', role:'Linea de Frente',   email:'j.mendez@neurocoop.com',   modulo:'Sin módulo',active:true,  color:'#F59E0B' },
+  { name:'Rec. Julia Méndez',  username:'jmendez',  password:'1234', role:'Recepcionista',   email:'j.mendez@neurocoop.com',   modulo:'Sin módulo',active:true,  color:'#F59E0B' },
   { name:'Adm. Luis García',   username:'lgarcia',  password:'1234', role:'Administrativo',  email:'l.garcia@neurocoop.com',   modulo:'Sin módulo',active:true,  color:'#EF4444' },
 ];
 
@@ -2635,7 +2571,6 @@ const API = {
   get(path)         { return this.req('GET',    path, null, getToken()); },
   post(path, body)  { return this.req('POST',   path, body, getToken()); },
   patch(path, body) { return this.req('PATCH',  path, body, getToken()); },
-  del(path)         { return this.req('DELETE',  path, null, getToken()); },
   postAuth(path, b) { return this.req('POST',   path, b, null); },
 };
 
@@ -2715,7 +2650,7 @@ async function login() {
   try {
     const data = await API.postAuth('/api/auth/login', { username, password });
     setToken(data.token);
-    currentUser = normalizarUsuario(data.usuario || data.user || {});
+    currentUser = data.usuario || data.user;
     onLoginSuccess();
   } catch(e) {
     setAuthError('auth-error', e.message || 'Error al iniciar sesión');
@@ -2789,9 +2724,6 @@ async function onLoginSuccess() {
   if (nameEl) nameEl.textContent = nombre;
   if (roleEl) roleEl.textContent = (currentUser.rol || 'Recepcionista') + (currentUser.modulo && currentUser.modulo !== 'Sin módulo' ? ' · ' + currentUser.modulo : '');
 
-  // Aplicar permisos de sidebar según rol
-  aplicarPermisosSidebar();
-
   // Cargar datos iniciales
   await cargarDatos();
   iniciarSSE();
@@ -2823,7 +2755,7 @@ async function cargarDatos() {
     state.turnos   = (tRes.turnos   || []).map(normalizarTurno);
     state.servicios = sRes.servicios || [];
     state.modulos  = mRes.modulos   || [];
-    state.users    = (uRes.usuarios  || []).map(normalizarUsuario);
+    state.users    = uRes.usuarios  || [];
   } catch(e) {
     console.warn('cargarDatos error:', e.message);
     showToast('Modo sin conexión — los datos pueden estar desactualizados', 'error');
@@ -2848,20 +2780,6 @@ function normalizarTurno(t) {
     tsLlamado:    t.ts_llamado  || t.tsLlamado  || null,
     tsAtendido:   t.ts_atendido || t.tsAtendido || null,
     tsFin:        t.ts_fin      || t.tsFin      || null,
-  };
-}
-
-// Normaliza campos de usuario API → frontend
-function normalizarUsuario(u) {
-  return {
-    ...u,
-    name:     u.name     || u.nombre   || '',
-    role:     u.role     || u.rol      || 'Recepcionista',
-    active:   u.active   !== undefined ? u.active : (u.activo !== undefined ? !!u.activo : true),
-    email:    u.email    || '',
-    username: u.username || '',
-    modulo:   u.modulo   || 'Sin módulo',
-    color:    u.color    || '#3B72F2',
   };
 }
 
@@ -2918,22 +2836,6 @@ function onSSEMessage(msg) {
       showTVCallBanner(state.turnos.find(x => x.dbId === t.dbId));
       addNotif('llamado', `Turno ${t.codigo} llamado`, `→ ${t.modulo} · Por: ${t.atendidoPor?.split(' ').slice(0,2).join(' ') || '—'}`);
     }
-  }
-
-  // ── Eventos de usuarios ──
-  if (msg.tipo === 'usuario_creado' && msg.usuario) {
-    const u = normalizarUsuario(msg.usuario);
-    if (!state.users.find(x => x.id === u.id)) state.users.push(u);
-  }
-  if (msg.tipo === 'usuario_actualizado' && msg.usuario) {
-    const u = normalizarUsuario(msg.usuario);
-    const idx = state.users.findIndex(x => x.id === u.id);
-    if (idx >= 0) state.users[idx] = { ...state.users[idx], ...u };
-    else state.users.push(u);
-  }
-  if (msg.tipo === 'usuario_eliminado' && msg.id) {
-    const idx = state.users.findIndex(x => x.id === msg.id);
-    if (idx >= 0) state.users[idx].active = false;
   }
 
   // Re-renderizar la página activa
@@ -3083,39 +2985,9 @@ const PAGE_TITLES = {
   modulos:'Gestión de Módulos', gservicios:'Gestión de Servicios', config:'Configuración'
 };
 // Pages that are fully implemented (others show Próximamente screen)
-const ACTIVE_PAGES = new Set(['inicio','dashboard','turnos','recepcion','panel','historial','tv','config','estadisticas','usuarios','anuncios']);
-
-// Pages allowed per role (if not listed here, the role sees ALL pages)
-const ROLE_PAGES = {
-  'Linea de Frente': new Set(['inicio','recepcion','turnos','panel','historial','tv'])
-};
-
-function aplicarPermisosSidebar() {
-  const rol = currentUser?.rol || currentUser?.role || '';
-  const allowed = ROLE_PAGES[rol]; // undefined = all pages allowed
-  document.querySelectorAll('.sidebar-nav .nav-item[data-page]').forEach(el => {
-    el.style.display = (!allowed || allowed.has(el.dataset.page)) ? '' : 'none';
-  });
-  // Also handle config in sidebar-footer
-  document.querySelectorAll('.sidebar-footer .nav-item[data-page]').forEach(el => {
-    el.style.display = (!allowed || allowed.has(el.dataset.page)) ? '' : 'none';
-  });
-  // Hide "Administración" section label if no admin items visible
-  const adminLabel = document.querySelector('.nav-section-label[data-section="admin"]');
-  if (adminLabel) {
-    const hasVisible = !!document.querySelector('.nav-item[data-page="usuarios"]:not([style*="display: none"]), .nav-item[data-page="servicios"]:not([style*="display: none"]), .nav-item[data-page="dashboard"]:not([style*="display: none"]), .nav-item[data-page="modulos"]:not([style*="display: none"]), .nav-item[data-page="gservicios"]:not([style*="display: none"])');
-    adminLabel.style.display = hasVisible ? '' : 'none';
-  }
-}
+const ACTIVE_PAGES = new Set(['inicio','dashboard','turnos','recepcion','panel','historial','tv','config','estadisticas']);
 
 function navTo(page) {
-  // Block access to restricted pages based on role
-  const rol = currentUser?.rol || currentUser?.role || '';
-  const allowed = ROLE_PAGES[rol];
-  if (allowed && !allowed.has(page)) {
-    showToast('⛔ No tienes permisos para acceder a esta sección', 'error');
-    return;
-  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const el = document.getElementById('page-' + page);
@@ -3135,11 +3007,9 @@ function renderPage(page) {
   else if (page === 'recepcion') renderRecepcion();
   else if (page === 'panel') renderPanel();
   else if (page === 'historial') renderHistorial();
-  else if (page === 'estadisticas') inicializarEstadisticas();
+  else if (page === 'estadisticas') renderEstadisticasFuncionarios();
   else if (page === 'tv') renderTV();
   else if (page === 'config') renderArchivos();
-  else if (page === 'usuarios') renderUsuarios();
-  else if (page === 'anuncios' && typeof window.renderAnuncios === 'function') window.renderAnuncios();
 }
 
 // ── NOTIFICATIONS ─────────────────────────────────
@@ -3567,7 +3437,7 @@ function renderTurnos(search='') {
     <tr>
       <td><span class="turno-id">${esc(t.id)}</span></td>
       <td style="font-weight:500">${esc(t.patient)}</td>
-      <td><span class="doc-masked">${esc(t.doc)}</span></td>
+      <td><span class="doc-masked">****${esc(t.doc)}</span></td>
       <td>${badgeHTML(t.estado)}</td>
       <td>${waitStr}</td>
       <td>${svcStr}</td>
@@ -3663,7 +3533,7 @@ function openTurnoDetail(idx) {
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Documento</div>
-        <div class="detail-stat-val" style="font-family:'DM Mono',monospace">${esc(t.doc)}</div>
+        <div class="detail-stat-val" style="font-family:'DM Mono',monospace">****${esc(t.doc)}</div>
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Servicio</div>
@@ -4466,216 +4336,38 @@ function finalizarTurno() { finalizarTurnoAPI(''); }
 function cancelarTurno()  { cancelarTurnoAPI(); }
 function atenderTurno()   { atenderTurnoAPI(); }
 
-// ── ESTADÍSTICAS POR FUNCIONARIO (CALENDARIO) ────
-let estAnio, estMes, estDiasConDatos = [], estDiasCSV = [], estDiasBD = [], estDatosDia = null;
-const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-function inicializarEstadisticas() {
-  const hoy = new Date();
-  estAnio = hoy.getFullYear();
-  estMes = hoy.getMonth(); // 0-based
-  estCargarMes();
-}
-
-function estMesPrev() { estMes--; if (estMes < 0) { estMes = 11; estAnio--; } estCargarMes(); }
-function estMesNext() { estMes++; if (estMes > 11) { estMes = 0; estAnio++; } estCargarMes(); }
-function estHoy() { const h = new Date(); estAnio = h.getFullYear(); estMes = h.getMonth(); estCargarMes(); }
-
-async function estCargarMes() {
-  document.getElementById('est-cal-titulo').textContent = MESES_ES[estMes] + ' ' + estAnio;
-  document.getElementById('est-detalle-dia').style.display = 'none';
-  estDatosDia = null;
-
-  // Cargar días disponibles
+// ── ESTADÍSTICAS POR FUNCIONARIO ─────────────────
+async function renderEstadisticasFuncionarios() {
+  const tbody = document.getElementById('est-func-body');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Cargando...</td></tr>';
   try {
-    const mesStr = String(estMes + 1).padStart(2, '0');
-    const data = await API.get(`/api/estadisticas/dias-disponibles?anio=${estAnio}&mes=${mesStr}`);
-    estDiasConDatos = data.dias || [];
-    estDiasCSV = data.diasCSV || [];
-    estDiasBD = data.diasBD || [];
-  } catch (e) { estDiasConDatos = []; estDiasCSV = []; estDiasBD = []; }
-
-  estRenderCalendario();
-}
-
-function estRenderCalendario() {
-  const cal = document.getElementById('est-calendario');
-  const primerDia = new Date(estAnio, estMes, 1);
-  const ultimoDia = new Date(estAnio, estMes + 1, 0);
-  const diasEnMes = ultimoDia.getDate();
-  let inicioSemana = primerDia.getDay(); // 0=dom
-  // Convertir a lunes=0
-  inicioSemana = inicioSemana === 0 ? 6 : inicioSemana - 1;
-
-  const hoy = new Date();
-  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-
-  let html = '';
-  // Headers
-  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(d => {
-    html += `<div style="background:#F1F5F9;padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:#64748B">${d}</div>`;
-  });
-
-  // Celdas vacías antes del inicio
-  for (let i = 0; i < inicioSemana; i++) {
-    html += `<div style="background:white;padding:8px;min-height:70px"></div>`;
-  }
-
-  // Días del mes
-  for (let d = 1; d <= diasEnMes; d++) {
-    const fechaStr = `${estAnio}-${String(estMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const tieneDatos = estDiasConDatos.includes(fechaStr);
-    const esCSV = estDiasCSV.includes(fechaStr);
-    const esSoloBD = tieneDatos && !esCSV && estDiasBD.includes(fechaStr);
-    const esHoy = fechaStr === hoyStr;
-    const esFinde = ((inicioSemana + d - 1) % 7) >= 5;
-
-    let bgColor = 'white';
-    if (esHoy) bgColor = '#EFF6FF';
-    else if (esFinde) bgColor = '#FAFAFA';
-
-    const cursor = tieneDatos || esHoy ? 'cursor:pointer;' : '';
-    const hoverBg = tieneDatos || esHoy ? `onmouseover="this.style.background='#E0E7FF'" onmouseout="this.style.background='${bgColor}'"` : '';
-    const onclick = tieneDatos || esHoy ? `onclick="estSeleccionarDia('${fechaStr}')"` : '';
-
-    html += `<div style="background:${bgColor};padding:8px;min-height:70px;${cursor}position:relative;transition:background 0.15s" ${hoverBg} ${onclick}>`;
-    html += `<div style="font-size:13px;font-weight:${esHoy?'800':'600'};color:${esHoy?'#3B72F2':'#374151'};${esHoy?'background:#3B72F2;color:white;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;':''}">${d}</div>`;
-    if (tieneDatos && !esSoloBD) {
-      html += `<div style="position:absolute;bottom:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#22C55E" title="Datos CSV completos"></div>`;
-    } else if (esSoloBD) {
-      html += `<div style="position:absolute;bottom:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#F59E0B" title="Datos parciales (auditoría BD)"></div>`;
-    }
-    html += `</div>`;
-  }
-
-  // Celdas vacías al final
-  const totalCeldas = inicioSemana + diasEnMes;
-  const restante = totalCeldas % 7 === 0 ? 0 : 7 - (totalCeldas % 7);
-  for (let i = 0; i < restante; i++) {
-    html += `<div style="background:white;padding:8px;min-height:70px"></div>`;
-  }
-
-  cal.innerHTML = html;
-}
-
-async function estSeleccionarDia(fechaStr) {
-  try {
-    const data = await API.get(`/api/estadisticas/dia?fecha=${fechaStr}`);
-    if (data.vacio) {
-      showToast('No hay datos para este día', 'info');
+    const data = await API.get('/api/estadisticas');
+    const rows = data.estadisticas || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Sin datos para hoy</td></tr>';
       return;
     }
-    estDatosDia = data;
-    estRenderDetalleDia(fechaStr, data);
-  } catch (e) {
-    showToast('Error cargando estadísticas: ' + e.message, 'error');
+    const colors = ['#3B72F2','#8B5CF6','#F97316','#22C55E','#F59E0B','#EF4444'];
+    tbody.innerHTML = rows.map(r => {
+      const nom = r.usuario || '—';
+      const ini = nom.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+      const col = colors[nom.charCodeAt(0) % colors.length];
+      const tProm = r.tiempo_promedio_atencion != null ? `<span class="timer-pill timer-blue">${parseFloat(r.tiempo_promedio_atencion).toFixed(1)} min</span>` : '—';
+      const modulo = r.modulo_principal || '—';
+      return `<tr>
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:50%;background:${col};color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${esc(ini)}</div>
+          <span style="font-weight:600;font-size:13px">${esc(nom.split(' ').slice(0,3).join(' '))}</span>
+        </div></td>
+        <td style="font-weight:700;color:var(--primary);font-size:15px">${r.turnos_atendidos}</td>
+        <td>${tProm}</td>
+        <td style="color:var(--text-muted);font-size:12.5px">${esc(modulo)}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--danger)">${esc(e.message)}</td></tr>`;
   }
-}
-
-function estRenderDetalleDia(fechaStr, data) {
-  const [y, m, d] = fechaStr.split('-');
-  const fechaObj = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
-  const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const fechaFormateada = fechaObj.toLocaleDateString('es-CO', opciones);
-
-  document.getElementById('est-detalle-titulo').textContent = 'Detalle del ' + d + ' de ' + MESES_ES[parseInt(m)-1] + ' de ' + y;
-  document.getElementById('est-detalle-dia').style.display = 'block';
-
-  // Banner de fuente de datos
-  const bannerEl = document.getElementById('est-fuente-banner');
-  if (data.fuente === 'historial_bd') {
-    bannerEl.style.display = 'block';
-    bannerEl.innerHTML = `
-      <div style="padding:10px 16px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:13px;color:#9A3412">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div><strong>Datos parciales (Auditoría BD)</strong> — No existe archivo CSV para este día. Los datos se reconstruyeron desde la tabla de auditoría. No incluye: paciente, documento, servicio, tiempos de espera.</div>
-      </div>`;
-  } else {
-    bannerEl.style.display = 'none';
-  }
-
-  const res = data.resumen;
-
-  // KPIs
-  const kpisHtml = [
-    { label: 'TOTAL TURNOS', valor: res.total_turnos, color: '#3B72F2' },
-    { label: 'FINALIZADOS', valor: res.finalizados, color: '#22C55E' },
-    { label: 'CANCELADOS', valor: res.cancelados, color: '#EF4444' },
-    { label: 'NO ATENDIDOS', valor: res.no_atendidos, color: '#F59E0B' },
-    { label: 'T. PROM. ESPERA', valor: res.promedio_espera + 'min', color: '#6366F1' },
-    { label: 'T. PROM. ATENCIÓN', valor: res.promedio_atencion + 'min', color: '#8B5CF6' },
-    { label: 'HORA PICO', valor: res.hora_pico ? res.hora_pico + ' (' + res.hora_pico_cantidad + ')' : '—', color: '#F97316' }
-  ].map(k => `
-    <div class="card" style="padding:14px;text-align:center;border-left:3px solid ${k.color}">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">${k.label}</div>
-      <div style="font-size:22px;font-weight:800;color:${k.color}">${k.valor}</div>
-    </div>
-  `).join('');
-  document.getElementById('est-resumen-kpis').innerHTML = kpisHtml;
-
-  // Funcionarios
-  const colors = ['#3B72F2','#8B5CF6','#F97316','#22C55E','#F59E0B','#EF4444','#06B6D4','#EC4899'];
-  const funcHtml = (data.funcionarios || []).map((f, i) => {
-    const ini = f.nombre === 'Sin asignar' ? 'SA' : f.nombre.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
-    const col = f.nombre === 'Sin asignar' ? '#9CA3AF' : colors[i % colors.length];
-    const nombreCorto = f.nombre.split(' ').slice(0, 2).join(' ');
-    const modInfo = f.modulo_principal ? `<div style="font-size:10px;color:var(--text-muted)">${esc(f.modulo_principal)}</div>` : '';
-
-    return `<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.15s;min-width:180px;background:white" onclick="estMostrarDetalleFuncionario('${esc(f.nombre)}')" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';this.style.borderColor='${col}'" onmouseout="this.style.boxShadow='none';this.style.borderColor='var(--border)'">
-      <div style="width:40px;height:40px;border-radius:50%;background:${col};color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ini}</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:13px">${esc(nombreCorto)}</div>
-        ${modInfo}
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:20px;font-weight:800;color:${col}">${f.atendidos}</div>
-        <div style="font-size:10px;color:var(--text-muted)">ATENDIDOS</div>
-      </div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2.5" style="opacity:0.5;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>`;
-  }).join('');
-  document.getElementById('est-funcionarios').innerHTML = funcHtml || '<div style="padding:20px;color:var(--text-muted);font-size:13px">No hay funcionarios registrados este día</div>';
-
-  // Ocultar detalle de funcionario
-  document.getElementById('est-func-detalle').style.display = 'none';
-}
-
-function estMostrarDetalleFuncionario(nombre) {
-  if (!estDatosDia) return;
-  const turnos = estDatosDia.turnos.filter(t => {
-    const op = (t.operador || '').trim() || 'Sin asignar';
-    return op === nombre;
-  });
-
-  document.getElementById('est-func-detalle-titulo').textContent = 'Turnos de ' + nombre + ' (' + turnos.length + ')';
-
-  const tbody = document.getElementById('est-func-detalle-body');
-  tbody.innerHTML = turnos.map((t, i) => {
-    const espera = t.tiempo_espera_min ? t.tiempo_espera_min + ' min' : '—';
-    const atencion = t.tiempo_atencion_min ? t.tiempo_atencion_min + ' min' : '—';
-    const horaCorta = (t.hora_creacion || '').split(',').pop().trim() || t.hora_creacion || '—';
-    const estadoColor = (t.estado || '').toLowerCase().includes('finalizado') ? '#22C55E' :
-                        (t.estado || '').toLowerCase().includes('cancelado') ? '#EF4444' : '#F59E0B';
-
-    return `<tr style="border-bottom:1px solid var(--border-light);background:${i%2===0?'white':'#F9FAFB'}">
-      <td style="padding:8px 10px;font-family:'DM Mono',monospace;font-weight:600;color:var(--primary)">${esc(t.turno||'')}</td>
-      <td style="padding:8px 10px;font-weight:500">${esc(t.paciente||'')}</td>
-      <td style="padding:8px 10px;font-family:'DM Mono',monospace">${esc(t.documento||'')}</td>
-      <td style="padding:8px 10px">${esc(t.servicio||'')}</td>
-      <td style="padding:8px 10px">${esc(t.modulo||'')}</td>
-      <td style="padding:8px 10px">${esc(horaCorta)}</td>
-      <td style="padding:8px 10px">${espera}</td>
-      <td style="padding:8px 10px">${atencion}</td>
-      <td style="padding:8px 10px"><span style="padding:2px 10px;border-radius:4px;font-size:11px;font-weight:600;color:white;background:${estadoColor}">${esc(t.estado||'')}</span></td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--text-muted)">Sin turnos</td></tr>';
-
-  document.getElementById('est-func-detalle').style.display = 'block';
-}
-
-function estCerrarDetalle() {
-  document.getElementById('est-detalle-dia').style.display = 'none';
-  estDatosDia = null;
 }
 
 // ── HISTORIAL ─────────────────────────────────────
@@ -5155,47 +4847,23 @@ function saveUser() {
   // Check duplicate username (excluding self on edit)
   const dupIdx = state.users.findIndex(u => u.username === username);
   if (dupIdx >= 0 && dupIdx !== editUserIdx) { showToast('El nombre de usuario ya existe', 'error'); return; }
-
+  const colors = ['#3B72F2','#8B5CF6','#22C55E','#F97316','#F59E0B','#EF4444','#06B6D4','#84CC16'];
   if (editUserIdx >= 0) {
     const existing = state.users[editUserIdx];
-    const body = { nombre: name, username, rol: role, email, modulo, activo: active };
-    if (password) body.password = password;
-    API.patch('/api/usuarios/' + existing.id, body)
-      .then(data => {
-        if (data.usuario) {
-          state.users[editUserIdx] = normalizarUsuario(data.usuario);
-        }
-        showToast('Usuario actualizado', 'success');
-        closeModal('modal-user'); renderUsuarios();
-      })
-      .catch(e => showToast('Error al actualizar: ' + e.message, 'error'));
+    state.users[editUserIdx] = { ...existing, name, username, email, role, modulo, active,
+      password: password || existing.password }; // keep old password if blank
+    showToast('Usuario actualizado', 'success');
   } else {
     if (!password) { showToast('Ingrese una contraseña', 'error'); return; }
-    API.post('/api/usuarios', { nombre: name, username, password, rol: role, email, modulo })
-      .then(data => {
-        if (data.usuario) {
-          state.users.push(normalizarUsuario(data.usuario));
-        }
-        showToast('Usuario creado: ' + name, 'success');
-        closeModal('modal-user'); renderUsuarios();
-      })
-      .catch(e => showToast('Error al crear: ' + e.message, 'error'));
+    state.users.push({ name, username, password, email, role, modulo, active, color: colors[state.users.length % colors.length] });
+    showToast('Usuario creado: ' + name, 'success');
   }
+  saveState(); closeModal('modal-user'); renderUsuarios();
 }
 function toggleUser(i) {
-  const u = state.users[i];
-  const newActive = !u.active;
-  API.patch('/api/usuarios/' + u.id, { activo: newActive })
-    .then(data => {
-      if (data.usuario) {
-        state.users[i] = normalizarUsuario(data.usuario);
-      } else {
-        state.users[i].active = newActive;
-      }
-      renderUsuarios();
-      showToast(state.users[i].active ? 'Usuario activado' : 'Usuario desactivado', 'success');
-    })
-    .catch(e => showToast('Error: ' + e.message, 'error'));
+  state.users[i].active = !state.users[i].active;
+  saveState(); renderUsuarios();
+  showToast(state.users[i].active ? 'Usuario activado' : 'Usuario desactivado', 'success');
 }
 function deleteUser(i) {
   const u = state.users[i];
@@ -5305,22 +4973,13 @@ function checkDeleteConfirm() {
 
 function deleteUserConfirmed() {
   if (pendingDeleteUserIdx === null) return;
-  const u = state.users[pendingDeleteUserIdx];
-  const name = u.name;
-  API.del('/api/usuarios/' + u.id)
-    .then(() => {
-      const idx = state.users.findIndex(x => x.id === u.id);
-      if (idx >= 0) state.users[idx].active = false;
-      renderUsuarios();
-      closeModal('modal-delete-user');
-      showToast(`Usuario ${name} desactivado`, 'success');
-      addNotif('sistema', 'Usuario eliminado', `${name} fue desactivado del sistema`);
-      pendingDeleteUserIdx = null;
-    })
-    .catch(e => {
-      showToast('Error al eliminar: ' + e.message, 'error');
-      pendingDeleteUserIdx = null;
-    });
+  const name = state.users[pendingDeleteUserIdx].name;
+  state.users.splice(pendingDeleteUserIdx, 1);
+  saveState(); renderUsuarios();
+  closeModal('modal-delete-user');
+  showToast(`Usuario ${name} eliminado`, 'success');
+  addNotif('sistema', 'Usuario eliminado', `${name} fue eliminado del sistema`);
+  pendingDeleteUserIdx = null;
 }
 
 // ── ARCHIVO MENSUAL ───────────────────────────────
@@ -5700,13 +5359,11 @@ function generarDatosPruebaHoy() {
   return turnos;
 }
 
-// ── REPORTES — Generador de Dashboard ─────────────
-function parseFecha(str) {
-  const [y, m, d] = (str || '').split('-').map(Number);
-  return new Date(y, (m || 1) - 1, d || 1);
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-turno') updatePrefixPreview();
 }
-
-function generarReporte(desde, hasta, turnos) {
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
       const fechaDesde = parseFecha(desde);
       const fechaHasta = parseFecha(hasta);
       fechaHasta.setHours(23, 59, 59);
@@ -5930,6 +5587,15 @@ function generarReporte(desde, hasta, turnos) {
       };
       
       console.log('[Reportes] ✅ Dashboard cargado:', { total: turnosFiltrados.length, operadores: operadores.length, servicios: servicios_arr.length });
+      
+    } catch (e) {
+      console.error('[Reportes Error]', e);
+      showToast('⚠️ Error procesando reportes: ' + e.message, 'error');
+    }
+  }
+  
+  // Cargar datos iniciales
+  await cargarReportes();
 }
 
 // Exportar Excel
@@ -6094,6 +5760,13 @@ function deleteModulo(i) {
   showToast('Módulo eliminado','success');
 }
 
+// ── SEARCH ────────────────────────────────────────
+function globalSearch(q) {
+  if (!q) return;
+  const t = state.turnos.find(x => x.id.toLowerCase().includes(q.toLowerCase()) || x.patient.toLowerCase().includes(q.toLowerCase()));
+  if (t) showToast(`Encontrado: ${t.id} — ${t.patient}`);
+}
+
 // ── EXPORT FUNCTIONS ─────────────────────────────
 function exportarExcel(source) {
   let data, filename;
@@ -6113,7 +5786,7 @@ function exportarExcel(source) {
     // Exportar todos los turnos del día con tiempos completos
     data = [['Turno','Paciente','Documento','Servicio','Operador','Módulo','Hora Llegada','Hora Inicio Atención','Hora Finalización','Tiempo Espera (min)','Tiempo Atención (min)','Estado'],
       ...turnos.map(t => {
-        const waitMin = t.tsCreated && t.tsLlamado ? Math.round((t.tsLlamado-t.tsCreated)/60000) : (t.tsCreated && t.tsAtendido ? Math.round((t.tsAtendido-t.tsCreated)/60000) : '');
+        const waitMin = t.tsCreated && t.tsLlamado ? Math.round((t.tsLlamado-t.tsCreado)/60000) : (t.tsCreated && t.tsAtendido ? Math.round((t.tsAtendido-t.tsCreated)/60000) : '');
         const svcMin  = t.tsAtendido && t.tsFin    ? Math.round((t.tsFin-t.tsAtendido)/60000)      : '';
         return [t.id, t.patient, t.doc || '', t.service, t.atendidoPor || '', t.modulo, tsToHHMM(t.tsCreated), tsToHHMM(t.tsAtendido), tsToHHMM(t.tsFin), waitMin, svcMin, t.estado];
       })];
@@ -6327,9 +6000,7 @@ function playCallAudio() {
 // Usa la variable moduloPaused declarada anteriormente
 
 function toggleModuloPause() {
-  const btn = document.getElementById('btn-pause-modulo');
   if (!btn) return;
-  moduloPaused = !moduloPaused;
   if (moduloPaused) {
     btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Reanudar módulo`;
     btn.style.background = '#FEF3C7'; btn.style.color = '#D97706'; btn.style.borderColor = '#FDE68A';
@@ -6411,7 +6082,7 @@ function globalSearch(q) {
       <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:800;color:${color};min-width:52px">${esc(t.id)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.patient)}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${esc(t.service)} · Doc. ${esc(t.doc)}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${esc(t.service)} · Doc. ****${esc(t.doc)}</div>
       </div>
       <div style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${bb};color:${bc};white-space:nowrap">${esc(t.estado)}</div>
     </div>`;
@@ -6536,7 +6207,6 @@ window.addEventListener('DOMContentLoaded', () => {
             .then(res => {
               if (res && (res.usuario || res.user)) {
                 console.log('✅ Sesión válida');
-                currentUser = normalizarUsuario(res.usuario || res.user || {});
                 if (window.onLoginSuccess) {
                   onLoginSuccess();
                 }
@@ -6725,3 +6395,5 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+

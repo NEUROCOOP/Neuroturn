@@ -1,2480 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NeuroTurn – Healthcare Management</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-  :root {
-    --primary: #3B72F2;
-    --primary-light: #EEF2FF;
-    --primary-dark: #2558D9;
-    --success: #22C55E;
-    --success-light: #DCFCE7;
-    --warning: #F59E0B;
-    --warning-light: #FEF3C7;
-    --danger: #EF4444;
-    --danger-light: #FEE2E2;
-    --purple: #8B5CF6;
-    --purple-light: #EDE9FE;
-    --orange: #F97316;
-    --orange-light: #FFEDD5;
-    --bg: #F4F6FA;
-    --sidebar-bg: #FFFFFF;
-    --card-bg: #FFFFFF;
-    --text: #111827;
-    --text-muted: #6B7280;
-    --text-light: #9CA3AF;
-    --border: #E5E7EB;
-    --border-light: #F3F4F6;
-    --sidebar-w: 200px;
-    --header-h: 64px;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,.08);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-  
-  /* ── AUTH SCREEN ─────────────────────────────── */
-  #auth-screen {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; background: linear-gradient(135deg, #EFF6FF 0%, #EEF2FF 60%, #F0FDF4 100%);
-    position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 1000;
-  }
-  .auth-header { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; }
-  .auth-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; color: var(--text); }
-  .auth-logo-icon { width: 32px; height: 32px; background: var(--primary-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-  .auth-nav { display: flex; gap: 24px; }
-  .auth-nav a { color: var(--text-muted); text-decoration: none; font-size: 14px; font-weight: 500; }
 
-  /* card principal */
-  .auth-card {
-    background: white; border-radius: 24px; padding: 44px 40px 36px; width: 420px; text-align: center;
-    box-shadow: 0 24px 64px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.04);
-    position: relative;
-  }
-  .auth-card::before {
-    content: ''; position: absolute; top: -80px; left: -80px; width: 220px; height: 220px;
-    background: rgba(59,114,242,.05); border-radius: 50%; z-index: -1; pointer-events: none;
-  }
-  .auth-icon { width: 72px; height: 72px; background: #EFF6FF; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-  .auth-card h1 { font-size: 26px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
-  .auth-card > p { color: var(--text-muted); font-size: 13px; margin-bottom: 28px; }
-  .auth-form { display: flex; flex-direction: column; gap: 11px; }
-  .auth-input {
-    width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 11px;
-    font-family: inherit; font-size: 14px; outline: none; transition: border .18s;
-    box-sizing: border-box; background: #FAFBFC; color: var(--text);
-  }
-  .auth-input:focus { border-color: var(--primary); background: white; }
-  .auth-error-box { color: #DC2626; font-size: 13px; text-align: center; min-height: 18px; margin-top: -2px; }
-
-  /* botón azul principal */
-  .btn-primary {
-    background: var(--primary); color: white; border: none; padding: 14px 24px;
-    border-radius: 11px; font-family: inherit; font-size: 15px; font-weight: 600;
-    cursor: pointer; width: 100%; transition: background .18s, transform .1s;
-  }
-  .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
-  .btn-primary:active:not(:disabled) { transform: scale(.98); }
-  .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
-
-  /* botón contorno verde — Registrarse */
-  .btn-register {
-    background: white; color: #16A34A; border: 2px solid #16A34A; padding: 13px 24px;
-    border-radius: 11px; font-family: inherit; font-size: 15px; font-weight: 600;
-    cursor: pointer; width: 100%; transition: background .18s, transform .1s; margin-top: 4px;
-  }
-  .btn-register:hover { background: #F0FDF4; }
-  .btn-register:active { transform: scale(.98); }
-
-  /* divider */
-  .auth-divider {
-    display: flex; align-items: center; gap: 12px; margin: 16px 0;
-    color: var(--text-light); font-size: 12px;
-  }
-  .auth-divider::before, .auth-divider::after {
-    content: ''; flex: 1; height: 1px; background: var(--border);
-  }
-
-  /* modal de registro (overlay) */
-  #registro-overlay {
-    display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2000;
-    background: rgba(15,23,42,.45); backdrop-filter: blur(4px);
-    align-items: center; justify-content: center;
-  }
-  #registro-overlay.open { display: flex; }
-  .registro-modal {
-    background: white; border-radius: 20px; padding: 36px 36px 28px; width: 440px; max-width: 94vw;
-    box-shadow: 0 32px 80px rgba(0,0,0,.18); animation: slideUp .22s ease;
-    max-height: 92vh; overflow-y: auto;
-  }
-  @keyframes slideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
-  .registro-modal h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
-  .registro-modal .reg-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
-  .reg-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
-  .reg-field label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
-  .reg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .reg-footer { display: flex; gap: 10px; margin-top: 20px; }
-  .reg-footer .btn-primary { flex: 1; }
-  .btn-cancel-reg { flex: 1; background: white; color: var(--text-muted); border: 1.5px solid var(--border); padding: 13px; border-radius: 11px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn-cancel-reg:hover { background: var(--bg); }
-  .reg-success { display: flex; align-items: center; gap: 8px; background: #F0FDF4; color: #16A34A; font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: 8px; margin-top: 8px; }
-
-  .auth-footer { margin-top: 28px; }
-  .auth-footer p { color: var(--text-light); font-size: 12px; }
-  .auth-footer-links { display: flex; justify-content: center; gap: 16px; margin-top: 16px; color: var(--text-light); font-size: 12px; }
-  .auth-footer-links a { color: var(--text-light); text-decoration: none; }
-  .auth-footer-links span { color: var(--border); }
-
-  /* ── APP LAYOUT ──────────────────────────────── */
-  #app { display: none; min-height: 100vh; }
-  .app-layout { display: flex; min-height: 100vh; }
-  
-  /* ── SIDEBAR ─────────────────────────────────── */
-  .sidebar {
-    width: var(--sidebar-w); background: var(--sidebar-bg); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
-  }
-  .sidebar-logo { padding: 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-light); }
-  .sidebar-logo-icon { width: 34px; height: 34px; background: var(--primary); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .sidebar-logo-text { font-size: 15px; font-weight: 700; line-height: 1.1; }
-  .sidebar-logo-text span { font-size: 10px; font-weight: 400; color: var(--text-muted); display: block; text-transform: uppercase; letter-spacing: .5px; }
-  .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
-  .nav-item {
-    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm);
-    cursor: pointer; color: var(--text-muted); font-size: 13.5px; font-weight: 500; margin-bottom: 2px;
-    transition: all .15s; text-decoration: none;
-  }
-  .nav-item:hover { background: var(--bg); color: var(--text); }
-  .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
-  .nav-item svg { flex-shrink: 0; opacity: .7; }
-  .nav-item.active svg { opacity: 1; }
-  .nav-item-soon { opacity: .6; cursor: default !important; }
-  .nav-item-soon:hover { background: transparent !important; color: var(--text-muted) !important; }
-  .nav-soon-badge {
-    margin-left: auto; font-size: 9px; font-weight: 700; letter-spacing: .4px;
-    background: var(--primary-light); color: var(--primary); padding: 2px 7px;
-    border-radius: 20px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
-  }
-  .nav-section-label {
-    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
-    color: var(--text-light); padding: 6px 12px 4px; margin-top: 4px;
-  }
-  /* ── SOON PAGE ───────────────────────────────── */
-  .soon-page {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 70vh; text-align: center; padding: 40px 20px;
-  }
-  .soon-icon-wrap {
-    width: 96px; height: 96px; border-radius: 28px;
-    background: linear-gradient(135deg, #EEF2FF 0%, #DBEAFE 100%);
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 28px; border: 2px solid #C7D7FA;
-    box-shadow: 0 8px 24px rgba(59,114,242,.12);
-  }
-  .soon-title { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
-  .soon-desc  { font-size: 14.5px; color: var(--text-muted); max-width: 440px; line-height: 1.65; margin-bottom: 32px; }
-  .soon-features {
-    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-    max-width: 560px; margin-bottom: 36px;
-  }
-  .soon-feature-chip {
-    display: flex; align-items: center; gap: 7px;
-    padding: 8px 14px; background: white; border: 1px solid var(--border);
-    border-radius: 20px; font-size: 13px; color: var(--text-muted);
-    box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  }
-  .soon-feature-chip svg { color: var(--primary); flex-shrink: 0; }
-  .soon-badge-big {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 22px; background: var(--primary-light);
-    color: var(--primary); border-radius: 30px; font-size: 13px;
-    font-weight: 700; letter-spacing: .3px;
-    border: 1.5px dashed #93AFEF;
-    animation: pulseSoon 2.5s ease-in-out infinite;
-  }
-  @keyframes pulseSoon {
-    0%,100% { box-shadow: 0 0 0 0 rgba(59,114,242,.15); }
-    50%      { box-shadow: 0 0 0 10px rgba(59,114,242,0); }
-  }
-  .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--radius-sm); }
-  .sidebar-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #ddd; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; background: var(--primary); }
-  .sidebar-user-info { flex: 1; min-width: 0; }
-  .sidebar-user-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sidebar-user-role { font-size: 11px; color: var(--text-muted); }
-  .online-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; border: 1.5px solid white; margin-top: -8px; margin-left: -10px; flex-shrink: 0; }
-
-  /* ── MAIN CONTENT ────────────────────────────── */
-  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-  .topbar {
-    height: var(--header-h); background: white; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 28px;
-    position: sticky; top: 0; z-index: 50;
-  }
-  .topbar-title { font-size: 18px; font-weight: 700; }
-  .topbar-right { display: flex; align-items: center; gap: 12px; }
-  .search-box { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; min-width: 200px; }
-  .search-box input { border: none; background: none; font-family: inherit; font-size: 13px; outline: none; color: var(--text); width: 160px; }
-  .search-box svg { color: var(--text-light); flex-shrink: 0; }
-  .notif-btn { width: 36px; height: 36px; border-radius: 9px; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
-  .notif-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; border: 1.5px solid white; animation: blink .8s ease-in-out infinite; }
-  .notif-count {
-    position: absolute; top: 3px; right: 3px; min-width: 16px; height: 16px;
-    background: var(--danger); color: white; border-radius: 8px; font-size: 9px;
-    font-weight: 800; display: flex; align-items: center; justify-content: center;
-    padding: 0 3px; border: 1.5px solid white; line-height: 1;
-  }
-  .notif-panel {
-    position: absolute; top: calc(var(--header-h) - 2px); right: 56px; z-index: 400;
-    width: 320px; background: white; border-radius: 14px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.14); border: 1px solid var(--border);
-    overflow: hidden; display: none; max-height: 420px; overflow-y: auto;
-  }
-  .notif-panel.open { display: block; animation: fadeSlideDown .18s ease; }
-  @keyframes fadeSlideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
-  .notif-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: white; z-index: 1; }
-  .notif-item { padding: 11px 16px; border-bottom: 1px solid var(--border-light); display: flex; gap: 10px; align-items: flex-start; cursor: pointer; transition: background .12s; }
-  .notif-item:hover { background: var(--bg); }
-  .notif-item:last-child { border-bottom: none; }
-  .notif-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .notif-text { flex: 1; min-width: 0; }
-  .notif-title { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
-  .notif-body  { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
-  .notif-time  { font-size: 10px; color: var(--text-light); margin-top: 3px; }
-  .notif-item.unread { background: #F0F4FF; }
-  .notif-item.unread:hover { background: #E8EFFE; }
-  .page-content { flex: 1; padding: 28px; }
-
-  /* ── PAGES ───────────────────────────────────── */
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* ── CARDS ───────────────────────────────────── */
-  .card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
-  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-  .stat-card { padding: 22px 24px; }
-  .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 18px; }
-  .stat-label { font-size: 12.5px; color: var(--text-muted); margin-bottom: 4px; }
-  .stat-value { font-size: 28px; font-weight: 700; }
-  .stat-value.blue { color: var(--primary); }
-
-  /* ── DASHBOARD ───────────────────────────────── */
-  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-  .chart-card { padding: 24px; }
-  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .chart-title { font-size: 15px; font-weight: 600; }
-  .chart-badge { font-size: 11px; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: .5px; cursor: pointer; }
-  .chart-area { height: 140px; display: flex; align-items: flex-end; gap: 6px; position: relative; }
-  .chart-bar { flex: 1; border-radius: 4px 4px 0 0; transition: height .3s; cursor: pointer; min-height: 4px; }
-  .chart-labels { display: flex; justify-content: space-between; margin-top: 8px; }
-  .chart-labels span { font-size: 11px; color: var(--text-light); }
-  .donut-wrap { display: flex; align-items: center; gap: 24px; }
-  .donut-svg { width: 110px; height: 110px; }
-  .donut-legend { display: flex; flex-direction: column; gap: 10px; }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-  /* ── TABLE ───────────────────────────────────── */
-  .table-card { overflow: hidden; }
-  .table-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; }
-  .table-header h3 { font-size: 15px; font-weight: 600; }
-  .table-actions { display: flex; gap: 8px; }
-  .btn-sm { padding: 6px 14px; border-radius: 8px; font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: white; color: var(--text-muted); transition: all .15s; display: flex; align-items: center; gap: 6px; }
-  .btn-sm:hover { background: var(--bg); }
-  .btn-sm.primary { background: var(--primary); color: white; border-color: var(--primary); }
-  .btn-sm.primary:hover { background: var(--primary-dark); }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { padding: 10px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-light); text-align: left; border-bottom: 1px solid var(--border); background: var(--bg); }
-  tbody td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border-light); }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: #FAFBFD; }
-  .turno-id { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--primary); font-size: 14px; }
-  .doc-masked { color: var(--text-muted); font-size: 12.5px; font-family: 'DM Mono', monospace; }
-  .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid var(--border); }
-  .pagination-info { font-size: 12.5px; color: var(--text-muted); }
-  .pagination-btns { display: flex; gap: 4px; }
-  .page-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: white; font-family: inherit; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-  .page-btn:hover:not(.active) { background: var(--bg); }
-
-  /* ── BADGES ──────────────────────────────────── */
-  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
-  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
-  .badge-atendiendo { background: var(--success-light); color: #16A34A; }
-  .badge-atendiendo::before { background: var(--success); }
-  .badge-llamando { background: var(--warning-light); color: #D97706; }
-  .badge-llamando::before { background: var(--warning); }
-  .badge-fila { background: #FEF9C3; color: #A16207; }
-  .badge-fila::before { background: #EAB308; }
-  .badge-finalizado { background: var(--success-light); color: #16A34A; }
-  .badge-finalizado::before { background: var(--success); }
-  .badge-cancelado { background: var(--danger-light); color: #DC2626; }
-  .badge-cancelado::before { background: var(--danger); }
-  .badge-noatendido { background: var(--warning-light); color: #D97706; }
-  .badge-noatendido::before { background: var(--warning); }
-
-  /* ── PANEL DE ATENCION ───────────────────────── */
-  .panel-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
-  .current-card { padding: 32px; text-align: center; }
-  .currently-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; }
-  .big-turno { font-size: 52px; font-weight: 800; color: var(--primary); background: var(--primary-light); border-radius: 16px; padding: 16px 32px; display: inline-block; margin-bottom: 20px; line-height: 1; }
-  .patient-name { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-  .patient-info { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
-  .action-btns { display: flex; justify-content: center; gap: 14px; margin-bottom: 32px; }
-  .action-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 20px; border-radius: 12px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: none; min-width: 90px; transition: all .15s; }
-  .action-btn:hover { transform: translateY(-1px); }
-  .btn-llamar { background: white; color: var(--primary); border: 2px solid var(--primary); }
-  .btn-siguiente { background: var(--primary); color: white; }
-  .btn-finalizar { background: var(--success); color: white; }
-  .btn-cancelar { background: var(--danger); color: white; }
-  .time-stats { display: flex; justify-content: center; gap: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
-  .time-stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 4px; }
-  .time-stat-value { font-size: 20px; font-weight: 700; }
-  .time-stat-value.blue { color: var(--primary); }
-  .queue-card { padding: 20px; }
-  .queue-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .queue-title { font-size: 14px; font-weight: 600; }
-  .queue-count { background: var(--primary); color: white; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-  .queue-item { padding: 12px; border-radius: 10px; border: 1px solid var(--border-light); margin-bottom: 8px; cursor: pointer; transition: all .15s; }
-  .queue-item:hover { border-color: var(--primary); background: var(--primary-light); }
-  .queue-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-  .queue-id { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--primary); }
-  .queue-wait { font-size: 11px; color: var(--text-muted); }
-  .queue-wait span { color: var(--text); font-weight: 600; }
-  .queue-name { font-size: 13px; font-weight: 500; }
-  .queue-location { font-size: 11.5px; color: var(--text-muted); }
-  .queue-view-all { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: white; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; margin-top: 8px; transition: background .15s; }
-  .queue-view-all:hover { background: var(--bg); }
-
-  /* ── GESTIÓN TURNOS ──────────────────────────── */
-  .gestion-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
-  .gestion-stat { padding: 18px 20px; }
-  .gestion-stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-  .gestion-stat-value { font-size: 26px; font-weight: 700; }
-  .gestion-stat-value.blue { color: var(--primary); }
-  .action-icons { display: flex; gap: 8px; align-items: center; }
-  .icon-btn { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); transition: all .15s; }
-  .icon-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
-  .icon-btn.disabled { opacity: .4; cursor: not-allowed; }
-
-  /* ── HISTORIAL ───────────────────────────────── */
-  .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-  .filter-select { padding: 8px 32px 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-family: inherit; font-size: 13px; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center; appearance: none; cursor: pointer; outline: none; min-width: 150px; color: var(--text); }
-  .filter-select:focus { border-color: var(--primary); }
-
-  /* ── TV SCREEN ───────────────────────────────── */
-  .tv-screen {
-    background: #080D1A; border-radius: var(--radius); overflow: hidden;
-    border: 1px solid #1E293B; box-shadow: 0 8px 40px rgba(0,0,0,.35);
-    font-family: 'DM Sans', sans-serif; position: relative;
-  }
-  .tv-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 28px; background: #0C1424; border-bottom: 1px solid #1E293B;
-  }
-  .tv-logo { display: flex; align-items: center; gap: 12px; }
-  .tv-logo-img {
-    width: 40px; height: 40px; border-radius: 10px;
-    background: linear-gradient(135deg, #1D4ED8 0%, #3B72F2 50%, #0EA5E9 100%);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 12px rgba(59,114,242,.4);
-    flex-shrink: 0;
-  }
-  .tv-logo-text { font-size: 18px; font-weight: 800; color: white; letter-spacing: .2px; line-height: 1.1; }
-  .tv-logo-org { font-size: 10px; color: #0EA5E9; font-weight: 700; text-transform: uppercase; letter-spacing: 1.8px; margin-top: 1px; }
-  .tv-clock-block { text-align: right; }
-  .tv-time { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 700; color: white; line-height: 1; }
-  .tv-date { font-size: 11px; color: #475569; margin-top: 3px; text-transform: capitalize; letter-spacing: .3px; }
-
-  /* ── TV CALL ANNOUNCEMENT BANNER ─────────────── */
-  .tv-call-banner {
-    position: absolute; top: 0; left: 0; right: 0; z-index: 20;
-    background: linear-gradient(135deg, #1D4ED8 0%, #3B72F2 60%, #0EA5E9 100%);
-    padding: 0 28px;
-    display: flex; align-items: center; gap: 20px;
-    max-height: 0; overflow: hidden;
-    transition: max-height .4s cubic-bezier(.4,0,.2,1), padding .4s;
-    box-shadow: 0 8px 32px rgba(59,114,242,.5);
-  }
-  .tv-call-banner.active {
-    max-height: 120px; padding: 18px 28px;
-  }
-  .tv-call-banner-icon {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: rgba(255,255,255,.15); border: 2px solid rgba(255,255,255,.3);
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    animation: banner-pulse 1s ease-in-out infinite;
-  }
-  @keyframes banner-pulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,.4); }
-    50%      { box-shadow: 0 0 0 10px rgba(255,255,255,.0); }
-  }
-  .tv-call-banner-main { flex: 1; min-width: 0; }
-  .tv-call-banner-label {
-    font-size: 10px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase;
-    color: rgba(255,255,255,.7); margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
-  }
-  .tv-call-banner-label::before {
-    content: ''; width: 8px; height: 8px; border-radius: 50%; background: #FDE68A;
-    animation: blink-dot 0.7s ease-in-out infinite; flex-shrink: 0;
-  }
-  .tv-call-banner-turno {
-    font-family: 'DM Mono', monospace; font-size: 42px; font-weight: 900; color: white;
-    line-height: 1; letter-spacing: -1px;
-  }
-  .tv-call-banner-patient {
-    font-size: 15px; font-weight: 600; color: rgba(255,255,255,.9); margin-top: 4px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .tv-call-banner-right { text-align: right; flex-shrink: 0; }
-  .tv-call-banner-dirijase {
-    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
-    color: rgba(255,255,255,.6); margin-bottom: 4px;
-  }
-  .tv-call-banner-modulo-num {
-    font-family: 'DM Mono', monospace; font-size: 48px; font-weight: 900;
-    color: #FDE68A; line-height: 1; text-shadow: 0 0 20px rgba(253,230,138,.4);
-  }
-  .tv-call-banner-modulo-label {
-    font-size: 11px; color: rgba(255,255,255,.6); font-weight: 600;
-  }
-  .tv-call-banner-operator {
-    font-size: 10px; color: rgba(255,255,255,.5); margin-top: 6px;
-    display: flex; align-items: center; gap: 5px; justify-content: flex-end;
-  }
-
-  /* TV body */
-  .tv-body { display: grid; grid-template-columns: 1fr 1.15fr; min-height: 400px; }
-  .tv-col { padding: 20px 24px; }
-  .tv-col-left { border-right: 1px solid #1E293B; }
-  .tv-col-title {
-    display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 2px; color: #334155; margin-bottom: 14px;
-    padding-bottom: 10px; border-bottom: 1px solid #1E293B;
-  }
-  .tv-col-count {
-    margin-left: auto; background: #1E293B; color: #475569;
-    font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 10px;
-    transition: background .3s, color .3s;
-  }
-  /* Force light-mode overrides with higher specificity */
-  .tv-screen.tv-light .tv-col-count,
-  .tv-light .tv-col-count {
-    background: #DBEAFE !important; color: #1D4ED8 !important;
-  }
-  .tv-screen.tv-light .tv-col-title,
-  .tv-light .tv-col-title {
-    color: #64748B !important; border-color: #E2E8F0 !important;
-  }
-  .tv-screen.tv-light .tv-aviso-badge,
-  .tv-light .tv-aviso-badge {
-    background: #2563EB !important; color: white !important;
-  }
-  .tv-screen.tv-light .tv-ticker-text,
-  .tv-light .tv-ticker-text {
-    color: #94A3B8 !important;
-  }
-
-  /* Queue items */
-  .tv-queue-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 11px 14px; border-radius: 10px; background: #0F172A;
-    margin-bottom: 6px; border: 1px solid #1E293B; transition: border-color .2s;
-  }
-  .tv-queue-left { display: flex; align-items: center; gap: 12px; }
-  .tv-queue-num { font-size: 10px; font-weight: 700; color: #334155; min-width: 16px; text-align:center; }
-  .tv-queue-id { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 800; line-height: 1; }
-  .tv-queue-name { font-size: 12px; font-weight: 500; color: #94A3B8; }
-  .tv-queue-wait {
-    font-size: 11px; font-weight: 700; color: #475569; font-family: 'DM Mono', monospace;
-    background: #1E293B; padding: 3px 8px; border-radius: 6px; white-space: nowrap;
-  }
-  .tv-queue-wait.warm  { color: #F59E0B; background: rgba(245,158,11,.12); }
-  .tv-queue-wait.hot   { color: #EF4444; background: rgba(239,68,68,.12); animation: pulse-bg .8s ease-in-out infinite; }
-  @keyframes pulse-bg { 0%,100% { opacity:1 } 50% { opacity:.6 } }
-
-  /* Serving cards */
-  .tv-serving-card {
-    border-radius: 14px; margin-bottom: 10px; padding: 16px 18px;
-    display: flex; align-items: stretch; gap: 14px;
-    border: 1px solid #1E293B; position: relative; overflow: hidden;
-    background: #0F172A;
-  }
-  .tv-serving-card.llamando {
-    background: linear-gradient(135deg, rgba(29,78,216,.2) 0%, rgba(14,165,233,.08) 100%);
-    border-color: rgba(59,114,242,.5);
-    animation: card-glow 1.8s ease-in-out infinite;
-  }
-  @keyframes card-glow {
-    0%,100% { box-shadow: 0 0 0 0 rgba(59,114,242,.0); border-color: rgba(59,114,242,.3); }
-    50%      { box-shadow: 0 0 24px 2px rgba(59,114,242,.25); border-color: rgba(59,114,242,.7); }
-  }
-  .tv-serving-card.atendiendo {
-    background: linear-gradient(135deg, rgba(22,163,74,.1) 0%, rgba(5,150,105,.05) 100%);
-    border-color: rgba(34,197,94,.3);
-  }
-  /* Left accent bar on cards */
-  .tv-serving-card::before {
-    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 14px 0 0 14px;
-  }
-  .tv-serving-card.llamando::before  { background: linear-gradient(to bottom, #3B72F2, #0EA5E9); }
-  .tv-serving-card.atendiendo::before { background: linear-gradient(to bottom, #22C55E, #10B981); }
-
-  .tv-serving-left { flex: 1; min-width: 0; padding-left: 6px; }
-  .tv-serving-status {
-    font-size: 9.5px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-    display: flex; align-items: center; gap: 5px; margin-bottom: 5px;
-  }
-  .tv-serving-status-dot { width: 5px; height: 5px; border-radius: 50%; animation: blink-dot 1s ease-in-out infinite; }
-  @keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.15} }
-  .tv-serving-turno { font-family: 'DM Mono', monospace; font-size: 32px; font-weight: 900; line-height: 1; }
-  .tv-serving-patient { font-size: 12.5px; font-weight: 600; color: #CBD5E1; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tv-serving-operator {
-    display: flex; align-items: center; gap: 5px; margin-top: 5px;
-    font-size: 10.5px; color: #475569; font-weight: 500;
-  }
-  .tv-serving-operator-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-
-  .tv-serving-right {
-    text-align: right; flex-shrink: 0; display: flex; flex-direction: column;
-    align-items: flex-end; justify-content: center; min-width: 80px;
-  }
-  .tv-serving-modulo-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #334155; }
-  .tv-serving-modulo-val { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 900; color: white; line-height: 1.1; }
-  .tv-serving-svc { font-size: 10px; color: #475569; margin-top: 2px; font-weight: 500; }
-  .tv-serving-timer { font-family: 'DM Mono', monospace; font-size: 10.5px; color: #334155; margin-top: 6px; background: #1E293B; padding: 2px 7px; border-radius: 5px; display: inline-block; }
-
-  /* Empty states */
-  .tv-empty { text-align: center; padding: 28px 16px; color: #1E293B; }
-  .tv-empty svg { opacity: .25; margin-bottom: 8px; }
-  .tv-empty p { font-size: 12.5px; color: #334155; }
-
-  /* Footer ticker */
-  .tv-footer {
-    background: #060A12; border-top: 1px solid #1E293B;
-    padding: 8px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  }
-  .tv-aviso { display: flex; align-items: center; gap: 10px; overflow: hidden; flex: 1; }
-  .tv-aviso-badge {
-    background: var(--primary); color: white; padding: 2px 9px; border-radius: 4px;
-    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .8px; flex-shrink: 0;
-  }
-  .tv-ticker-wrap { overflow: hidden; flex: 1; }
-  .tv-ticker-text { font-size: 11.5px; color: #475569; white-space: nowrap; animation: ticker 30s linear infinite; display: inline-block; }
-  @keyframes ticker { 0%{transform:translateX(60vw)} 100%{transform:translateX(-100%)} }
-  .tv-network { font-size: 9.5px; color: #1E293B; font-weight: 700; letter-spacing: .5px; flex-shrink: 0; display: flex; align-items: center; gap: 5px; }
-  .tv-network-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; animation: blink-dot 2s ease-in-out infinite; }
-
-  /* ── TV LIGHT MODE ───────────────────────────── */
-  .tv-light { background: #F0F4FF !important; }
-  .tv-light .tv-header { background: white !important; border-color: #DBEAFE !important; }
-  .tv-light .tv-logo-text { color: #0F172A !important; }
-  .tv-light .tv-logo-org { color: #2563EB !important; }
-  .tv-light .tv-time { color: #0F172A !important; }
-  .tv-light .tv-date { color: #64748B !important; }
-  .tv-light .tv-col-left { border-color: #DBEAFE !important; }
-  .tv-light .tv-queue-item { background: white !important; border-color: #E2E8F0 !important; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-  .tv-light .tv-queue-name { color: #475569 !important; }
-  .tv-light .tv-queue-num  { color: #CBD5E1 !important; }
-  .tv-light .tv-queue-wait { background: #F1F5F9 !important; color: #64748B !important; }
-  .tv-light .tv-queue-wait.warm { background: #FEF3C7 !important; color: #D97706 !important; }
-  .tv-light .tv-queue-wait.hot  { background: #FEE2E2 !important; color: #DC2626 !important; }
-  .tv-light .tv-serving-card { background: white !important; border-color: #E2E8F0 !important; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-  .tv-light .tv-serving-card.llamando  { background: #EEF2FF !important; border-color: #93C5FD !important; }
-  .tv-light .tv-serving-card.atendiendo { background: #F0FDF4 !important; border-color: #86EFAC !important; }
-  .tv-light .tv-serving-patient   { color: #374151 !important; }
-  .tv-light .tv-serving-operator  { color: #9CA3AF !important; }
-  .tv-light .tv-serving-modulo-label { color: #94A3B8 !important; }
-  .tv-light .tv-serving-modulo-val { color: #0F172A !important; }
-  .tv-light .tv-serving-svc { color: #94A3B8 !important; }
-  .tv-light .tv-serving-timer { background: #F1F5F9 !important; color: #64748B !important; }
-  .tv-light .tv-empty p { color: #C7D2FE !important; }
-  .tv-light .tv-footer {
-    background: #E8EFF8 !important;
-    border-top-color: #CBD5E1 !important;
-  }
-  .tv-light .tv-aviso-badge { background: #2563EB !important; color: white !important; }
-  .tv-light .tv-ticker-text { color: #475569 !important; }
-  .tv-light .tv-network { color: #64748B !important; }
-  .tv-light .tv-network-dot { background: #22C55E !important; }
-  .tv-light .tv-est-wait { color: #2563EB !important; background: rgba(37,99,235,.1) !important; }
-  .tv-light .tv-body { background: #F0F4FF; }
-  .tv-light .tv-serving-turno { color: var(--primary) !important; }
-
-  /* ── TV CONTROLS ─────────────────────────────── */
-  .tv-controls-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .tv-preview-label { font-size: 13px; font-weight: 600; color: var(--text-muted); display:flex; align-items:center; gap:6px; }
-  .tv-theme-btn {
-    display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px;
-    border: 1px solid var(--border); background: white; font-family: inherit; font-size: 12.5px;
-    font-weight: 500; cursor: pointer; color: var(--text-muted); transition: all .15s;
-  }
-  .tv-theme-btn:hover { background: #FFFBEB; color: #D97706; border-color: #FDE68A; }
-  .tv-fullscreen-btn {
-    display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px;
-    border: 1px solid var(--border); background: white; font-family: inherit; font-size: 12.5px;
-    font-weight: 500; cursor: pointer; color: var(--text-muted); transition: all .15s;
-  }
-  .tv-fullscreen-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
-
-  /* Fullscreen overlay */
-  #tv-fullscreen { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 900; background: #080D1A; display: none; flex-direction: column; }
-  #tv-fullscreen.open { display: flex; }
-  #tv-fullscreen .tv-screen { border-radius: 0; border: none; flex: 1; display: flex; flex-direction: column; box-shadow: none; }
-  #tv-fullscreen .tv-body { flex: 1; overflow:hidden; }
-
-  /* ── TV FULLSCREEN — OPTIMIZADO 1920×1080 (Samsung LN40D503) ─ */
-  #tv-fullscreen .tv-time          { font-size: 52px !important; }
-  #tv-fullscreen .tv-date          { font-size: 16px !important; color: #64748B !important; }
-  #tv-fullscreen .tv-logo-text     { font-size: 26px !important; }
-  #tv-fullscreen .tv-logo-org      { font-size: 13px !important; }
-  #tv-fullscreen .tv-col-title     { font-size: 13px !important; letter-spacing:2.5px; padding-bottom:14px; margin-bottom:18px; }
-  #tv-fullscreen .tv-queue-item    { padding: 18px 22px !important; margin-bottom: 8px !important; border-radius:14px !important; }
-  #tv-fullscreen .tv-queue-id      { font-size: 34px !important; }
-  #tv-fullscreen .tv-queue-name    { font-size: 16px !important; }
-  #tv-fullscreen .tv-queue-wait    { font-size: 15px !important; padding: 5px 12px !important; }
-  #tv-fullscreen .tv-queue-num     { font-size: 14px !important; }
-  #tv-fullscreen .tv-serving-card  { padding: 22px 26px !important; margin-bottom: 12px !important; border-radius:18px !important; }
-  #tv-fullscreen .tv-serving-turno { font-size: 54px !important; }
-  #tv-fullscreen .tv-serving-patient { font-size: 18px !important; }
-  #tv-fullscreen .tv-serving-modulo-label { font-size: 12px !important; }
-  #tv-fullscreen .tv-serving-modulo-val   { font-size: 46px !important; }
-  #tv-fullscreen .tv-serving-svc          { font-size: 13px !important; }
-  #tv-fullscreen .tv-serving-timer        { font-size: 14px !important; padding: 4px 10px !important; }
-  #tv-fullscreen .tv-call-banner-turno    { font-size: 64px !important; }
-  #tv-fullscreen .tv-call-banner-patient  { font-size: 20px !important; }
-  #tv-fullscreen .tv-call-banner-modulo-num { font-size: 72px !important; }
-  #tv-fullscreen .tv-call-banner-modulo-label { font-size: 14px !important; }
-  #tv-fullscreen .tv-ticker-text          { font-size: 15px !important; }
-  #tv-fullscreen .tv-aviso-badge          { font-size: 12px !important; padding: 4px 12px !important; }
-  #tv-fullscreen .tv-empty p              { font-size: 18px !important; }
-  .tv-exit-btn {
-    position: fixed; top: 12px; right: 16px; z-index: 910;
-    background: rgba(0,0,0,.7); color: white; border: 1px solid #334155; border-radius: 8px;
-    padding: 6px 14px; font-family: inherit; font-size: 12px; cursor: pointer;
-    display: flex; align-items: center; gap: 6px; transition: all .15s; backdrop-filter: blur(4px);
-  }
-  .tv-exit-btn:hover { background: rgba(239,68,68,.4); border-color: #EF4444; }
-
-  /* ── MODAL ───────────────────────────────────── */
-  .modal-overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0,0,0,.4); z-index: 500; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-  .modal-overlay.open { display: flex; }
-  .modal { background: white; border-radius: 16px; padding: 32px; width: 480px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
-  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .modal-title { font-size: 18px; font-weight: 700; }
-  .modal-close { width: 30px; height: 30px; border-radius: 8px; border: none; background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-muted); }
-  .form-group { margin-bottom: 16px; }
-  .form-label { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; display: block; }
-  .form-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: border .2s; }
-  .form-input:focus { border-color: var(--primary); }
-  .form-select { width: 100%; padding: 10px 32px 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; cursor: pointer; transition: border .2s; color: var(--text); }
-  .form-select:focus { border-color: var(--primary); }
-  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-  .btn-cancel-modal { padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border); background: white; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
-  .btn-save { padding: 10px 24px; border-radius: 10px; border: none; background: var(--primary); color: white; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn-save:hover { background: var(--primary-dark); }
-
-  /* ── TOAST ───────────────────────────────────── */
-  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-  .toast { background: var(--text); color: white; padding: 12px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,.2); animation: slideIn .2s ease; max-width: 300px; }
-  .toast.success { background: #166534; }
-  .toast.error { background: #991B1B; }
-  @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-  /* ── CALLING OVERLAY ─────────────────────────────── */
-  #calling-overlay {
-    position: fixed; inset: 0; z-index: 800;
-    background: rgba(10,20,60,.55); backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none; transition: opacity .25s;
-  }
-  #calling-overlay.visible { opacity: 1; pointer-events: all; }
-  .calling-box {
-    background: white; border-radius: 24px; padding: 44px 52px; text-align: center;
-    box-shadow: 0 24px 80px rgba(0,0,0,.25); min-width: 360px;
-    animation: popIn .3s cubic-bezier(.34,1.56,.64,1) both;
-  }
-  @keyframes popIn { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .calling-waves {
-    display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 48px; margin-bottom: 20px;
-  }
-  .calling-waves span {
-    width: 6px; border-radius: 3px; background: var(--primary);
-    animation: wave 1.1s ease-in-out infinite;
-  }
-  .calling-waves span:nth-child(1) { height: 20px; animation-delay: 0s; }
-  .calling-waves span:nth-child(2) { height: 36px; animation-delay: .15s; }
-  .calling-waves span:nth-child(3) { height: 48px; animation-delay: .3s; }
-  .calling-waves span:nth-child(4) { height: 28px; animation-delay: .45s; }
-  @keyframes wave {
-    0%,100% { transform: scaleY(.4); opacity: .5; }
-    50%      { transform: scaleY(1);  opacity: 1; }
-  }
-  .calling-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--primary); text-transform: uppercase; margin-bottom: 10px; }
-  .calling-id { font-family: 'DM Mono', monospace; font-size: 52px; font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 10px; }
-  .calling-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-  .calling-modulo { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; min-height: 20px; }
-  .calling-stop {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 24px; border-radius: 10px; border: 1.5px solid var(--border);
-    background: white; font-family: inherit; font-size: 13px; font-weight: 600;
-    cursor: pointer; color: var(--text-muted); transition: all .15s;
-  }
-  .calling-stop:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
-
-  /* ── VOICE SETTINGS PANEL ────────────────────────── */
-  .voice-panel {
-    background: var(--primary-light); border: 1px solid #BFDBFE; border-radius: 12px;
-    padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  }
-  .voice-panel-title { font-size: 13px; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .voice-control { display: flex; align-items: center; gap: 6px; }
-  .voice-control label { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
-  .voice-control select, .voice-control input[type=range] { font-family: inherit; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; outline: none; background: white; }
-  .voice-control input[type=range] { width: 80px; padding: 0; border: none; cursor: pointer; accent-color: var(--primary); }
-  .voice-test-btn {
-    margin-left: auto; padding: 7px 16px; border-radius: 8px; border: none;
-    background: var(--primary); color: white; font-family: inherit; font-size: 12.5px;
-    font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;
-    transition: background .15s;
-  }
-  .voice-test-btn:hover { background: var(--primary-dark); }
-
-  .cb1 { background: #93C5FD; } .cb2 { background: #60A5FA; } .cb3 { background: #3B82F6; } .cb4 { background: #2563EB; } .cb5 { background: #3B72F2; } .cb6 { background: #1D4ED8; } .cb7 { background: #1E40AF; }
-
-  /* ── TIMER PILLS ─────────────────────────────── */
-  .timer-pill {
-    display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px;
-    font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: .3px;
-  }
-  .timer-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; }
-  .timer-blue   { background: var(--primary-light); color: var(--primary); }
-  .timer-blue::before { background: var(--primary); }
-  .timer-orange { background: var(--warning-light); color: #D97706; }
-  .timer-orange::before { background: var(--warning); animation: blink 1.5s ease-in-out infinite; }
-  .timer-red    { background: var(--danger-light); color: var(--danger); }
-  .timer-red::before { background: var(--danger); animation: blink .8s ease-in-out infinite; }
-  .timer-gray   { background: var(--bg); color: var(--text-muted); }
-  .timer-gray::before { background: var(--text-light); }
-  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .2; } }
-
-  /* ── DETAIL MODAL ────────────────────────────── */
-  .detail-stat-box { background: var(--bg); border-radius: 10px; padding: 12px 14px; }
-  .detail-stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 4px; }
-  .detail-stat-val { font-size: 15px; font-weight: 600; }
-  .detail-time-card { border-radius: 10px; padding: 14px 16px; }
-  .detail-time-label { font-size: 11px; font-weight: 600; margin-bottom: 6px; }
-  .detail-time-val { font-size: 22px; font-weight: 800; font-family: 'DM Mono', monospace; }
-
-  /* ── TIMELINE ────────────────────────────────── */
-  .timeline { display: flex; flex-direction: column; }
-  .tl-item { display: flex; align-items: flex-start; gap: 12px; position: relative; padding-bottom: 14px; }
-  .tl-item:last-child { padding-bottom: 0; }
-  .tl-item::before { content: ''; position: absolute; left: 7px; top: 16px; bottom: 0; width: 2px; background: var(--border); }
-  .tl-item:last-child::before { display: none; }
-  .tl-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); background: white; flex-shrink: 0; margin-top: 2px; position: relative; z-index: 1; }
-  .tl-item.done .tl-dot { background: var(--primary); border-color: var(--primary); }
-  .tl-item.done::before { background: var(--primary); opacity: .3; }
-  .tl-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-  .tl-item.done .tl-label { color: var(--text); }
-  .tl-time { font-size: 13px; font-family: 'DM Mono', monospace; font-weight: 500; color: var(--primary); margin-top: 2px; }
-
-  /* ── USUARIOS ────────────────────────────────── */
-  .user-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .user-card { padding: 22px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
-  .user-avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white; }
-  .user-name { font-size: 14px; font-weight: 600; }
-  .user-role { font-size: 12px; color: var(--text-muted); }
-  .user-status { font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; }
-  .status-active { background: var(--success-light); color: #16A34A; }
-  .status-inactive { background: var(--danger-light); color: #DC2626; }
-
-  /* ── RECEPCIÓN ────────────────────────────────────────────────── */
-  .rec-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
-  @media (max-width: 1100px) { .rec-layout { grid-template-columns: 1fr; } }
-  .rec-svc-btn {
-    padding: 10px 16px; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 600;
-    cursor: pointer; border: 2px solid var(--border); background: white; color: var(--text-muted);
-    transition: all .15s; display: inline-flex; align-items: center; gap: 7px;
-  }
-  .rec-svc-btn:hover { border-color: var(--border); background: var(--bg); }
-  .rec-svc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .rec-ticket-box {
-    margin-top: 20px; border-radius: 14px; padding: 22px; text-align: center;
-    background: var(--primary-light); border: 2px solid #93C5FD;
-    animation: slideUp .22s ease;
-  }
-  .rec-ticket-num {
-    font-family: 'DM Mono', monospace; font-size: 58px; font-weight: 800;
-    color: var(--primary); line-height: 1; letter-spacing: -1px;
-  }
-  /* ── PANEL MÓDULO BAR ────────────────────────────────────────── */
-  .panel-modulo-bar {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
-    background: var(--primary-light); border-radius: 10px; padding: 12px 16px;
-    border: 1.5px solid #BFDBFE; flex-wrap: wrap;
-  }
-  .panel-modulo-bar label { font-size: 13px; font-weight: 600; color: var(--primary); white-space: nowrap; }
-  .panel-modulo-bar select { min-width: 180px; max-width: 240px; }
-  .panel-modulo-bar .hint { font-size: 11.5px; color: var(--primary); font-style: italic; opacity: .8; }
-
-  /* ── PRINT STYLES ─────────────────────────────── */
-  @media print {
-    body { background: white; }
-    #sidebar, .nav-item, button[onclick*="exportar"], button[onclick*="window.print"] { display: none !important; }
-    #app { margin: 0 !important; padding: 0 !important; }
-    .page { background: white; padding: 20px !important; }
-    [id^="kpi-"], [id^="histograma"], [id^="turnos-por-hora"], [id^="tabla-"], #reportes-kpis, [style*="display:grid"] {
-      page-break-inside: avoid;
-    }
-    table { width: 100%; border-collapse: collapse; page-break-inside: avoid; margin-bottom: 20px; }
-    table tr { page-break-inside: avoid; }
-    table th, table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    table th { background: #f0f0f0; font-weight: 700; }
-    .page-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
-    .section-title { font-size: 16px; font-weight: 700; margin-top: 25px; margin-bottom: 10px; page-break-after: avoid; }
-  }
-</style>
-</head>
-<body>
-
-<!-- AUTH SCREEN -->
-<div id="auth-screen">
-  <div class="auth-header">
-    <div class="auth-logo">
-      <div class="auth-logo-icon">
-        <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="14" r="7" fill="white" opacity=".9"/>
-          <path d="M11 38c0-7.18 5.82-13 13-13s13 5.82 13 13" stroke="white" stroke-width="3.2" stroke-linecap="round" fill="none" opacity=".85"/>
-          <circle cx="35" cy="35" r="4.5" stroke="#FDE68A" stroke-width="2" fill="none"/>
-          <path d="M30.8 30.8 Q29 25 24 25" stroke="#FDE68A" stroke-width="2" stroke-linecap="round" fill="none"/>
-          <path d="M33.5 35 h3" stroke="#FDE68A" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M35 33.5 v3" stroke="#FDE68A" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
-      </div>
-      NeuroTurn
-    </div>
-    <nav class="auth-nav">
-      <a href="#">Ayuda</a>
-      <a href="#">Contacto</a>
-    </nav>
-  </div>
-  <div class="auth-card">
-    <div class="auth-icon">
-      <svg width="52" height="52" viewBox="0 0 48 48" fill="none">
-        <circle cx="24" cy="13" r="8" fill="#3B72F2" opacity=".15"/>
-        <circle cx="24" cy="13" r="7" fill="#1D4ED8" opacity=".9"/>
-        <!-- head -->
-        <circle cx="24" cy="13" r="5.5" fill="white" opacity=".95"/>
-        <!-- body -->
-        <path d="M12 38c0-6.63 5.37-12 12-12s12 5.37 12 12" stroke="#2563EB" stroke-width="2.8" stroke-linecap="round" fill="none"/>
-        <!-- stethoscope -->
-        <circle cx="36" cy="35" r="4.5" stroke="#0EA5E9" stroke-width="2.2" fill="none"/>
-        <path d="M31.5 30.5 Q29 25 24 25" stroke="#0EA5E9" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        <!-- cross on stethoscope -->
-        <path d="M34.5 35 h3" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="M36 33.5 v3" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <h1>NeuroTurn</h1>
-    <p style="color:#64748B;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:2px">Neurocoop Healthcare</p>
-    <p style="color:var(--text-muted);font-size:13px;margin-bottom:28px">Sistema de Gestión de Turnos Médicos</p>
-
-    <!-- ── FORM LOGIN ── -->
-    <div class="auth-form">
-      <input class="auth-input" type="text" id="auth-username" placeholder="Nombre de usuario" autocomplete="username">
-      <input class="auth-input" type="password" id="auth-password" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
-      <div id="auth-error" class="auth-error-box"></div>
-      <button class="btn-primary" id="btn-login" onclick="login()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="display:inline;vertical-align:middle;margin-right:6px;margin-top:-2px"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-        Iniciar sesión
-      </button>
-    </div>
-
-    <!-- ── SEPARADOR ── -->
-    <div class="auth-divider">o</div>
-
-    <!-- ── BOTÓN REGISTRAR ── -->
-    <button class="btn-register" onclick="abrirRegistro()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" style="display:inline;vertical-align:middle;margin-right:6px;margin-top:-2px"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-      Registrar nuevo usuario
-    </button>
-
-    <div class="auth-footer">
-      <div class="auth-footer-links">
-        <a href="#">Privacidad</a><span>•</span><a href="#">Soporte</a>
-      </div>
-      <p style="margin-top:8px">© 2026 NEUROTURN · Neurocoop</p>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════
-     MODAL DE REGISTRO (overlay independiente)
-══════════════════════════════════════════════ -->
-<div id="registro-overlay" onclick="if(event.target===this)cerrarRegistro()">
-  <div class="registro-modal">
-
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px">
-      <div style="width:42px;height:42px;background:#F0FDF4;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2">
-          <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
-          <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-        </svg>
-      </div>
-      <div style="text-align:left">
-        <h2 style="font-size:20px;font-weight:700;margin:0 0 2px;color:var(--text)">Registrar usuario</h2>
-        <p class="reg-sub">Completa los datos para crear una cuenta</p>
-      </div>
-    </div>
-
-    <div class="reg-field">
-      <label>Nombre completo *</label>
-      <input class="auth-input" type="text" id="reg-nombre" placeholder="Ej: María González" autocomplete="name">
-    </div>
-
-    <div class="reg-row">
-      <div class="reg-field">
-        <label>Usuario *</label>
-        <input class="auth-input" type="text" id="reg-username" placeholder="Ej: magonzalez" autocomplete="username">
-      </div>
-      <div class="reg-field">
-        <label>Contraseña *</label>
-        <input class="auth-input" type="password" id="reg-password" placeholder="Mín. 6 caracteres" autocomplete="new-password">
-      </div>
-    </div>
-
-    <div class="reg-row">
-      <div class="reg-field">
-        <label>Rol</label>
-        <select class="auth-input" id="reg-rol" style="cursor:pointer">
-          <option value="Recepcionista">Recepcionista</option>
-          <option value="Médico">Médico</option>
-          <option value="Enfermero">Enfermero</option>
-          <option value="Linea de Frente">Linea de Frente</option>
-          <option value="Administrativo">Administrativo</option>
-          <option value="Administrador">Administrador</option>
-        </select>
-      </div>
-      <div class="reg-field">
-        <label>Módulo asignado</label>
-        <select class="auth-input" id="reg-modulo" style="cursor:pointer">
-          <option value="Sin módulo">Sin módulo</option>
-          <option value="Módulo 01">Módulo 01</option>
-          <option value="Módulo 02">Módulo 02</option>
-          <option value="Módulo 03">Módulo 03</option>
-          <option value="Módulo 04">Módulo 04</option>
-          <option value="Módulo 05">Módulo 05</option>
-          <option value="Módulo 06">Módulo 06</option>
-          <option value="Módulo 07">Módulo 07</option>
-          <option value="Módulo 08">Módulo 08</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="reg-field">
-      <label>Email <span style="font-weight:400;text-transform:none;font-size:11px">(opcional)</span></label>
-      <input class="auth-input" type="email" id="reg-email" placeholder="correo@ejemplo.com" autocomplete="email">
-    </div>
-
-    <div class="reg-field">
-      <label>Clave de administrador *
-        <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--danger)">requerida para registrar usuarios</span>
-      </label>
-      <input class="auth-input" type="password" id="reg-admin-key" placeholder="Clave de administrador" autocomplete="off" style="border-color:#FCA5A5">
-    </div>
-
-    <div id="reg-error" class="auth-error-box" style="margin-bottom:4px"></div>
-    <div id="reg-success" class="reg-success" style="display:none">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      <span id="reg-success-msg">¡Usuario creado! Ya puede iniciar sesión.</span>
-    </div>
-
-    <div class="reg-footer">
-      <button class="btn-cancel-reg" onclick="cerrarRegistro()">Cancelar</button>
-      <button class="btn-primary" id="btn-reg-submit" onclick="registrarUsuario()" style="background:#16A34A">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px;margin-top:-2px"><polyline points="20 6 9 17 4 12"/></svg>
-        Crear cuenta
-      </button>
-    </div>
-
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app">
-  <div class="app-layout">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">
-          <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="13" r="7" fill="white" opacity=".95"/>
-            <path d="M10 38c0-7.73 6.27-14 14-14s14 6.27 14 14" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".85"/>
-            <circle cx="35" cy="35" r="5" stroke="#FDE68A" stroke-width="2.5" fill="none"/>
-            <path d="M30 30 Q28 24 24 24" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-            <path d="M33 35 h4" stroke="#FDE68A" stroke-width="2.2" stroke-linecap="round"/>
-            <path d="M35 33 v4" stroke="#FDE68A" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="sidebar-logo-text">NeuroTurn <span>Neurocoop · Healthcare</span></div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="nav-section-label">Principal</div>
-        <a class="nav-item" data-page="inicio" onclick="navTo('inicio')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Inicio
-        </a>
-        <div class="nav-section-label" style="margin-top:8px">Atención</div>
-        <a class="nav-item" data-page="recepcion" onclick="navTo('recepcion')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          Recepción
-        </a>
-        <a class="nav-item" data-page="turnos" onclick="navTo('turnos')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Turnos
-        </a>
-        <a class="nav-item" data-page="panel" onclick="navTo('panel')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-          Panel De Atención
-        </a>
-        <a class="nav-item" data-page="historial" onclick="navTo('historial')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Historial de Turnos
-        </a>
-        <a class="nav-item" data-page="estadisticas" onclick="navTo('estadisticas')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
-          Estadísticas
-        </a>
-        <a class="nav-item" data-page="tv" onclick="navTo('tv')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          Ventana Televisor
-        </a>
-        <a class="nav-item" data-page="anuncios" onclick="navTo('anuncios')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/><circle cx="12" cy="12" r="1"/></svg>
-          Ventana de Anuncios
-        </a>
-        <div class="nav-section-label" data-section="admin" style="margin-top:8px">Administración</div>
-        <a class="nav-item" data-page="usuarios" onclick="navTo('usuarios')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-          Gestión De Usuarios
-        </a>
-        <a class="nav-item nav-item-soon" data-page="servicios" onclick="navTo('servicios')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>
-          Servicios Médicos
-          <span class="nav-soon-badge">Próximamente</span>
-        </a>
-        <a class="nav-item" data-page="dashboard" onclick="navTo('dashboard')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Dashboard
-        </a>
-        <a class="nav-item nav-item-soon" data-page="modulos" onclick="navTo('modulos')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Gestión de Módulos
-          <span class="nav-soon-badge">Próximamente</span>
-        </a>
-        <a class="nav-item nav-item-soon" data-page="gservicios" onclick="navTo('gservicios')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 115 19.07"/></svg>
-          Gestión de Servicios
-          <span class="nav-soon-badge">Próximamente</span>
-        </a>
-      </nav>
-      <div class="sidebar-footer">
-        <a class="nav-item" data-page="config" onclick="navTo('config')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 115 19.07"/></svg>
-          Configuración
-        </a>
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" id="sidebar-avatar" style="background:#3B72F2">DR</div>
-          <div class="sidebar-user-info">
-            <div class="sidebar-user-name" id="sidebar-user-name">Dr. Julian Rossi</div>
-            <div class="sidebar-user-role" id="sidebar-user-role">Administrador</div>
-          </div>
-          <div class="online-dot"></div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- MAIN -->
-    <main class="main">
-      <div class="topbar">
-        <div class="topbar-title" id="page-title">Dashboard</div>
-        <div class="topbar-right">
-          <div class="search-box">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" placeholder="Buscar paciente..." id="search-input" oninput="globalSearch(this.value)">
-          </div>
-          <!-- Nuevo turno rápido -->
-          <button class="btn-sm primary" onclick="openNewTurno()" style="display:flex;align-items:center;gap:5px;white-space:nowrap">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nuevo Turno
-          </button>
-          <!-- Notificaciones -->
-          <div class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-            <div class="notif-dot" id="notif-dot" style="display:none"></div>
-            <span class="notif-count" id="notif-count" style="display:none"></span>
-          </div>
-          <!-- Notif dropdown -->
-          <div class="notif-panel" id="notif-panel">
-            <div class="notif-panel-header">
-              <span style="font-weight:700;font-size:14px">Notificaciones</span>
-              <button onclick="clearNotifs()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer">Limpiar</button>
-            </div>
-            <div id="notif-list"><div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px">Sin notificaciones</div></div>
-          </div>
-          <button class="btn-sm" onclick="logout()">Salir</button>
-        </div>
-      </div>
-
-      <div class="page-content">
-        <!-- INICIO -->
-        <div class="page" id="page-inicio">
-          <div style="margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
-            <div>
-              <h2 style="font-size:20px;font-weight:700" id="inicio-welcome">Bienvenido 👋</h2>
-              <p style="color:var(--text-muted);font-size:14px;margin-top:4px">Aquí tienes un resumen de la actividad de hoy — <span id="inicio-date"></span></p>
-            </div>
-            <button class="btn-sm primary" onclick="openNewTurno()" style="display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;padding:9px 16px">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Nuevo Turno
-            </button>
-          </div>
-          <div class="stat-grid" style="margin-bottom:24px" id="inicio-stats"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-            <div class="card" style="padding:20px">
-              <div style="font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Últimas actividades
-              </div>
-              <div id="inicio-activity"></div>
-            </div>
-            <div class="card" style="padding:20px">
-              <div style="font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                Turnos en espera prolongada
-              </div>
-              <div id="inicio-alerts"></div>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
-            <div class="card" style="padding:20px;cursor:pointer;transition:box-shadow .2s" onclick="navTo('panel')" onmouseenter="this.style.boxShadow='0 4px 16px rgba(59,114,242,.15)'" onmouseleave="this.style.boxShadow=''">
-              <div style="width:44px;height:44px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg>
-              </div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:4px">Panel de Atención</div>
-              <div style="font-size:12px;color:var(--text-muted)">Llamar y gestionar turnos activos</div>
-            </div>
-            <div class="card" style="padding:20px;cursor:pointer;transition:box-shadow .2s" onclick="navTo('turnos')" onmouseenter="this.style.boxShadow='0 4px 16px rgba(59,114,242,.15)'" onmouseleave="this.style.boxShadow=''">
-              <div style="width:44px;height:44px;border-radius:12px;background:#DCFCE7;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              </div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:4px">Gestión de Turnos</div>
-              <div style="font-size:12px;color:var(--text-muted)">Ver y administrar todos los turnos</div>
-            </div>
-            <div class="card" style="padding:20px;cursor:pointer;transition:box-shadow .2s" onclick="navTo('tv')" onmouseenter="this.style.boxShadow='0 4px 16px rgba(59,114,242,.15)'" onmouseleave="this.style.boxShadow=''">
-              <div style="width:44px;height:44px;border-radius:12px;background:var(--warning-light);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              </div>
-              <div style="font-size:14px;font-weight:600;margin-bottom:4px">Ventana Televisor</div>
-              <div style="font-size:12px;color:var(--text-muted)">Pantalla pública sala de espera</div>
-            </div>
-          </div>
-          <!-- Módulos activos en tiempo real -->
-          <div class="card" style="padding:20px">
-            <div style="font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-              <div style="display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Estado de Módulos
-              </div>
-              <div style="font-size:12px;color:var(--text-muted)" id="inicio-modulos-summary"></div>
-            </div>
-            <div id="inicio-modulos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
-          </div>
-        </div>
-
-        <!-- DASHBOARD -->
-        <div class="page" id="page-dashboard">
-          <div class="stat-grid">
-            <div class="card stat-card">
-              <div class="stat-icon" style="background:#EEF2FF">📋</div>
-              <div class="stat-label">Turnos atendidos hoy</div>
-              <div class="stat-value" id="stat-atendidos">42</div>
-            </div>
-            <div class="card stat-card">
-              <div class="stat-icon" style="background:#FEF3C7">📁</div>
-              <div class="stat-label">Turnos en espera</div>
-              <div class="stat-value" id="stat-espera">12</div>
-            </div>
-            <div class="card stat-card">
-              <div class="stat-icon" style="background:#DCFCE7">✅</div>
-              <div class="stat-label">Turnos finalizados</div>
-              <div class="stat-value" id="stat-finalizados">38</div>
-            </div>
-            <div class="card stat-card">
-              <div class="stat-icon" style="background:#CFFAFE">⏱</div>
-              <div class="stat-label">Tiempo promedio de espera</div>
-              <div class="stat-value blue" id="stat-tiempo">15 min</div>
-            </div>
-          </div>
-          <div class="dash-grid">
-            <div class="card chart-card">
-              <div class="chart-header">
-                <div class="chart-title">Turnos atendidos por hora</div>
-                <div class="chart-badge">HOY</div>
-              </div>
-              <div class="chart-area" id="chart-bars"></div>
-              <div class="chart-labels">
-                <span>08h</span><span>10h</span><span>12h</span><span>14h</span><span>16h</span><span>18h</span><span>20h</span>
-              </div>
-            </div>
-            <div class="card chart-card">
-              <div class="chart-header">
-                <div class="chart-title">Servicios más utilizados</div>
-                <div class="chart-badge">DISTRIBUCIÓN</div>
-              </div>
-              <div class="donut-wrap">
-                <svg class="donut-svg" viewBox="0 0 36 36" id="donut-svg">
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" stroke-width="3.8"/>
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3B72F2" stroke-width="3.8" stroke-dasharray="45 100" stroke-dashoffset="25" transform="rotate(-90 18 18)"/>
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#8B5CF6" stroke-width="3.8" stroke-dasharray="25 100" stroke-dashoffset="-20" transform="rotate(-90 18 18)"/>
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#22C55E" stroke-width="3.8" stroke-dasharray="18 100" stroke-dashoffset="-45" transform="rotate(-90 18 18)"/>
-                  <text x="18" y="20" text-anchor="middle" font-size="5" font-weight="700" fill="#111827" id="donut-total">256</text>
-                  <text x="18" y="25" text-anchor="middle" font-size="2.5" fill="#6B7280">TOTAL</text>
-                </svg>
-                <div class="donut-legend" id="donut-legend"></div>
-              </div>
-            </div>
-          </div>
-          <div class="card table-card">
-            <div class="table-header">
-              <h3>Últimos turnos llamados</h3>
-              <div class="table-actions">
-                <button class="btn-sm" onclick="exportDashboardPDF()">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Exportar PDF
-                </button>
-                <button class="btn-sm" onclick="exportarExcel('dashboard')">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Descargar Excel
-                </button>
-                <button class="btn-sm" onclick="navTo('turnos')">Ver todos</button>
-              </div>
-            </div>
-            <table>
-              <thead><tr><th>TURNO</th><th>SERVICIO</th><th>MÓDULO</th><th>ESTADO</th><th>T. ESPERA</th><th>HORA</th></tr></thead>
-              <tbody id="dash-table-body"></tbody>
-            </table>
-          </div>
-          <!-- MÉTRICAS DEL DÍA -->
-          <div class="card table-card" style="margin-top:0">
-            <div class="table-header"><h3>Métricas del día</h3><div class="chart-badge">EN TIEMPO REAL</div></div>
-            <div id="dash-metrics-panel" style="padding:4px 0 8px"></div>
-          </div>
-        </div>
-
-        <!-- TURNOS / GESTIÓN -->
-        <div class="page" id="page-turnos">
-          <div class="gestion-stats">
-            <div class="card gestion-stat"><div class="gestion-stat-label">En espera</div><div class="gestion-stat-value" id="g-espera">12</div></div>
-            <div class="card gestion-stat"><div class="gestion-stat-label">Siendo atendidos</div><div class="gestion-stat-value" id="g-atendiendo">05</div></div>
-            <div class="card gestion-stat"><div class="gestion-stat-label">Promedio de espera</div><div class="gestion-stat-value blue" id="g-promedio">14 min</div></div>
-            <div class="card gestion-stat"><div class="gestion-stat-label">Módulos activos</div><div class="gestion-stat-value" id="g-modulos">08</div></div>
-          </div>
-          <div class="card table-card">
-            <div class="table-header">
-              <h3>Gestión de Turnos</h3>
-              <div class="table-actions">
-                <div class="search-box" style="min-width:180px">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  <input type="text" placeholder="Buscar turno o paciente..." oninput="filterTurnos(this.value)" style="width:140px">
-                </div>
-                <button class="btn-sm primary" onclick="openNewTurno()">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Nuevo Turno
-                </button>
-              </div>
-            </div>
-            <table>
-              <thead><tr><th>TURNO</th><th>PACIENTE</th><th>REGISTRADO POR</th><th>ATENDIDO POR</th><th>ESTADO</th><th>T. ESPERA</th><th>HORA</th><th>ACCIONES</th></tr></thead>
-              <tbody id="turnos-table-body"></tbody>
-            </table>
-            <div class="pagination">
-              <div class="pagination-info" id="turnos-pagination-info"></div>
-              <div class="pagination-btns" id="turnos-pagination-btns"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PANEL DE ATENCIÓN -->
-        <div class="page" id="page-panel">
-          <!-- Barra de selección de módulo rápida -->
-          <div class="panel-modulo-bar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            <label for="panel-modulo-quick">Mi módulo:</label>
-            <select id="panel-modulo-quick" class="form-select" onchange="aplicarModuloRapido(this.value)" style="border-color:#BFDBFE">
-              <option value="Sin módulo">Sin módulo asignado</option>
-            </select>
-            <span class="hint">📌 Módulos en uso solo pueden cambiar por admin</span>
-          </div>
-          <!-- Voice Settings Bar -->
-          <div class="voice-panel">
-            <div class="voice-panel-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
-              Voz del sistema
-            </div>
-            <div class="voice-control">
-              <label>Voz:</label>
-              <select id="tts-voice-select" onchange="TTS.settings.voice = TTS.voices.find(v=>v.name===this.value)" style="max-width:180px"></select>
-            </div>
-            <div class="voice-control">
-              <label>Velocidad:</label>
-              <input type="range" min="0.5" max="1.5" step="0.05" value="0.88" oninput="TTS.settings.rate=this.value; document.getElementById('rate-val').textContent=parseFloat(this.value).toFixed(2)">
-              <span id="rate-val" style="font-size:11px;color:var(--text-muted);min-width:28px">0.88</span>
-            </div>
-            <div class="voice-control">
-              <label>Tono:</label>
-              <input type="range" min="0.5" max="2" step="0.05" value="1.05" oninput="TTS.settings.pitch=this.value; document.getElementById('pitch-val').textContent=parseFloat(this.value).toFixed(2)">
-              <span id="pitch-val" style="font-size:11px;color:var(--text-muted);min-width:28px">1.05</span>
-            </div>
-            <div class="voice-control">
-              <label>Volumen:</label>
-              <input type="range" min="0.1" max="1" step="0.1" value="1" oninput="TTS.settings.volume=this.value">
-            </div>
-            <div class="voice-control">
-              <label>Repetir:</label>
-              <select onchange="TTS.settings.repeat=parseInt(this.value)" style="padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px">
-                <option value="1">1×</option>
-                <option value="2" selected>2×</option>
-                <option value="3">3×</option>
-              </select>
-            </div>
-            <button 
-              class="voice-test-btn" 
-              onclick="TTS.speak({id:'A-104', patient:'Juan Pérez', modulo:'Módulo 04'})"
-              aria-label="Probar síntesis de voz con turno de ejemplo"
-              title="Reproduce de prueba de voz">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Probar voz
-            </button>
-          </div>
-          <div class="panel-layout">
-            <div class="card current-card">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-                <div class="currently-label">Turno actual</div>
-                <div id="panel-operator-badge" style="font-size:11px;font-weight:600;background:var(--primary-light);color:var(--primary);padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:5px">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                  <span id="panel-operator-name">Sistema</span>
-                </div>
-              </div>
-              <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:6px" id="panel-modulo-badge">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-                <span id="panel-modulo-label">Sin módulo asignado</span>
-              </div>
-              <div class="big-turno" id="panel-turno-id">—</div>
-              <div class="patient-name" id="panel-patient-name">Sin turno activo</div>
-              <div class="patient-info" id="panel-patient-info">—</div>
-              <div class="action-btns">
-                <button class="action-btn btn-llamar" onclick="llamarTurno()">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
-                  Re-llamar
-                </button>
-                <button class="action-btn btn-siguiente" onclick="siguienteTurno()" id="btn-siguiente-panel">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-                  Siguiente
-                </button>
-                <button class="action-btn btn-finalizar" onclick="pedirNotaYFinalizar()">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  Finalizar
-                </button>
-                <button class="action-btn btn-cancelar" onclick="cancelarTurnoAPI()">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                  Cancelar
-                </button>
-              </div>
-              <div style="padding:0 20px 16px;display:flex;justify-content:flex-end">
-                <button id="btn-pause-modulo" onclick="toggleModuloPause()" class="btn-sm" style="display:flex;align-items:center;gap:6px;font-size:12px;transition:all .2s">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                  Pausar módulo
-                </button>
-              </div>
-              <div class="time-stats">
-                <div>
-                  <div class="time-stat-label">Tiempo de espera</div>
-                  <div class="time-stat-value" id="panel-wait-time">00:00 min</div>
-                </div>
-                <div>
-                  <div class="time-stat-label">Tiempo de atención</div>
-                  <div class="time-stat-value blue" id="panel-service-time">00:00 min</div>
-                </div>
-              </div>
-            </div>
-            <div class="card queue-card">
-              <div class="queue-header">
-                <div class="queue-title">Turnos en espera</div>
-                <div class="queue-count" id="queue-count">0 Total</div>
-              </div>
-              <div id="queue-list"></div>
-              <button class="queue-view-all" onclick="navTo('turnos')">Ver todos los turnos pendientes</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- RECEPCIÓN -->
-        <div class="page" id="page-recepcion">
-          <div class="rec-layout">
-            <!-- Panel de registro -->
-            <div class="card" style="padding:28px 32px">
-              <div style="display:flex;align-items:center;gap:14px;margin-bottom:26px">
-                <div style="width:50px;height:50px;background:var(--primary-light);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                </div>
-                <div>
-                  <div style="font-size:20px;font-weight:700">Registrar paciente</div>
-                  <div style="font-size:13px;color:var(--text-muted);margin-top:3px">Completa los datos y emite el turno</div>
-                </div>
-              </div>
-
-              <!-- Nombre -->
-              <div class="form-group">
-                <label class="form-label">Nombre completo *</label>
-                <input class="form-input" id="rec-nombre" placeholder="Ej: Juan García"
-                  style="font-size:15px;padding:12px 14px"
-                  onkeydown="if(event.key==='Enter')crearTurnoRecepcion()" autocomplete="off">
-              </div>
-
-              <!-- Documento -->
-              <div class="form-group">
-                <label class="form-label">Documento de identidad
-                  <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">(opcional)</span>
-                </label>
-                <input class="form-input" id="rec-doc" placeholder="Ej: 12.345.678" autocomplete="off">
-              </div>
-
-              <!-- Servicio -->
-              <div class="form-group" style="margin-bottom:22px">
-                <label class="form-label">Servicio *</label>
-                <div id="rec-servicios-btns" style="display:flex;flex-wrap:wrap;gap:9px;margin-top:9px"></div>
-              </div>
-
-              <!-- Botón principal -->
-              <button class="btn-primary" style="font-size:15px;padding:13px" onclick="crearTurnoRecepcion()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  style="display:inline;vertical-align:middle;margin-right:8px;margin-top:-2px">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Emitir turno
-              </button>
-
-              <!-- Último ticket emitido -->
-              <div id="rec-ultimo-ticket" class="rec-ticket-box" style="display:none">
-                <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:var(--primary);margin-bottom:10px;text-transform:uppercase">
-                  ✓ Turno asignado
-                </div>
-                <div class="rec-ticket-num" id="rec-ticket-code">—</div>
-                <div style="font-size:18px;font-weight:600;margin-top:10px" id="rec-ticket-name">—</div>
-                <div style="font-size:13px;color:var(--text-muted);margin-top:4px" id="rec-ticket-svc">—</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:12px;display:flex;align-items:center;justify-content:center;gap:5px">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                  El paciente será llamado por este código
-                </div>
-              </div>
-            </div>
-
-            <!-- Sala de espera -->
-            <div class="card" style="overflow:hidden">
-              <div style="padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
-                <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Sala de espera
-                </div>
-                <span id="rec-queue-count" style="background:var(--primary);color:white;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;min-width:24px;text-align:center">0</span>
-              </div>
-              <!-- Atendiendo/llamando ahora -->
-              <div id="rec-activos-list" style="padding:8px 10px 0"></div>
-              <!-- En fila -->
-              <div id="rec-queue-list" style="max-height:480px;overflow-y:auto;padding:4px 10px 10px"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- HISTORIAL -->
-        <div class="page" id="page-historial">
-          <!-- Barra de búsqueda + filtros -->
-          <div class="filter-bar" style="flex-wrap:wrap;gap:8px">
-            <div style="position:relative;flex:1;min-width:180px">
-              <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input class="filter-select" id="hist-search" placeholder="Buscar por nombre, turno o documento..." oninput="filterHistorial()" style="padding-left:32px;width:100%;min-width:0">
-            </div>
-            <select class="filter-select" id="hist-periodo" onchange="filterHistorial()">
-              <option value="todo">Todo el período</option>
-              <option value="hoy">Hoy</option>
-              <option value="7">Últimos 7 días</option>
-              <option value="30">Últimos 30 días</option>
-            </select>
-            <select class="filter-select" id="hist-servicio" onchange="filterHistorial()">
-              <option value="">Todos los módulos</option>
-              <option>Módulo 1</option>
-              <option>Módulo 2</option>
-              <option>Módulo 3</option>
-              <option>Módulo 4</option>
-            </select>
-            <select class="filter-select" id="hist-estado" onchange="filterHistorial()">
-              <option value="">Todos los estados</option>
-              <option>Finalizado</option>
-              <option>Cancelado</option>
-              <option>No atendido</option>
-            </select>
-            <select class="filter-select" id="hist-operador" onchange="filterHistorial()">
-              <option value="">Todos los operadores</option>
-            </select>
-            <div style="display:flex;gap:8px;margin-left:auto">
-              <button class="btn-sm" onclick="clearHistFiltros()" title="Limpiar filtros" style="display:flex;align-items:center;gap:4px">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-                Limpiar
-              </button>
-              <button class="btn-sm" onclick="exportHistorialPDF()" style="display:flex;align-items:center;gap:4px">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                PDF
-              </button>
-              <button class="btn-sm" onclick="exportarExcel('historial')" style="display:flex;align-items:center;gap:4px">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Excel
-              </button>
-            </div>
-          </div>
-          <!-- Resumen dinámico de la selección actual -->
-          <div id="hist-summary-bar" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap"></div>
-          <div class="card table-card">
-            <table>
-              <thead><tr><th>TURNO</th><th>PACIENTE</th><th>SERVICIO</th><th>OPERADOR</th><th>HORA CREACIÓN</th><th>T. ESPERA</th><th>T. ATENCIÓN</th><th>ESTADO</th><th>NOTA</th></tr></thead>
-              <tbody id="historial-table-body"></tbody>
-            </table>
-            <div class="pagination">
-              <div class="pagination-info" id="historial-pagination-info"></div>
-              <div class="pagination-btns" id="historial-pagination-btns"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TV -->
-        <div class="page" id="page-tv">
-          <div class="tv-controls-bar">
-            <div class="tv-preview-label">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              Vista previa — Pantalla Televisor
-            </div>
-            <div style="display:flex;gap:8px">
-              <button class="tv-theme-btn" id="tv-theme-toggle" onclick="toggleTVTheme()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                Modo claro
-              </button>
-              <button class="tv-fullscreen-btn" onclick="openTVFullscreen()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
-                Pantalla completa
-              </button>
-            </div>
-          </div>
-          <div class="tv-screen" id="tv-preview-screen">
-            <!-- CALL ANNOUNCEMENT BANNER -->
-            <div class="tv-call-banner" id="tv-banner-preview">
-              <div class="tv-call-banner-icon">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                </svg>
-              </div>
-              <div class="tv-call-banner-main">
-                <div class="tv-call-banner-label">Llamando ahora</div>
-                <div class="tv-call-banner-turno" id="tv-banner-turno-preview">—</div>
-                <div class="tv-call-banner-patient" id="tv-banner-patient-preview">—</div>
-              </div>
-              <div class="tv-call-banner-right">
-                <div class="tv-call-banner-dirijase">Diríjase al</div>
-                <div class="tv-call-banner-modulo-num" id="tv-banner-modulo-preview">—</div>
-                <div class="tv-call-banner-modulo-label" id="tv-banner-modsvc-preview">—</div>
-                <div class="tv-call-banner-operator" id="tv-banner-operator-preview">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                  <span>—</span>
-                </div>
-              </div>
-            </div>
-            <div class="tv-header">
-              <div class="tv-logo">
-                <div class="tv-logo-img">
-                  <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
-                    <!-- Doctor with stethoscope icon -->
-                    <circle cx="24" cy="13" r="7" fill="white" opacity=".95"/>
-                    <path d="M10 38c0-7.73 6.27-14 14-14s14 6.27 14 14" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" opacity=".9"/>
-                    <circle cx="35" cy="35" r="5" stroke="#FDE68A" stroke-width="2.5" fill="none"/>
-                    <path d="M30 30 Q28 24 24 24" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <path d="M33 35 h4" stroke="#FDE68A" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M35 33 v4" stroke="#FDE68A" stroke-width="2" stroke-linecap="round"/>
-                  </svg>
-                </div>
-                <div>
-                  <div class="tv-logo-text">NeuroTurn</div>
-                  <div class="tv-logo-org">Neurocoop</div>
-                </div>
-              </div>
-              <div class="tv-clock-block">
-                <div class="tv-time" id="tv-time">--:--</div>
-                <div class="tv-date" id="tv-date">--</div>
-              </div>
-            </div>
-            <div class="tv-body">
-              <div class="tv-col tv-col-left">
-                <div class="tv-col-title">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                  Turnos en fila
-                  <span id="tv-queue-count" class="tv-col-count"></span>
-                </div>
-                <div id="tv-queue-list"></div>
-              </div>
-              <div class="tv-col">
-                <div class="tv-col-title">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  Siendo atendidos
-                  <span id="tv-serving-count" class="tv-col-count"></span>
-                </div>
-                <div id="tv-serving-list"></div>
-              </div>
-            </div>
-            <div class="tv-footer">
-              <div class="tv-aviso">
-                <div class="tv-aviso-badge">Aviso</div>
-                <div class="tv-ticker-wrap">
-                  <span class="tv-ticker-text">Por favor, tenga su documento de identidad a mano &nbsp;·&nbsp; El sistema le llamará por su código de turno &nbsp;·&nbsp; Neurocoop – Comprometidos con su salud &nbsp;·&nbsp; NeuroTurn: Sistema Inteligente de Turnos Médicos</span>
-                </div>
-              </div>
-              <div id="tv-est-wait" style="font-size:11px;font-weight:700;color:#60A5FA;background:rgba(59,130,246,.12);padding:3px 10px;border-radius:6px;white-space:nowrap;flex-shrink:0;display:none">⏱ Espera: ~-- min</div>
-              <div class="tv-network"><div class="tv-network-dot"></div>NeuroTurn Live</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- USUARIOS — PRÓXIMAMENTE -->
-        <div class="page" id="page-usuarios">
-          <div class="card table-card">
-            <div class="table-header">
-              <h3>Gestión de Usuarios</h3>
-              <div class="table-actions">
-                <button class="btn-sm primary" onclick="openNewUser()">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Nuevo Usuario
-                </button>
-              </div>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>NOMBRE</th>
-                  <th>USUARIO</th>
-                  <th>ROL</th>
-                  <th>MÓDULO</th>
-                  <th>EMAIL</th>
-                  <th>ESTADO</th>
-                  <th>ACCIONES</th>
-                </tr>
-              </thead>
-              <tbody id="user-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- SERVICIOS MÉDICOS — PRÓXIMAMENTE -->
-        <div class="page" id="page-servicios">
-          <div class="soon-page">
-            <div class="soon-icon-wrap">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#3B72F2" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-            </div>
-            <div class="soon-title">Servicios Médicos</div>
-            <div class="soon-desc">Configura los servicios clínicos disponibles: Neurología, Psiquiatría, Kinesiología y más. Define prefijos, módulos asociados y parámetros de atención para cada especialidad.</div>
-            <div class="soon-features">
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Crear servicios con prefijo único</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Asociar módulos por servicio</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Prioridades de atención</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Colores y etiquetas personalizadas</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Activar / desactivar servicios</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Estadísticas por especialidad</div>
-            </div>
-            <div class="soon-badge-big">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Módulo en desarrollo — Próximamente
-            </div>
-          </div>
-        </div>
-
-        <!-- ESTADÍSTICAS POR FUNCIONARIO -->
-        <div class="page" id="page-estadisticas">
-          <!-- ENCABEZADO -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <h2 style="font-size:20px;font-weight:700;margin:0">Estadísticas por Funcionario</h2>
-            <button class="btn-sm primary" onclick="estCargarMes()" style="display:flex;align-items:center;gap:6px">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              Actualizar
-            </button>
-          </div>
-
-          <!-- CALENDARIO -->
-          <div class="card" style="padding:20px;margin-bottom:16px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-              <div style="display:flex;align-items:center;gap:12px">
-                <button class="btn-sm" onclick="estMesPrev()" style="padding:6px 10px">&lt;</button>
-                <span id="est-cal-titulo" style="font-size:16px;font-weight:700;min-width:160px;text-align:center"></span>
-                <button class="btn-sm" onclick="estMesNext()" style="padding:6px 10px">&gt;</button>
-                <button class="btn-sm" onclick="estHoy()" style="margin-left:8px;font-size:12px">Hoy</button>
-              </div>
-              <div style="display:flex;align-items:center;gap:12px;font-size:12px">
-                <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#22C55E;display:inline-block"></span> CSV completo</span>
-                <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block"></span> Auditoría BD</span>
-              </div>
-            </div>
-            <div id="est-calendario" style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden"></div>
-          </div>
-
-          <!-- DETALLE DEL DÍA -->
-          <div id="est-detalle-dia" style="display:none">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <h3 id="est-detalle-titulo" style="font-size:16px;font-weight:700;margin:0"></h3>
-              <button class="btn-sm" onclick="estCerrarDetalle()" style="font-size:12px">✕ Cerrar</button>
-            </div>
-
-            <!-- BANNER FUENTE DE DATOS -->
-            <div id="est-fuente-banner" style="display:none"></div>
-
-            <!-- RESUMEN KPIs -->
-            <div id="est-resumen-kpis" style="display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:16px"></div>
-
-            <!-- FUNCIONARIOS DEL DÍA -->
-            <div class="card" style="padding:20px;margin-bottom:16px">
-              <h4 style="font-size:14px;font-weight:700;margin:0 0 14px 0;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                FUNCIONARIOS DEL DÍA
-              </h4>
-              <div id="est-funcionarios" style="display:flex;flex-wrap:wrap;gap:12px"></div>
-            </div>
-
-            <!-- DETALLE POR FUNCIONARIO -->
-            <div id="est-func-detalle" style="display:none">
-              <div class="card" style="padding:20px">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-                  <h4 id="est-func-detalle-titulo" style="font-size:14px;font-weight:700;margin:0"></h4>
-                  <button class="btn-sm" onclick="document.getElementById('est-func-detalle').style.display='none'" style="font-size:12px">✕ Cerrar detalle</button>
-                </div>
-                <div style="overflow-x:auto">
-                  <table style="width:100%;border-collapse:collapse;font-size:12px">
-                    <thead>
-                      <tr style="background:var(--bg)">
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">TURNO</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">PACIENTE</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">DOCUMENTO</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">SERVICIO</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">MÓDULO</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">HORA CREACIÓN</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">ESPERA</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">ATENCIÓN</th>
-                        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)">ESTADO</th>
-                      </tr>
-                    </thead>
-                    <tbody id="est-func-detalle-body"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- MÓDULOS — PRÓXIMAMENTE -->
-        <div class="page" id="page-modulos">
-          <div class="soon-page">
-            <div class="soon-icon-wrap">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#3B72F2" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            </div>
-            <div class="soon-title">Gestión de Módulos</div>
-            <div class="soon-desc">Configura los módulos físicos de atención: Box 01, Módulo 02, Consultorio A, etc. Asigna servicios, activa o desactiva módulos según la disponibilidad del día.</div>
-            <div class="soon-features">
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Crear y nombrar módulos</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Asignar servicio por módulo</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Activar / desactivar módulos</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Estado en tiempo real</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Turno actual por módulo</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Pausa y reanudación de módulos</div>
-            </div>
-            <div class="soon-badge-big">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Módulo en desarrollo — Próximamente
-            </div>
-          </div>
-        </div>
-
-        <!-- VENTANA DE ANUNCIOS -->
-        <div class="page" id="page-anuncios">
-          <div class="card" style="padding:24px;margin-bottom:20px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-              <div>
-                <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Ventana de Anuncios</h2>
-                <p style="font-size:13px;color:var(--text-muted)">Gestiona y proyecta anuncios para la pantalla TV de la sala de espera</p>
-              </div>
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
-            <!-- Panel de Creación de Anuncios -->
-            <div class="card" style="padding:24px">
-              <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Nuevo Anuncio
-              </h3>
-              <div style="display:flex;flex-direction:column;gap:12px">
-                <div>
-                  <label class="form-label">Tipo de Anuncio</label>
-                  <select class="form-select" id="tipo-anuncio" style="width:100%">
-                    <option value="texto">Mensaje de Texto</option>
-                    <option value="imagen">Imagen</option>
-                    <option value="voz">Anuncio de Voz</option>
-                    <option value="aviso">Aviso Importante</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="form-label">Contenido</label>
-                  <textarea class="form-select" id="contenido-anuncio" style="width:100%;min-height:80px;padding:10px;font-family:inherit;border-radius:8px;border:1px solid var(--border);resize:vertical" placeholder="Escribe el mensaje del anuncio..."></textarea>
-                </div>
-                <div>
-                  <label class="form-label">Duración (segundos)</label>
-                  <input type="number" class="form-select" id="duracion-anuncio" value="5" min="1" max="60" style="width:100%" />
-                </div>
-                <button class="btn-primary" onclick="crearAnuncio()" style="width:100%">✓ Crear Anuncio</button>
-              </div>
-            </div>
-
-            <!-- Panel de Control -->
-            <div class="card" style="padding:24px">
-              <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                Control de Proyección
-              </h3>
-              <div style="display:flex;flex-direction:column;gap:12px">
-                <div style="background:var(--bg);padding:14px;border-radius:10px;border:1px solid var(--border)">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Estado Actual</div>
-                  <div style="font-size:16px;font-weight:700;color:var(--primary)" id="estado-proyeccion">Inactivo</div>
-                </div>
-                <button class="btn-primary" onclick="proyectarAnuncio()" style="width:100%">▶ Proyectar en TV</button>
-                <button class="btn-sm" onclick="reproducirVoz()" style="width:100%;background:var(--orange);color:white;border-color:var(--orange);padding:10px">🔊 Reproducir Voz</button>
-                <button class="btn-sm" onclick="pausarAnuncio()" style="width:100%;background:#666;color:white;border-color:#666;padding:10px">⏸ Pausar</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Listado de Anuncios -->
-          <div class="card">
-            <div class="table-header">
-              <h3>Anuncios Activos</h3>
-              <div class="table-actions">
-                <button class="btn-sm" onclick="location.reload()">↻ Actualizar</button>
-              </div>
-            </div>
-            <div style="overflow-x:auto">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Tipo</th>
-                    <th>Contenido</th>
-                    <th>Duración</th>
-                    <th>Creado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="anuncios-tbody">
-                  <tr>
-                    <td colspan="6" style="text-align:center;padding:32px;color:var(--text-light)">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.5;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                      Sin anuncios creados
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- GESTIÓN DE SERVICIOS — PRÓXIMAMENTE -->
-        <div class="page" id="page-gservicios">
-          <div class="soon-page">
-            <div class="soon-icon-wrap">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#3B72F2" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 115 19.07"/><path d="M12 8v4l3 3"/></svg>
-            </div>
-            <div class="soon-title">Gestión de Servicios</div>
-            <div class="soon-desc">Configuración avanzada de servicios: parámetros de atención, tiempos límite, mensajes de voz personalizados y configuración detallada del flujo de turnos por especialidad.</div>
-            <div class="soon-features">
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Parámetros avanzados de servicio</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Tiempos límite de atención</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Mensajes de voz personalizados</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Reglas de prioridad</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Flujo de turnos configurable</div>
-              <div class="soon-feature-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>Integración con TV y anuncios</div>
-            </div>
-            <div class="soon-badge-big">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Módulo en desarrollo — Próximamente
-            </div>
-          </div>
-        </div>
-
-        <!-- CONFIG -->
-        <div class="page" id="page-config">
-          <!-- MI MÓDULO DE TRABAJO -->
-          <div class="card" style="padding:24px;margin-bottom:20px;border:2px solid var(--primary-light)">
-            <div style="font-size:14px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-              Mi módulo de trabajo
-              <span style="font-size:11px;font-weight:500;color:var(--primary);background:var(--primary-light);padding:2px 8px;border-radius:20px;margin-left:4px">Personal · solo te afecta a ti</span>
-            </div>
-            <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px">Selecciona el módulo o box desde el que estás trabajando hoy. Este valor se usará automáticamente al llamar turnos.</p>
-            <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
-              <div style="flex:1;min-width:180px">
-                <label class="form-label">Módulo actual</label>
-                <select class="form-select" id="mi-modulo-select" style="border-color:var(--primary)">
-                  <option value="Sin módulo">Sin módulo asignado</option>
-                  <option value="Módulo 01">Módulo 01</option>
-                  <option value="Módulo 02">Módulo 02</option>
-                  <option value="Módulo 03">Módulo 03</option>
-                  <option value="Módulo 04">Módulo 04</option>
-                  <option value="Módulo 05">Módulo 05</option>
-                  <option value="Módulo 06">Módulo 06</option>
-                  <option value="Módulo 07">Módulo 07</option>
-                  <option value="Módulo 08">Módulo 08</option>
-                </select>
-              </div>
-              <button class="btn-save" onclick="guardarMiModulo()" style="white-space:nowrap;display:flex;align-items:center;gap:6px">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Guardar mi módulo
-              </button>
-            </div>
-            <div id="mi-modulo-status" style="margin-top:12px;font-size:12.5px;color:#16A34A;font-weight:600;display:none"></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div class="card" style="padding:24px">
-              <div style="font-size:14px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                Información de la institución
-              </div>
-              <div class="form-group"><label class="form-label">Nombre de la institución</label><input class="form-input" value="NeuroTurn Healthcare"></div>
-              <div class="form-group"><label class="form-label">Dirección</label><input class="form-input" value="Av. Principal 1234, Ciudad"></div>
-              <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" value="+1 234 567 8900"></div>
-              <div class="form-group"><label class="form-label">Email institucional</label><input class="form-input" type="email" value="admin@neuroturn.com"></div>
-              <button class="btn-save" onclick="showToast('Información guardada','success')" style="margin-top:4px">Guardar cambios</button>
-            </div>
-            <div class="card" style="padding:24px">
-              <div style="font-size:14px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 115 19.07"/></svg>
-                Parámetros del sistema
-              </div>
-              <div class="form-group"><label class="form-label">Tiempo máximo de espera (min)</label><input class="form-input" type="number" value="30"></div>
-              <div class="form-group"><label class="form-label">Tiempo máximo de atención (min)</label><input class="form-input" type="number" value="20"></div>
-              <div class="form-group"><label class="form-label">Prefijo por defecto</label><input class="form-input" value="A" maxlength="2"></div>
-              <div class="form-group"><label class="form-label">Número inicial de turnos</label><input class="form-input" type="number" value="100"></div>
-              <button class="btn-save" onclick="showToast('Parámetros guardados','success')" style="margin-top:4px">Guardar cambios</button>
-            </div>
-            <div class="card" style="padding:24px">
-              <div style="font-size:14px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                Anuncios de voz
-              </div>
-              <div class="form-group">
-                <label class="form-label">Idioma de voz</label>
-                <select class="form-select"><option>Español (es-ES)</option><option>Español (es-MX)</option><option>Español (es-AR)</option></select>
-              </div>
-              <div class="form-group"><label class="form-label">Repeticiones por llamado</label><input class="form-input" type="number" value="2" min="1" max="5"></div>
-              <div class="form-group"><label class="form-label">Mensaje personalizado de espera</label><input class="form-input" value="Por favor espere, su turno está próximo"></div>
-              <button class="btn-save" onclick="showToast('Configuración de voz guardada','success')" style="margin-top:4px">Guardar cambios</button>
-            </div>
-            <div class="card" style="padding:24px">
-              <div style="font-size:14px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
-                Pantalla Televisor
-              </div>
-              <div class="form-group"><label class="form-label">Mensaje de aviso en pantalla</label><input class="form-input" value="Por favor, tenga su documento de identidad a mano."></div>
-              <div class="form-group"><label class="form-label">Turnos máximos en fila visibles</label><input class="form-input" type="number" value="5"></div>
-              <div class="form-group"><label class="form-label">Turnos atendidos visibles</label><input class="form-input" type="number" value="3"></div>
-              <button class="btn-save" onclick="showToast('Configuración de TV guardada','success')" style="margin-top:4px">Guardar cambios</button>
-            </div>
-          </div>
-          <div class="card" style="padding:24px;margin-top:20px">
-            <div style="font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Respaldo de datos
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Exporta o importa todos los datos del sistema como archivo JSON.</p>
-            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-              <button class="btn-save" onclick="backupData()" style="display:flex;align-items:center;gap:6px">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Descargar backup
-              </button>
-              <label class="btn-sm" style="cursor:pointer;display:flex;align-items:center;gap:6px">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Restaurar backup
-                <input type="file" accept=".json" onchange="restoreData(this)" style="display:none">
-              </label>
-            </div>
-          </div>
-          <!-- Archivo Mensual -->
-          <div class="card" style="padding:24px;margin-top:20px">
-            <div style="font-size:14px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-              Archivo Mensual
-            </div>
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Guarda el historial del mes actual como archivo permanente y limpia la cola para el nuevo mes. Los archivos quedan disponibles para consulta en cualquier momento.</p>
-            <div id="archivos-mensuales-list" style="margin-bottom:16px"></div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button class="btn-save" onclick="archivarMes()" style="display:flex;align-items:center;gap:6px">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-                Archivar mes actual
-              </button>
-              <button class="btn-sm" onclick="renderArchivos()" style="display:flex;align-items:center;gap:6px">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-                Actualizar lista
-              </button>
-            </div>
-          </div>
-          <!-- Zona de peligro reducida -->
-          <div class="card" style="padding:24px;margin-top:20px;border:1.5px solid var(--danger-light)">
-            <div style="font-size:14px;font-weight:600;color:var(--danger);margin-bottom:4px;display:flex;align-items:center;gap:8px">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Zona de peligro
-            </div>
-            <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Elimina los turnos del día actual. Requiere escribir <strong>CONFIRMAR</strong>. Esta acción no puede deshacerse.</p>
-            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-              <button class="btn-sm" style="background:var(--danger-light);color:var(--danger);border-color:var(--danger)" onclick="abrirModalLimpiarDia()">
-                🗑 Limpiar turnos del día
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- MODAL LIMPIAR TURNOS DEL DÍA -->
-<div class="modal-overlay" id="modal-limpiar-dia">
-  <div class="modal" style="width:420px">
-    <div class="modal-header">
-      <div class="modal-title" style="color:var(--danger);display:flex;align-items:center;gap:8px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        Limpiar turnos del día
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-limpiar-dia')">✕</button>
-    </div>
-
-    <!-- Paso 1 -->
-    <div id="limpiar-step1">
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:600;color:#991B1B;margin-bottom:8px">¿Eliminar todos los turnos activos?</div>
-        <div id="limpiar-resumen" style="font-size:12.5px;color:#B91C1C"></div>
-      </div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Se eliminarán los turnos en estado <strong>En fila</strong>, <strong>Llamando</strong> y <strong>Atendiendo</strong>. Los turnos Finalizados y Cancelados no se tocan.</p>
-      <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px">Esta acción no se puede deshacer.</p>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn-cancel-modal" onclick="closeModal('modal-limpiar-dia')">Cancelar</button>
-        <button style="padding:9px 20px;background:var(--danger-light);color:var(--danger);border:1.5px solid var(--danger);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" onclick="limpiarDiaStep2()">
-          Sí, continuar →
-        </button>
-      </div>
-    </div>
-
-    <!-- Paso 2 -->
-    <div id="limpiar-step2" style="display:none">
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
-        <div style="font-size:30px;margin-bottom:6px">⚠️</div>
-        <div style="font-size:13px;font-weight:700;color:#991B1B">Confirmación final</div>
-        <div style="font-size:12px;color:#B91C1C;margin-top:4px">Escribe <strong>LIMPIAR</strong> para confirmar</div>
-      </div>
-      <input class="form-input" id="limpiar-confirm-input" placeholder="Escribe LIMPIAR..." oninput="checkLimpiarConfirm()" style="margin-bottom:6px" autocomplete="off">
-      <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:16px">Esta acción es irreversible.</div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn-cancel-modal" onclick="limpiarDiaBack()">← Atrás</button>
-        <button id="btn-limpiar-final" disabled style="padding:9px 20px;background:#DC2626;color:white;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;opacity:.4;transition:opacity .2s" onclick="ejecutarLimpiarDia()">
-          Limpiar ahora
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL CONFIRMAR ELIMINAR USUARIO -->
-<div class="modal-overlay" id="modal-delete-user">
-  <div class="modal" style="width:420px">
-    <div class="modal-header">
-      <div class="modal-title" style="color:var(--danger);display:flex;align-items:center;gap:8px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Eliminar usuario
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-delete-user')">✕</button>
-    </div>
-    <!-- Paso 1 -->
-    <div id="delete-user-step1">
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:600;color:#991B1B;margin-bottom:4px">¿Eliminar este usuario?</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
-          <div id="del-user-avatar" style="width:38px;height:38px;border-radius:50%;background:#3B72F2;color:white;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
-          <div>
-            <div style="font-size:14px;font-weight:700" id="del-user-name">—</div>
-            <div style="font-size:12px;color:var(--text-muted)" id="del-user-role">—</div>
-          </div>
-        </div>
-      </div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">Esta acción no se puede deshacer. El usuario perderá acceso al sistema.</p>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn-cancel-modal" onclick="closeModal('modal-delete-user')">Cancelar</button>
-        <button style="padding:9px 20px;background:var(--danger-light);color:var(--danger);border:1.5px solid var(--danger);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer" onclick="deleteUserStep2()">
-          Sí, continuar →
-        </button>
-      </div>
-    </div>
-    <!-- Paso 2 -->
-    <div id="delete-user-step2" style="display:none">
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
-        <div style="font-size:28px;margin-bottom:6px">⚠️</div>
-        <div style="font-size:13px;font-weight:700;color:#991B1B">Confirmación final</div>
-        <div style="font-size:12px;color:#B91C1C;margin-top:4px">Estás a punto de eliminar permanentemente a <strong id="del-user-name2">—</strong></div>
-      </div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Escribe el nombre de usuario para confirmar:</p>
-      <input class="form-input" id="del-user-confirm-input" placeholder="Escribe el nombre de usuario..." oninput="checkDeleteConfirm()" style="margin-bottom:16px">
-      <div id="del-confirm-hint" style="font-size:11.5px;color:var(--text-muted);margin-top:-10px;margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn-cancel-modal" onclick="deleteUserBack()">← Atrás</button>
-        <button id="btn-delete-user-final" disabled style="padding:9px 20px;background:#DC2626;color:white;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;opacity:.4;transition:opacity .2s" onclick="deleteUserConfirmed()">
-          Eliminar definitivamente
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL ARCHIVO MENSUAL -->
-<div class="modal-overlay" id="modal-archivo">
-  <div class="modal" style="width:620px;max-width:96vw">
-    <div class="modal-header">
-      <div class="modal-title" style="display:flex;align-items:center;gap:8px">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-        <span id="archivo-modal-mes-display">—</span>
-        <!-- Inline rename -->
-        <button id="btn-rename-archivo" onclick="toggleRenameArchivo()" title="Renombrar" style="margin-left:4px;background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:6px;color:var(--text-muted);transition:all .15s" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='none'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-archivo')">✕</button>
-    </div>
-
-    <!-- Rename row (hidden by default) -->
-    <div id="archivo-rename-row" style="display:none;margin-bottom:14px;display:none">
-      <div style="display:flex;gap:8px;align-items:center">
-        <input class="form-input" id="archivo-rename-input" placeholder="Nombre del archivo..." style="flex:1;margin:0">
-        <button class="btn-save" onclick="guardarRenombreArchivo()" style="white-space:nowrap">Guardar nombre</button>
-        <button class="btn-cancel-modal" onclick="toggleRenameArchivo()">✕</button>
-      </div>
-    </div>
-
-    <div class="stat-grid" id="archivo-modal-stats" style="margin-bottom:16px"></div>
-
-    <!-- Tabs -->
-    <div style="display:flex;gap:2px;margin-bottom:12px;background:var(--bg);border-radius:8px;padding:3px">
-      <button id="tab-datos" onclick="switchArchivoTab('datos')" style="flex:1;padding:6px 12px;border:none;border-radius:6px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;background:white;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08)">
-        📋 Turnos
-      </button>
-      <button id="tab-notas" onclick="switchArchivoTab('notas')" style="flex:1;padding:6px 12px;border:none;border-radius:6px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;background:none;color:var(--text-muted)">
-        📝 Nota del archivo
-      </button>
-    </div>
-
-    <!-- Tab: turnos -->
-    <div id="archivo-tab-datos">
-      <div class="card table-card" style="max-height:300px;overflow-y:auto">
-        <table>
-          <thead><tr><th>TURNO</th><th>PACIENTE</th><th>SERVICIO</th><th>ESTADO</th><th>OPERADOR</th><th>T. ESPERA</th></tr></thead>
-          <tbody id="archivo-modal-table"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Tab: nota -->
-    <div id="archivo-tab-notas" style="display:none">
-      <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:8px">
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Agrega comentarios o novedades de este período (solo visible internamente)</div>
-        <textarea id="archivo-nota-texto" class="form-input" rows="4" placeholder="Ej: Mes con alta demanda por campaña de vacunación. Se incorporó Dr. Ramos al Módulo 04..." style="resize:vertical;min-height:100px;font-family:inherit;margin-bottom:8px"></textarea>
-        <button class="btn-save" onclick="guardarNotaArchivo()" style="width:100%">Guardar nota</button>
-      </div>
-    </div>
-
-    <!-- Footer acciones -->
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap">
-      <button onclick="confirmarEliminarArchivo()" style="display:flex;align-items:center;gap:5px;padding:8px 14px;background:var(--danger-light);color:var(--danger);border:1.5px solid #FECACA;border-radius:8px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
-        Eliminar archivo
-      </button>
-      <div style="display:flex;gap:8px">
-        <button class="btn-sm" onclick="exportArchivoExcel()" style="display:flex;align-items:center;gap:5px">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar Excel
-        </button>
-        <button class="btn-sm" onclick="descargarArchivoActual()" style="display:flex;align-items:center;gap:5px">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-          JSON
-        </button>
-        <button class="btn-cancel-modal" onclick="closeModal('modal-archivo')">Cerrar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL NUEVO TURNO -->
-<div class="modal-overlay" id="modal-turno">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="vertical-align:middle;margin-right:6px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Nuevo Turno
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-turno')">✕</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Nombre del paciente *</label>
-      <input class="form-input" id="new-patient-name" placeholder="Ej: Juan Pérez" autocomplete="off">
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group">
-        <label class="form-label">Documento (últimos 4 dígitos)</label>
-        <input class="form-input" id="new-patient-doc" placeholder="Ej: 4821" maxlength="4" inputmode="numeric">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Módulo *</label>
-        <select class="form-select" id="new-patient-service" onchange="updatePrefixPreview()">
-          <option value="Módulo 1">Módulo 1 - Recepción</option>
-          <option value="Módulo 2">Módulo 2 - Recepción</option>
-          <option value="Módulo 3">Módulo 3 - Recepción</option>
-          <option value="Módulo 4">Módulo 4 - Recepción</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:8px;padding:10px 14px">
-      <span style="font-size:12px;color:var(--text-muted)">Código de turno asignado:</span>
-      <span id="turno-preview" style="font-family:'DM Mono',monospace;font-size:16px;font-weight:800;color:var(--primary)">A-101</span>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel-modal" onclick="closeModal('modal-turno')">Cancelar</button>
-      <button class="btn-save" onclick="saveTurno()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Crear Turno
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL NOTA AL FINALIZAR -->
-<div class="modal-overlay" id="modal-nota">
-  <div class="modal" style="width:440px">
-    <div class="modal-header">
-      <div class="modal-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Finalizar turno
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-nota')">✕</button>
-    </div>
-    <div style="background:var(--bg);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
-      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:800;color:var(--primary)" id="nota-turno-id">—</div>
-      <div>
-        <div style="font-size:13px;font-weight:600" id="nota-paciente">—</div>
-        <div style="font-size:11px;color:var(--text-muted)" id="nota-servicio">—</div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Nota interna (opcional)</label>
-      <textarea id="nota-texto" class="form-input" rows="3" placeholder="Ej: Derivado a traumatología, requiere seguimiento en 2 semanas..." style="resize:vertical;min-height:80px;font-family:inherit"></textarea>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Esta nota es solo visible para el equipo médico</div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel-modal" onclick="closeModal('modal-nota')">Cancelar</button>
-      <button class="btn-save" onclick="guardarNotaYFinalizar()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        Finalizar atención
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL DETALLE TURNO -->
-<div class="modal-overlay" id="modal-detail">
-  <div class="modal" style="width:560px">
-    <div class="modal-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="modal-title" id="detail-title">Detalle del Turno</div>
-        <span id="detail-badge"></span>
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
-    </div>
-    <div id="detail-body"></div>
-  </div>
-</div>
-
-<!-- MODAL PACIENTES POR OPERADOR -->
-<div class="modal-overlay" id="modal-operador-pacientes">
-  <div class="modal" style="width:680px;max-height:80vh;overflow-y:auto">
-    <div class="modal-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        <div class="modal-title" id="operador-modal-title">Pacientes Atendidos</div>
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-operador-pacientes')">✕</button>
-    </div>
-    <div style="padding:0 20px 20px 20px">
-      <div id="operador-pacientes-list" style="display:grid;gap:10px"></div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL NUEVO/EDITAR USUARIO -->
-<div class="modal-overlay" id="modal-user">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-user-title">Nuevo Usuario</div>
-      <button class="modal-close" onclick="closeModal('modal-user')">✕</button>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group" style="grid-column:1/-1">
-        <label class="form-label">Nombre completo</label>
-        <input class="form-input" id="user-name" placeholder="Dr. Juan García">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Nombre de usuario</label>
-        <input class="form-input" id="user-username" placeholder="jgarcia" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Contraseña</label>
-        <input class="form-input" id="user-password" type="password" placeholder="••••••" autocomplete="new-password">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input class="form-input" id="user-email" type="email" placeholder="user@neurocoop.com">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Rol</label>
-        <select class="form-select" id="user-role">
-          <option>Administrador</option>
-          <option>Médico</option>
-          <option>Enfermero</option>
-          <option>Recepcionista</option>
-          <option>Linea de Frente</option>
-          <option>Administrativo</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Módulo asignado</label>
-        <select class="form-select" id="user-modulo">
-          <option>Sin módulo</option>
-          <option>Módulo 01</option>
-          <option>Módulo 02</option>
-          <option>Módulo 03</option>
-          <option>Módulo 04</option>
-          <option>Módulo 05</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Estado</label>
-        <select class="form-select" id="user-status">
-          <option value="true">Activo</option>
-          <option value="false">Inactivo</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel-modal" onclick="closeModal('modal-user')">Cancelar</button>
-      <button class="btn-save" onclick="saveUser()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL NUEVO SERVICIO -->
-<div class="modal-overlay" id="modal-servicio">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-svc-title">Nuevo Servicio</div>
-      <button class="modal-close" onclick="closeModal('modal-servicio')">✕</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Nombre del servicio</label>
-      <input class="form-input" id="svc-name" placeholder="Ej: Cardiología">
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group">
-        <label class="form-label">Prefijo de turno</label>
-        <input class="form-input" id="svc-prefix" placeholder="Ej: C" maxlength="2">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Estado</label>
-        <select class="form-select" id="svc-status">
-          <option value="true">Activo</option>
-          <option value="false">Inactivo</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel-modal" onclick="closeModal('modal-servicio')">Cancelar</button>
-      <button class="btn-save" onclick="saveServicio()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL NUEVO MÓDULO -->
-<div class="modal-overlay" id="modal-modulo">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-mod-title">Nuevo Módulo</div>
-      <button class="modal-close" onclick="closeModal('modal-modulo')">✕</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Nombre del módulo / Consultorio</label>
-      <input class="form-input" id="mod-name" placeholder="Ej: Consultorio 6">
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group">
-        <label class="form-label">Servicio asociado</label>
-        <select class="form-select" id="mod-service">
-          <option>General</option>
-          <option>Neurología</option>
-          <option>Psiquiatría</option>
-          <option>Kinesiología</option>
-          <option>Laboratorio</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Estado</label>
-        <select class="form-select" id="mod-status">
-          <option value="true">Activo</option>
-          <option value="false">Inactivo</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel-modal" onclick="closeModal('modal-modulo')">Cancelar</button>
-      <button class="btn-save" onclick="saveModulo()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST CONTAINER -->
-<div class="toast-container" id="toast-container"></div>
-
-<script>
 // ── DATA STORE ────────────────────────────────────
 const SERVICES = [
   { id: 'N', name: 'Neurología', color: '#3B72F2' },
@@ -2599,7 +123,7 @@ const DEFAULT_USERS = [
   { name:'Dra. Ana Torres',    username:'atores',   password:'1234', role:'Médico',          email:'a.torres@neurocoop.com',   modulo:'Módulo 02', active:true,  color:'#8B5CF6' },
   { name:'Enf. Pedro Lima',    username:'plima',    password:'1234', role:'Enfermero',       email:'p.lima@neurocoop.com',     modulo:'Módulo 03', active:true,  color:'#22C55E' },
   { name:'Dr. Marco Silva',    username:'msilva',   password:'1234', role:'Médico',          email:'m.silva@neurocoop.com',    modulo:'Sin módulo',active:false, color:'#F97316' },
-  { name:'Rec. Julia Méndez',  username:'jmendez',  password:'1234', role:'Linea de Frente',   email:'j.mendez@neurocoop.com',   modulo:'Sin módulo',active:true,  color:'#F59E0B' },
+  { name:'Rec. Julia Méndez',  username:'jmendez',  password:'1234', role:'Recepcionista',   email:'j.mendez@neurocoop.com',   modulo:'Sin módulo',active:true,  color:'#F59E0B' },
   { name:'Adm. Luis García',   username:'lgarcia',  password:'1234', role:'Administrativo',  email:'l.garcia@neurocoop.com',   modulo:'Sin módulo',active:true,  color:'#EF4444' },
 ];
 
@@ -2635,7 +159,6 @@ const API = {
   get(path)         { return this.req('GET',    path, null, getToken()); },
   post(path, body)  { return this.req('POST',   path, body, getToken()); },
   patch(path, body) { return this.req('PATCH',  path, body, getToken()); },
-  del(path)         { return this.req('DELETE',  path, null, getToken()); },
   postAuth(path, b) { return this.req('POST',   path, b, null); },
 };
 
@@ -2715,7 +238,7 @@ async function login() {
   try {
     const data = await API.postAuth('/api/auth/login', { username, password });
     setToken(data.token);
-    currentUser = normalizarUsuario(data.usuario || data.user || {});
+    currentUser = data.usuario || data.user;
     onLoginSuccess();
   } catch(e) {
     setAuthError('auth-error', e.message || 'Error al iniciar sesión');
@@ -2789,9 +312,6 @@ async function onLoginSuccess() {
   if (nameEl) nameEl.textContent = nombre;
   if (roleEl) roleEl.textContent = (currentUser.rol || 'Recepcionista') + (currentUser.modulo && currentUser.modulo !== 'Sin módulo' ? ' · ' + currentUser.modulo : '');
 
-  // Aplicar permisos de sidebar según rol
-  aplicarPermisosSidebar();
-
   // Cargar datos iniciales
   await cargarDatos();
   iniciarSSE();
@@ -2823,7 +343,7 @@ async function cargarDatos() {
     state.turnos   = (tRes.turnos   || []).map(normalizarTurno);
     state.servicios = sRes.servicios || [];
     state.modulos  = mRes.modulos   || [];
-    state.users    = (uRes.usuarios  || []).map(normalizarUsuario);
+    state.users    = uRes.usuarios  || [];
   } catch(e) {
     console.warn('cargarDatos error:', e.message);
     showToast('Modo sin conexión — los datos pueden estar desactualizados', 'error');
@@ -2848,20 +368,6 @@ function normalizarTurno(t) {
     tsLlamado:    t.ts_llamado  || t.tsLlamado  || null,
     tsAtendido:   t.ts_atendido || t.tsAtendido || null,
     tsFin:        t.ts_fin      || t.tsFin      || null,
-  };
-}
-
-// Normaliza campos de usuario API → frontend
-function normalizarUsuario(u) {
-  return {
-    ...u,
-    name:     u.name     || u.nombre   || '',
-    role:     u.role     || u.rol      || 'Recepcionista',
-    active:   u.active   !== undefined ? u.active : (u.activo !== undefined ? !!u.activo : true),
-    email:    u.email    || '',
-    username: u.username || '',
-    modulo:   u.modulo   || 'Sin módulo',
-    color:    u.color    || '#3B72F2',
   };
 }
 
@@ -2918,22 +424,6 @@ function onSSEMessage(msg) {
       showTVCallBanner(state.turnos.find(x => x.dbId === t.dbId));
       addNotif('llamado', `Turno ${t.codigo} llamado`, `→ ${t.modulo} · Por: ${t.atendidoPor?.split(' ').slice(0,2).join(' ') || '—'}`);
     }
-  }
-
-  // ── Eventos de usuarios ──
-  if (msg.tipo === 'usuario_creado' && msg.usuario) {
-    const u = normalizarUsuario(msg.usuario);
-    if (!state.users.find(x => x.id === u.id)) state.users.push(u);
-  }
-  if (msg.tipo === 'usuario_actualizado' && msg.usuario) {
-    const u = normalizarUsuario(msg.usuario);
-    const idx = state.users.findIndex(x => x.id === u.id);
-    if (idx >= 0) state.users[idx] = { ...state.users[idx], ...u };
-    else state.users.push(u);
-  }
-  if (msg.tipo === 'usuario_eliminado' && msg.id) {
-    const idx = state.users.findIndex(x => x.id === msg.id);
-    if (idx >= 0) state.users[idx].active = false;
   }
 
   // Re-renderizar la página activa
@@ -3083,39 +573,9 @@ const PAGE_TITLES = {
   modulos:'Gestión de Módulos', gservicios:'Gestión de Servicios', config:'Configuración'
 };
 // Pages that are fully implemented (others show Próximamente screen)
-const ACTIVE_PAGES = new Set(['inicio','dashboard','turnos','recepcion','panel','historial','tv','config','estadisticas','usuarios','anuncios']);
-
-// Pages allowed per role (if not listed here, the role sees ALL pages)
-const ROLE_PAGES = {
-  'Linea de Frente': new Set(['inicio','recepcion','turnos','panel','historial','tv'])
-};
-
-function aplicarPermisosSidebar() {
-  const rol = currentUser?.rol || currentUser?.role || '';
-  const allowed = ROLE_PAGES[rol]; // undefined = all pages allowed
-  document.querySelectorAll('.sidebar-nav .nav-item[data-page]').forEach(el => {
-    el.style.display = (!allowed || allowed.has(el.dataset.page)) ? '' : 'none';
-  });
-  // Also handle config in sidebar-footer
-  document.querySelectorAll('.sidebar-footer .nav-item[data-page]').forEach(el => {
-    el.style.display = (!allowed || allowed.has(el.dataset.page)) ? '' : 'none';
-  });
-  // Hide "Administración" section label if no admin items visible
-  const adminLabel = document.querySelector('.nav-section-label[data-section="admin"]');
-  if (adminLabel) {
-    const hasVisible = !!document.querySelector('.nav-item[data-page="usuarios"]:not([style*="display: none"]), .nav-item[data-page="servicios"]:not([style*="display: none"]), .nav-item[data-page="dashboard"]:not([style*="display: none"]), .nav-item[data-page="modulos"]:not([style*="display: none"]), .nav-item[data-page="gservicios"]:not([style*="display: none"])');
-    adminLabel.style.display = hasVisible ? '' : 'none';
-  }
-}
+const ACTIVE_PAGES = new Set(['inicio','dashboard','turnos','recepcion','panel','historial','tv','config','estadisticas']);
 
 function navTo(page) {
-  // Block access to restricted pages based on role
-  const rol = currentUser?.rol || currentUser?.role || '';
-  const allowed = ROLE_PAGES[rol];
-  if (allowed && !allowed.has(page)) {
-    showToast('⛔ No tienes permisos para acceder a esta sección', 'error');
-    return;
-  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const el = document.getElementById('page-' + page);
@@ -3135,11 +595,9 @@ function renderPage(page) {
   else if (page === 'recepcion') renderRecepcion();
   else if (page === 'panel') renderPanel();
   else if (page === 'historial') renderHistorial();
-  else if (page === 'estadisticas') inicializarEstadisticas();
+  else if (page === 'estadisticas') renderEstadisticasFuncionarios();
   else if (page === 'tv') renderTV();
   else if (page === 'config') renderArchivos();
-  else if (page === 'usuarios') renderUsuarios();
-  else if (page === 'anuncios' && typeof window.renderAnuncios === 'function') window.renderAnuncios();
 }
 
 // ── NOTIFICATIONS ─────────────────────────────────
@@ -3402,14 +860,14 @@ function renderDashboard() {
     const pill    = isLive
       ? `<span class="live-dash-${safeId} timer-pill timer-orange">${fmtDuration(waitMs)}</span>`
       : `<span class="timer-pill timer-gray">${fmtDuration(waitMs)}</span>`;
-    return `<tr>
+    return `
       <td><span class="turno-id">${esc(t.id)}</span></td>
       <td>${esc(t.service)}</td>
       <td>${esc(t.modulo)}</td>
       <td>${badgeHTML(t.estado)}</td>
       <td>${pill}</td>
       <td style="color:var(--text-muted);font-size:12.5px">${tsToHHMM(t.tsCreated)}</td>
-    </tr>`;
+    `;
   }).join('');
 
   // Métricas por operador y módulo
@@ -3564,10 +1022,10 @@ function renderTurnos(search='') {
       return `<span style="color:var(--text-muted);font-size:12.5px">${esc(mod)}</span>`;
     })();
     return `
-    <tr>
+    
       <td><span class="turno-id">${esc(t.id)}</span></td>
       <td style="font-weight:500">${esc(t.patient)}</td>
-      <td><span class="doc-masked">${esc(t.doc)}</span></td>
+      <td><span class="doc-masked">****${esc(t.doc)}</span></td>
       <td>${badgeHTML(t.estado)}</td>
       <td>${waitStr}</td>
       <td>${svcStr}</td>
@@ -3591,7 +1049,7 @@ function renderTurnos(search='') {
           </div>
         </div>
       </td>
-    </tr>`;
+    `;
   }).join('');
 
   document.getElementById('turnos-pagination-info').textContent = `Mostrando ${start+1}-${Math.min(start+TURNOS_PER_PAGE,total)} de ${total} turnos`;
@@ -3663,7 +1121,7 @@ function openTurnoDetail(idx) {
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Documento</div>
-        <div class="detail-stat-val" style="font-family:'DM Mono',monospace">${esc(t.doc)}</div>
+        <div class="detail-stat-val" style="font-family:'DM Mono',monospace">****${esc(t.doc)}</div>
       </div>
       <div class="detail-stat-box">
         <div class="detail-stat-label">Servicio</div>
@@ -3960,7 +1418,7 @@ function renderRecQueue() {
         style="opacity:.25;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto">
         <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
       </svg>
-      <p style="font-size:13px">Sin pacientes en espera</p>
+      <p style="font-size:13px">Sin pacientes en espera
     </div>`;
     return;
   }
@@ -4466,216 +1924,38 @@ function finalizarTurno() { finalizarTurnoAPI(''); }
 function cancelarTurno()  { cancelarTurnoAPI(); }
 function atenderTurno()   { atenderTurnoAPI(); }
 
-// ── ESTADÍSTICAS POR FUNCIONARIO (CALENDARIO) ────
-let estAnio, estMes, estDiasConDatos = [], estDiasCSV = [], estDiasBD = [], estDatosDia = null;
-const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-function inicializarEstadisticas() {
-  const hoy = new Date();
-  estAnio = hoy.getFullYear();
-  estMes = hoy.getMonth(); // 0-based
-  estCargarMes();
-}
-
-function estMesPrev() { estMes--; if (estMes < 0) { estMes = 11; estAnio--; } estCargarMes(); }
-function estMesNext() { estMes++; if (estMes > 11) { estMes = 0; estAnio++; } estCargarMes(); }
-function estHoy() { const h = new Date(); estAnio = h.getFullYear(); estMes = h.getMonth(); estCargarMes(); }
-
-async function estCargarMes() {
-  document.getElementById('est-cal-titulo').textContent = MESES_ES[estMes] + ' ' + estAnio;
-  document.getElementById('est-detalle-dia').style.display = 'none';
-  estDatosDia = null;
-
-  // Cargar días disponibles
+// ── ESTADÍSTICAS POR FUNCIONARIO ─────────────────
+async function renderEstadisticasFuncionarios() {
+  const tbody = document.getElementById('est-func-body');
+  if (!tbody) return;
+  tbody.innerHTML = '<td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Cargando...</td>';
   try {
-    const mesStr = String(estMes + 1).padStart(2, '0');
-    const data = await API.get(`/api/estadisticas/dias-disponibles?anio=${estAnio}&mes=${mesStr}`);
-    estDiasConDatos = data.dias || [];
-    estDiasCSV = data.diasCSV || [];
-    estDiasBD = data.diasBD || [];
-  } catch (e) { estDiasConDatos = []; estDiasCSV = []; estDiasBD = []; }
-
-  estRenderCalendario();
-}
-
-function estRenderCalendario() {
-  const cal = document.getElementById('est-calendario');
-  const primerDia = new Date(estAnio, estMes, 1);
-  const ultimoDia = new Date(estAnio, estMes + 1, 0);
-  const diasEnMes = ultimoDia.getDate();
-  let inicioSemana = primerDia.getDay(); // 0=dom
-  // Convertir a lunes=0
-  inicioSemana = inicioSemana === 0 ? 6 : inicioSemana - 1;
-
-  const hoy = new Date();
-  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-
-  let html = '';
-  // Headers
-  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(d => {
-    html += `<div style="background:#F1F5F9;padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:#64748B">${d}</div>`;
-  });
-
-  // Celdas vacías antes del inicio
-  for (let i = 0; i < inicioSemana; i++) {
-    html += `<div style="background:white;padding:8px;min-height:70px"></div>`;
-  }
-
-  // Días del mes
-  for (let d = 1; d <= diasEnMes; d++) {
-    const fechaStr = `${estAnio}-${String(estMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const tieneDatos = estDiasConDatos.includes(fechaStr);
-    const esCSV = estDiasCSV.includes(fechaStr);
-    const esSoloBD = tieneDatos && !esCSV && estDiasBD.includes(fechaStr);
-    const esHoy = fechaStr === hoyStr;
-    const esFinde = ((inicioSemana + d - 1) % 7) >= 5;
-
-    let bgColor = 'white';
-    if (esHoy) bgColor = '#EFF6FF';
-    else if (esFinde) bgColor = '#FAFAFA';
-
-    const cursor = tieneDatos || esHoy ? 'cursor:pointer;' : '';
-    const hoverBg = tieneDatos || esHoy ? `onmouseover="this.style.background='#E0E7FF'" onmouseout="this.style.background='${bgColor}'"` : '';
-    const onclick = tieneDatos || esHoy ? `onclick="estSeleccionarDia('${fechaStr}')"` : '';
-
-    html += `<div style="background:${bgColor};padding:8px;min-height:70px;${cursor}position:relative;transition:background 0.15s" ${hoverBg} ${onclick}>`;
-    html += `<div style="font-size:13px;font-weight:${esHoy?'800':'600'};color:${esHoy?'#3B72F2':'#374151'};${esHoy?'background:#3B72F2;color:white;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;':''}">${d}</div>`;
-    if (tieneDatos && !esSoloBD) {
-      html += `<div style="position:absolute;bottom:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#22C55E" title="Datos CSV completos"></div>`;
-    } else if (esSoloBD) {
-      html += `<div style="position:absolute;bottom:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#F59E0B" title="Datos parciales (auditoría BD)"></div>`;
-    }
-    html += `</div>`;
-  }
-
-  // Celdas vacías al final
-  const totalCeldas = inicioSemana + diasEnMes;
-  const restante = totalCeldas % 7 === 0 ? 0 : 7 - (totalCeldas % 7);
-  for (let i = 0; i < restante; i++) {
-    html += `<div style="background:white;padding:8px;min-height:70px"></div>`;
-  }
-
-  cal.innerHTML = html;
-}
-
-async function estSeleccionarDia(fechaStr) {
-  try {
-    const data = await API.get(`/api/estadisticas/dia?fecha=${fechaStr}`);
-    if (data.vacio) {
-      showToast('No hay datos para este día', 'info');
+    const data = await API.get('/api/estadisticas');
+    const rows = data.estadisticas || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">Sin datos para hoy</td>';
       return;
     }
-    estDatosDia = data;
-    estRenderDetalleDia(fechaStr, data);
-  } catch (e) {
-    showToast('Error cargando estadísticas: ' + e.message, 'error');
+    const colors = ['#3B72F2','#8B5CF6','#F97316','#22C55E','#F59E0B','#EF4444'];
+    tbody.innerHTML = rows.map(r => {
+      const nom = r.usuario || '—';
+      const ini = nom.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+      const col = colors[nom.charCodeAt(0) % colors.length];
+      const tProm = r.tiempo_promedio_atencion != null ? `<span class="timer-pill timer-blue">${parseFloat(r.tiempo_promedio_atencion).toFixed(1)} min</span>` : '—';
+      const modulo = r.modulo_principal || '—';
+      return `
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:50%;background:${col};color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${esc(ini)}</div>
+          <span style="font-weight:600;font-size:13px">${esc(nom.split(' ').slice(0,3).join(' '))}</span>
+        </div></td>
+        <td style="font-weight:700;color:var(--primary);font-size:15px">${r.turnos_atendidos}</td>
+        <td>${tProm}</td>
+        <td style="color:var(--text-muted);font-size:12.5px">${esc(modulo)}</td>
+      `;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<td colspan="4" style="text-align:center;padding:24px;color:var(--danger)">${esc(e.message)}</td>`;
   }
-}
-
-function estRenderDetalleDia(fechaStr, data) {
-  const [y, m, d] = fechaStr.split('-');
-  const fechaObj = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
-  const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const fechaFormateada = fechaObj.toLocaleDateString('es-CO', opciones);
-
-  document.getElementById('est-detalle-titulo').textContent = 'Detalle del ' + d + ' de ' + MESES_ES[parseInt(m)-1] + ' de ' + y;
-  document.getElementById('est-detalle-dia').style.display = 'block';
-
-  // Banner de fuente de datos
-  const bannerEl = document.getElementById('est-fuente-banner');
-  if (data.fuente === 'historial_bd') {
-    bannerEl.style.display = 'block';
-    bannerEl.innerHTML = `
-      <div style="padding:10px 16px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:13px;color:#9A3412">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div><strong>Datos parciales (Auditoría BD)</strong> — No existe archivo CSV para este día. Los datos se reconstruyeron desde la tabla de auditoría. No incluye: paciente, documento, servicio, tiempos de espera.</div>
-      </div>`;
-  } else {
-    bannerEl.style.display = 'none';
-  }
-
-  const res = data.resumen;
-
-  // KPIs
-  const kpisHtml = [
-    { label: 'TOTAL TURNOS', valor: res.total_turnos, color: '#3B72F2' },
-    { label: 'FINALIZADOS', valor: res.finalizados, color: '#22C55E' },
-    { label: 'CANCELADOS', valor: res.cancelados, color: '#EF4444' },
-    { label: 'NO ATENDIDOS', valor: res.no_atendidos, color: '#F59E0B' },
-    { label: 'T. PROM. ESPERA', valor: res.promedio_espera + 'min', color: '#6366F1' },
-    { label: 'T. PROM. ATENCIÓN', valor: res.promedio_atencion + 'min', color: '#8B5CF6' },
-    { label: 'HORA PICO', valor: res.hora_pico ? res.hora_pico + ' (' + res.hora_pico_cantidad + ')' : '—', color: '#F97316' }
-  ].map(k => `
-    <div class="card" style="padding:14px;text-align:center;border-left:3px solid ${k.color}">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">${k.label}</div>
-      <div style="font-size:22px;font-weight:800;color:${k.color}">${k.valor}</div>
-    </div>
-  `).join('');
-  document.getElementById('est-resumen-kpis').innerHTML = kpisHtml;
-
-  // Funcionarios
-  const colors = ['#3B72F2','#8B5CF6','#F97316','#22C55E','#F59E0B','#EF4444','#06B6D4','#EC4899'];
-  const funcHtml = (data.funcionarios || []).map((f, i) => {
-    const ini = f.nombre === 'Sin asignar' ? 'SA' : f.nombre.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
-    const col = f.nombre === 'Sin asignar' ? '#9CA3AF' : colors[i % colors.length];
-    const nombreCorto = f.nombre.split(' ').slice(0, 2).join(' ');
-    const modInfo = f.modulo_principal ? `<div style="font-size:10px;color:var(--text-muted)">${esc(f.modulo_principal)}</div>` : '';
-
-    return `<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.15s;min-width:180px;background:white" onclick="estMostrarDetalleFuncionario('${esc(f.nombre)}')" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';this.style.borderColor='${col}'" onmouseout="this.style.boxShadow='none';this.style.borderColor='var(--border)'">
-      <div style="width:40px;height:40px;border-radius:50%;background:${col};color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ini}</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:13px">${esc(nombreCorto)}</div>
-        ${modInfo}
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:20px;font-weight:800;color:${col}">${f.atendidos}</div>
-        <div style="font-size:10px;color:var(--text-muted)">ATENDIDOS</div>
-      </div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2.5" style="opacity:0.5;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>`;
-  }).join('');
-  document.getElementById('est-funcionarios').innerHTML = funcHtml || '<div style="padding:20px;color:var(--text-muted);font-size:13px">No hay funcionarios registrados este día</div>';
-
-  // Ocultar detalle de funcionario
-  document.getElementById('est-func-detalle').style.display = 'none';
-}
-
-function estMostrarDetalleFuncionario(nombre) {
-  if (!estDatosDia) return;
-  const turnos = estDatosDia.turnos.filter(t => {
-    const op = (t.operador || '').trim() || 'Sin asignar';
-    return op === nombre;
-  });
-
-  document.getElementById('est-func-detalle-titulo').textContent = 'Turnos de ' + nombre + ' (' + turnos.length + ')';
-
-  const tbody = document.getElementById('est-func-detalle-body');
-  tbody.innerHTML = turnos.map((t, i) => {
-    const espera = t.tiempo_espera_min ? t.tiempo_espera_min + ' min' : '—';
-    const atencion = t.tiempo_atencion_min ? t.tiempo_atencion_min + ' min' : '—';
-    const horaCorta = (t.hora_creacion || '').split(',').pop().trim() || t.hora_creacion || '—';
-    const estadoColor = (t.estado || '').toLowerCase().includes('finalizado') ? '#22C55E' :
-                        (t.estado || '').toLowerCase().includes('cancelado') ? '#EF4444' : '#F59E0B';
-
-    return `<tr style="border-bottom:1px solid var(--border-light);background:${i%2===0?'white':'#F9FAFB'}">
-      <td style="padding:8px 10px;font-family:'DM Mono',monospace;font-weight:600;color:var(--primary)">${esc(t.turno||'')}</td>
-      <td style="padding:8px 10px;font-weight:500">${esc(t.paciente||'')}</td>
-      <td style="padding:8px 10px;font-family:'DM Mono',monospace">${esc(t.documento||'')}</td>
-      <td style="padding:8px 10px">${esc(t.servicio||'')}</td>
-      <td style="padding:8px 10px">${esc(t.modulo||'')}</td>
-      <td style="padding:8px 10px">${esc(horaCorta)}</td>
-      <td style="padding:8px 10px">${espera}</td>
-      <td style="padding:8px 10px">${atencion}</td>
-      <td style="padding:8px 10px"><span style="padding:2px 10px;border-radius:4px;font-size:11px;font-weight:600;color:white;background:${estadoColor}">${esc(t.estado||'')}</span></td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--text-muted)">Sin turnos</td></tr>';
-
-  document.getElementById('est-func-detalle').style.display = 'block';
-}
-
-function estCerrarDetalle() {
-  document.getElementById('est-detalle-dia').style.display = 'none';
-  estDatosDia = null;
 }
 
 // ── HISTORIAL ─────────────────────────────────────
@@ -4746,11 +2026,11 @@ function renderHistorial() {
 
   const tbody = document.getElementById('historial-table-body');
   if (!slice.length) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--text-muted)">
+    tbody.innerHTML = `<td colspan="9" style="text-align:center;padding:28px;color:var(--text-muted)">
       <div style="font-size:24px;margin-bottom:8px">🔍</div>
       <div style="font-size:13px">Sin resultados para los filtros actuales</div>
       <button onclick="clearHistFiltros()" style="margin-top:10px;padding:6px 16px;background:var(--primary-light);color:var(--primary);border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Limpiar filtros</button>
-    </td></tr>`;
+    </td>`;
   } else {
     tbody.innerHTML = slice.map(t => {
       const color   = getSvcColor(t.id[0]);
@@ -4765,7 +2045,7 @@ function renderHistorial() {
       const notaIcon = t.nota
         ? `<span title="${esc(t.nota)}" style="cursor:help;font-size:14px">📝</span>`
         : '<span style="color:var(--border)">—</span>';
-      return `<tr>
+      return `
         <td><span class="turno-id" style="cursor:pointer;color:${color}" onclick="openTurnoDetailById('${esc(t.id)}')">${esc(t.id)}</span></td>
         <td style="font-weight:500">${esc(t.patient)}</td>
         <td><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${color};display:inline-block"></span>${esc(t.service)}</span></td>
@@ -4775,7 +2055,7 @@ function renderHistorial() {
         <td>${svcStr}</td>
         <td>${badgeHTML(t.estado)}</td>
         <td style="text-align:center">${notaIcon}</td>
-      </tr>`;
+      `;
     }).join('');
   }
 
@@ -4866,7 +2146,7 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
   const qEl = document.getElementById(queueId);
   if (qEl) {
     if (!queue.length) {
-      qEl.innerHTML = '<div class="tv-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Sin turnos en espera</p></div>';
+      qEl.innerHTML = '<div class="tv-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Sin turnos en espera</div>';
     } else {
       qEl.innerHTML = queue.slice(0,6).map((t,i) => {
         const color   = getSvcColor(t.id[0]);
@@ -4891,7 +2171,7 @@ function _renderTVContent(timeId,dateId,queueId,servingId,queueCountId,servingCo
   const sEl = document.getElementById(servingId);
   if (sEl) {
     if (!serving.length) {
-      sEl.innerHTML = '<div class="tv-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><p>Ningún turno siendo atendido</p></div>';
+      sEl.innerHTML = '<div class="tv-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Ningún turno siendo atendido</div>';
     } else {
       sEl.innerHTML = serving.slice(0,5).map(t => {
         const color       = getSvcColor(t.id[0]);
@@ -5096,7 +2376,7 @@ function renderUsuarios() {
   tbody.innerHTML = list.map((u,i) => {
     const initials = u.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
     const lastAccess = ['Hace 2 min','Hace 15 min','Hace 1 hora','Ayer','Hace 3 días','Hoy'][i%6];
-    return `<tr>
+    return `
       <td>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:34px;height:34px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0">${esc(initials)}</div>
@@ -5118,7 +2398,7 @@ function renderUsuarios() {
           <div class="icon-btn" title="Eliminar" onclick="deleteUser(${i})" style="color:var(--danger)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></div>
         </div>
       </td>
-    </tr>`;
+    `;
   }).join('');
 }
 
@@ -5155,47 +2435,23 @@ function saveUser() {
   // Check duplicate username (excluding self on edit)
   const dupIdx = state.users.findIndex(u => u.username === username);
   if (dupIdx >= 0 && dupIdx !== editUserIdx) { showToast('El nombre de usuario ya existe', 'error'); return; }
-
+  const colors = ['#3B72F2','#8B5CF6','#22C55E','#F97316','#F59E0B','#EF4444','#06B6D4','#84CC16'];
   if (editUserIdx >= 0) {
     const existing = state.users[editUserIdx];
-    const body = { nombre: name, username, rol: role, email, modulo, activo: active };
-    if (password) body.password = password;
-    API.patch('/api/usuarios/' + existing.id, body)
-      .then(data => {
-        if (data.usuario) {
-          state.users[editUserIdx] = normalizarUsuario(data.usuario);
-        }
-        showToast('Usuario actualizado', 'success');
-        closeModal('modal-user'); renderUsuarios();
-      })
-      .catch(e => showToast('Error al actualizar: ' + e.message, 'error'));
+    state.users[editUserIdx] = { ...existing, name, username, email, role, modulo, active,
+      password: password || existing.password }; // keep old password if blank
+    showToast('Usuario actualizado', 'success');
   } else {
     if (!password) { showToast('Ingrese una contraseña', 'error'); return; }
-    API.post('/api/usuarios', { nombre: name, username, password, rol: role, email, modulo })
-      .then(data => {
-        if (data.usuario) {
-          state.users.push(normalizarUsuario(data.usuario));
-        }
-        showToast('Usuario creado: ' + name, 'success');
-        closeModal('modal-user'); renderUsuarios();
-      })
-      .catch(e => showToast('Error al crear: ' + e.message, 'error'));
+    state.users.push({ name, username, password, email, role, modulo, active, color: colors[state.users.length % colors.length] });
+    showToast('Usuario creado: ' + name, 'success');
   }
+  saveState(); closeModal('modal-user'); renderUsuarios();
 }
 function toggleUser(i) {
-  const u = state.users[i];
-  const newActive = !u.active;
-  API.patch('/api/usuarios/' + u.id, { activo: newActive })
-    .then(data => {
-      if (data.usuario) {
-        state.users[i] = normalizarUsuario(data.usuario);
-      } else {
-        state.users[i].active = newActive;
-      }
-      renderUsuarios();
-      showToast(state.users[i].active ? 'Usuario activado' : 'Usuario desactivado', 'success');
-    })
-    .catch(e => showToast('Error: ' + e.message, 'error'));
+  state.users[i].active = !state.users[i].active;
+  saveState(); renderUsuarios();
+  showToast(state.users[i].active ? 'Usuario activado' : 'Usuario desactivado', 'success');
 }
 function deleteUser(i) {
   const u = state.users[i];
@@ -5305,22 +2561,13 @@ function checkDeleteConfirm() {
 
 function deleteUserConfirmed() {
   if (pendingDeleteUserIdx === null) return;
-  const u = state.users[pendingDeleteUserIdx];
-  const name = u.name;
-  API.del('/api/usuarios/' + u.id)
-    .then(() => {
-      const idx = state.users.findIndex(x => x.id === u.id);
-      if (idx >= 0) state.users[idx].active = false;
-      renderUsuarios();
-      closeModal('modal-delete-user');
-      showToast(`Usuario ${name} desactivado`, 'success');
-      addNotif('sistema', 'Usuario eliminado', `${name} fue desactivado del sistema`);
-      pendingDeleteUserIdx = null;
-    })
-    .catch(e => {
-      showToast('Error al eliminar: ' + e.message, 'error');
-      pendingDeleteUserIdx = null;
-    });
+  const name = state.users[pendingDeleteUserIdx].name;
+  state.users.splice(pendingDeleteUserIdx, 1);
+  saveState(); renderUsuarios();
+  closeModal('modal-delete-user');
+  showToast(`Usuario ${name} eliminado`, 'success');
+  addNotif('sistema', 'Usuario eliminado', `${name} fue eliminado del sistema`);
+  pendingDeleteUserIdx = null;
 }
 
 // ── ARCHIVO MENSUAL ───────────────────────────────
@@ -5411,14 +2658,14 @@ function verArchivo(i) {
   document.getElementById('archivo-modal-table').innerHTML = a.data.map(t => {
     const color = getSvcColor(t.id[0]);
     const waitMs = t.tsCreated && t.tsAtendido ? t.tsAtendido - t.tsCreated : null;
-    return `<tr>
+    return `
       <td style="font-family:'DM Mono',monospace;font-weight:800;color:${color}">${t.id}</td>
       <td>${t.patient}</td>
       <td>${t.service}</td>
       <td>${badgeHTML(t.estado)}</td>
       <td style="font-size:12px;color:var(--text-muted)">${t.atendidoPor ? t.atendidoPor.split(' ').slice(0,2).join(' ') : '—'}</td>
       <td>${waitMs ? fmtDuration(waitMs) : '—'}</td>
-    </tr>`;
+    `;
   }).join('');
   openModal('modal-archivo');
 }
@@ -5609,7 +2856,7 @@ function exportArchivoExcel() {
 function renderServicios() {
   const tbody = document.getElementById('servicios-table-body');
   tbody.innerHTML = state.servicios.map((s,i) => `
-    <tr>
+    
       <td style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:12.5px">${s.id}</td>
       <td style="font-weight:500">${s.name}</td>
       <td><span class="turno-id">${s.prefix}-###</span></td>
@@ -5621,7 +2868,7 @@ function renderServicios() {
           <div class="icon-btn" title="Eliminar" onclick="deleteServicio(${i})" style="color:var(--danger)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></div>
         </div>
       </td>
-    </tr>
+    
   `).join('');
 }
 
@@ -5629,7 +2876,7 @@ function renderServicios() {
 function renderModulos() {
   const tbody = document.getElementById('modulos-table-body');
   tbody.innerHTML = state.modulos.map((m,i) => `
-    <tr>
+    
       <td style="font-weight:600;font-family:'DM Mono',monospace">${m.id}</td>
       <td style="font-weight:500">${m.name}</td>
       <td>${m.service}</td>
@@ -5640,7 +2887,7 @@ function renderModulos() {
           <div class="icon-btn" title="Eliminar" onclick="deleteModulo(${i})" style="color:var(--danger)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></div>
         </div>
       </td>
-    </tr>
+    
   `).join('');
 }
 
@@ -5700,13 +2947,11 @@ function generarDatosPruebaHoy() {
   return turnos;
 }
 
-// ── REPORTES — Generador de Dashboard ─────────────
-function parseFecha(str) {
-  const [y, m, d] = (str || '').split('-').map(Number);
-  return new Date(y, (m || 1) - 1, d || 1);
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-turno') updatePrefixPreview();
 }
-
-function generarReporte(desde, hasta, turnos) {
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
       const fechaDesde = parseFecha(desde);
       const fechaHasta = parseFecha(hasta);
       fechaHasta.setHours(23, 59, 59);
@@ -5872,8 +3117,8 @@ function generarReporte(desde, hasta, turnos) {
           <td style="padding:16px 20px;text-align:center"><span style="background:linear-gradient(135deg, #3B72F2 0%, #5B8FFF 100%);color:white;padding:6px 12px;border-radius:6px;font-weight:700;display:inline-block;min-width:40px">${op.atendidos}</span></td>
           <td style="padding:16px 20px;text-align:center;color:var(--text);font-weight:600">${op.espera_prom}<span style="font-size:11px;color:var(--text-muted);margin-left:2px">min</span></td>
           <td style="padding:16px 20px;text-align:center;color:var(--text);font-weight:600">${op.servicio_prom}<span style="font-size:11px;color:var(--text-muted);margin-left:2px">min</span></td>
-        </tr>`
-      ).join('') || '<tr><td colspan="4" style="padding:32px 20px;text-align:center;color:var(--text-muted)">📊 Sin datos disponibles</td></tr>';
+        `
+      ).join('') || '<td colspan="4" style="padding:32px 20px;text-align:center;color:var(--text-muted)">📊 Sin datos disponibles</td>';
       
       // ===== TABLA SERVICIOS DETALLADA =====
       const servicios_arr = Object.entries(serviciosMap).map(([servicio, total]) => {
@@ -5903,8 +3148,8 @@ function generarReporte(desde, hasta, turnos) {
           <td style="padding:16px 20px;text-align:center">
             <div style="background:${s.porcentaje > 80 ? 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)' : s.porcentaje > 50 ? 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)' : 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)'};border-radius:6px;padding:6px 12px;font-weight:700;color:white;display:inline-block;min-width:45px">${s.porcentaje}%</div>
           </td>
-        </tr>`
-      ).join('') || '<tr><td colspan="5" style="padding:32px 20px;text-align:center;color:var(--text-muted)">📊 Sin datos disponibles</td></tr>';
+        `
+      ).join('') || '<td colspan="5" style="padding:32px 20px;text-align:center;color:var(--text-muted)">📊 Sin datos disponibles</td>';
       
       // Guardar para exportación
       window.reportesData = {
@@ -5930,6 +3175,15 @@ function generarReporte(desde, hasta, turnos) {
       };
       
       console.log('[Reportes] ✅ Dashboard cargado:', { total: turnosFiltrados.length, operadores: operadores.length, servicios: servicios_arr.length });
+      
+    } catch (e) {
+      console.error('[Reportes Error]', e);
+      showToast('⚠️ Error procesando reportes: ' + e.message, 'error');
+    }
+  }
+  
+  // Cargar datos iniciales
+  await cargarReportes();
 }
 
 // Exportar Excel
@@ -6094,6 +3348,13 @@ function deleteModulo(i) {
   showToast('Módulo eliminado','success');
 }
 
+// ── SEARCH ────────────────────────────────────────
+function globalSearch(q) {
+  if (!q) return;
+  const t = state.turnos.find(x => x.id.toLowerCase().includes(q.toLowerCase()) || x.patient.toLowerCase().includes(q.toLowerCase()));
+  if (t) showToast(`Encontrado: ${t.id} — ${t.patient}`);
+}
+
 // ── EXPORT FUNCTIONS ─────────────────────────────
 function exportarExcel(source) {
   let data, filename;
@@ -6113,7 +3374,7 @@ function exportarExcel(source) {
     // Exportar todos los turnos del día con tiempos completos
     data = [['Turno','Paciente','Documento','Servicio','Operador','Módulo','Hora Llegada','Hora Inicio Atención','Hora Finalización','Tiempo Espera (min)','Tiempo Atención (min)','Estado'],
       ...turnos.map(t => {
-        const waitMin = t.tsCreated && t.tsLlamado ? Math.round((t.tsLlamado-t.tsCreated)/60000) : (t.tsCreated && t.tsAtendido ? Math.round((t.tsAtendido-t.tsCreated)/60000) : '');
+        const waitMin = t.tsCreated && t.tsLlamado ? Math.round((t.tsLlamado-t.tsCreado)/60000) : (t.tsCreated && t.tsAtendido ? Math.round((t.tsAtendido-t.tsCreated)/60000) : '');
         const svcMin  = t.tsAtendido && t.tsFin    ? Math.round((t.tsFin-t.tsAtendido)/60000)      : '';
         return [t.id, t.patient, t.doc || '', t.service, t.atendidoPor || '', t.modulo, tsToHHMM(t.tsCreated), tsToHHMM(t.tsAtendido), tsToHHMM(t.tsFin), waitMin, svcMin, t.estado];
       })];
@@ -6327,9 +3588,7 @@ function playCallAudio() {
 // Usa la variable moduloPaused declarada anteriormente
 
 function toggleModuloPause() {
-  const btn = document.getElementById('btn-pause-modulo');
   if (!btn) return;
-  moduloPaused = !moduloPaused;
   if (moduloPaused) {
     btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Reanudar módulo`;
     btn.style.background = '#FEF3C7'; btn.style.color = '#D97706'; btn.style.borderColor = '#FDE68A';
@@ -6411,7 +3670,7 @@ function globalSearch(q) {
       <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:800;color:${color};min-width:52px">${esc(t.id)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.patient)}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${esc(t.service)} · Doc. ${esc(t.doc)}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${esc(t.service)} · Doc. ****${esc(t.doc)}</div>
       </div>
       <div style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${bb};color:${bc};white-space:nowrap">${esc(t.estado)}</div>
     </div>`;
@@ -6536,7 +3795,6 @@ window.addEventListener('DOMContentLoaded', () => {
             .then(res => {
               if (res && (res.usuario || res.user)) {
                 console.log('✅ Sesión válida');
-                currentUser = normalizarUsuario(res.usuario || res.user || {});
                 if (window.onLoginSuccess) {
                   onLoginSuccess();
                 }
@@ -6590,12 +3848,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!tbody) return;
 
     if (window.listaAnuncios.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-light)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.5;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Sin anuncios creados</td></tr>';
+      tbody.innerHTML = '<td colspan="6" style="text-align:center;padding:32px;color:var(--text-light)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.5;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Sin anuncios creados</td>';
       return;
     }
 
     tbody.innerHTML = window.listaAnuncios.map(a => `
-      <tr>
+      
         <td><span class="turno-id">#${a.id}</span></td>
         <td><span class="badge badge-atendiendo" style="background:var(--primary-light);color:var(--primary)">${a.tipo}</span></td>
         <td>${a.contenido.substring(0, 50)}${a.contenido.length > 50 ? '...' : ''}</td>
@@ -6608,7 +3866,7 @@ window.addEventListener('DOMContentLoaded', () => {
             <button class="icon-btn" title="Eliminar" onclick="eliminarAnuncio(${a.id})">✕</button>
           </div>
         </td>
-      </tr>
+      
     `).join('');
   };
 
@@ -6722,6 +3980,3 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => renderAnuncios(), 500);
   });
 });
-</script>
-</body>
-</html>
